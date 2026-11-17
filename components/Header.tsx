@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
-import { Clock, Plus, LogOut, Shield, User as UserIcon, Menu } from "lucide-react";
+import { Clock, Plus, LogOut, Shield, Menu } from "lucide-react";
 
 interface HeaderProps {
   onOpenQuickAction: () => void;
@@ -48,10 +48,10 @@ export default function Header({ onOpenQuickAction, onToggleSidebar }: HeaderPro
           </button>
         )}
         <div>
-          <span className="text-xs uppercase tracking-widest text-luxury-gold font-semibold">
+          <span className="text-xs uppercase tracking-widest text-luxury-gold-dark font-semibold">
             Enterprise Gold & Silver ERP
           </span>
-          <h2 className="font-serif text-lg font-bold tracking-tight text-luxury-green sm:text-xl">
+          <h2 className="font-serif text-lg font-bold tracking-wider text-luxury-onyx sm:text-xl">
             SIDHESHWAR JEWELLERS
           </h2>
         </div>
@@ -59,20 +59,20 @@ export default function Header({ onOpenQuickAction, onToggleSidebar }: HeaderPro
 
       <div className="flex items-center gap-3 sm:gap-6">
         {/* Live Asia/Kolkata Time display */}
-        <div className="hidden items-center gap-2 rounded-full border border-luxury-beige bg-luxury-ivory/80 px-3.5 py-1.5 text-xs font-medium text-luxury-charcoal md:flex shadow-xs">
-          <Clock className="h-3.5 w-3.5 text-luxury-gold animate-pulse" />
-          <span>{istTime || "Loading IST..."}</span>
-          <span className="rounded bg-luxury-gold/20 px-1 py-0.5 text-[10px] font-bold text-luxury-green">
+        <div className="hidden items-center gap-2 rounded-full border border-luxury-gold/30 bg-luxury-gold-subtle/80 px-3.5 py-1.5 text-xs font-medium text-luxury-charcoal md:flex shadow-xs">
+          <Clock className="h-3.5 w-3.5 text-luxury-gold-dark animate-pulse" />
+          <span className="font-medium">{istTime || "Loading IST..."}</span>
+          <span className="rounded bg-luxury-gold/20 px-1 py-0.5 text-[10px] font-bold text-luxury-gold-dark">
             IST
           </span>
         </div>
 
-        {/* Quick Action Button */}
+        {/* Quick Action Button - Golden Luxe */}
         <button
           onClick={onOpenQuickAction}
-          className="flex items-center gap-1.5 rounded-lg bg-luxury-green px-3.5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light transition active:scale-95"
+          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark to-luxury-gold px-4 py-2 text-xs font-bold text-white shadow-luxury hover:brightness-105 transition active:scale-95 border border-luxury-gold/30"
         >
-          <Plus className="h-4 w-4 text-luxury-gold" />
+          <Plus className="h-4 w-4 text-white" />
           <span className="hidden sm:inline">Quick Action</span>
         </button>
 
@@ -80,13 +80,13 @@ export default function Header({ onOpenQuickAction, onToggleSidebar }: HeaderPro
         {user && (
           <div className="flex items-center gap-3 border-l border-luxury-beige pl-3 sm:pl-6">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-luxury-green/10 border border-luxury-gold/30 text-luxury-green font-serif font-bold text-sm">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-luxury-gold-subtle border border-luxury-gold/40 text-luxury-gold-dark font-serif font-bold text-sm shadow-xs">
                 {user.name.charAt(0).toUpperCase()}
               </div>
               <div className="hidden text-left xl:block">
                 <p className="text-xs font-semibold text-luxury-charcoal leading-tight">{user.name}</p>
                 <div className="flex items-center gap-1">
-                  <Shield className="h-3 w-3 text-luxury-gold" />
+                  <Shield className="h-3 w-3 text-luxury-gold-dark" />
                   <span className="text-[10px] capitalize text-luxury-muted">{user.role}</span>
                 </div>
               </div>

@@ -142,7 +142,7 @@ export default function SettingsPage() {
         <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
           System Administration
         </span>
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-green sm:text-3xl">
+        <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
           Settings & Configurations
         </h1>
         <p className="mt-1 text-xs text-luxury-muted">
@@ -158,8 +158,8 @@ export default function SettingsPage() {
       )}
 
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 border border-emerald-200">
-          <Check className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
+          <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -169,7 +169,7 @@ export default function SettingsPage() {
         <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
           <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
             <div>
-              <h3 className="font-serif text-base font-bold text-luxury-green">Daily Benchmark Rates</h3>
+              <h3 className="font-serif text-base font-bold text-luxury-onyx">Daily Benchmark Rates</h3>
               <p className="text-xs text-luxury-muted">Sarafa Bazaar market reference per gram (₹/g)</p>
             </div>
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-luxury-gold">
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                   required
                   value={rates.gold24k}
                   onChange={(e) => setRates({ ...rates, gold24k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -201,7 +201,7 @@ export default function SettingsPage() {
                   required
                   value={rates.gold22k}
                   onChange={(e) => setRates({ ...rates, gold22k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -214,7 +214,7 @@ export default function SettingsPage() {
                   required
                   value={rates.gold18k}
                   onChange={(e) => setRates({ ...rates, gold18k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                   required
                   value={rates.silverFine}
                   onChange={(e) => setRates({ ...rates, silverFine: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-slate-700 focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={savingRates}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {savingRates ? "Saving..." : "Update Daily Rates"}
               </button>
@@ -248,10 +248,10 @@ export default function SettingsPage() {
         <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
           <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
             <div>
-              <h3 className="font-serif text-base font-bold text-luxury-green">Shop Profile & Settings</h3>
+              <h3 className="font-serif text-base font-bold text-luxury-onyx">Shop Profile & Settings</h3>
               <p className="text-xs text-luxury-muted">Receipt letterhead and mortgage default rates</p>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-luxury-ivory text-luxury-green">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-luxury-gold">
               <Building className="h-4 w-4" />
             </div>
           </div>
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                 required
                 value={shopSettings.shopName}
                 onChange={(e) => setShopSettings({ ...shopSettings, shopName: e.target.value })}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               />
             </div>
 
@@ -275,7 +275,7 @@ export default function SettingsPage() {
                   type="text"
                   value={shopSettings.phone}
                   onChange={(e) => setShopSettings({ ...shopSettings, phone: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -285,7 +285,7 @@ export default function SettingsPage() {
                   type="email"
                   value={shopSettings.email}
                   onChange={(e) => setShopSettings({ ...shopSettings, email: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function SettingsPage() {
                 type="text"
                 value={shopSettings.address}
                 onChange={(e) => setShopSettings({ ...shopSettings, address: e.target.value })}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               />
             </div>
 
@@ -315,7 +315,7 @@ export default function SettingsPage() {
                       defaultMonthlyInterestRate: Number(e.target.value),
                     })
                   }
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={savingShop}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {savingShop ? "Saving..." : "Save Shop Settings"}
               </button>
@@ -347,7 +347,7 @@ export default function SettingsPage() {
       <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
         <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
           <div>
-            <h3 className="font-serif text-base font-bold text-luxury-green">Data Export Center</h3>
+            <h3 className="font-serif text-base font-bold text-luxury-onyx">Data Export Center</h3>
             <p className="text-xs text-luxury-muted">
               Download clean CSV spreadsheets for accounting, audit, and offline backup
             </p>
@@ -362,7 +362,7 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-green">Gold Inventory CSV</p>
+              <p className="font-bold text-xs text-luxury-onyx">Gold Inventory CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active gold stock</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -374,7 +374,7 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-green">Silver Inventory CSV</p>
+              <p className="font-bold text-xs text-luxury-onyx">Silver Inventory CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active silver stock</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -386,7 +386,7 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-green">Used Metal Scrap CSV</p>
+              <p className="font-bold text-xs text-luxury-onyx">Used Metal Scrap CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">Customer exchange vouchers</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -398,7 +398,7 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-green">Finance Portfolio CSV</p>
+              <p className="font-bold text-xs text-luxury-onyx">Finance Portfolio CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">Loans, dues & pledged items</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -410,10 +410,10 @@ export default function SettingsPage() {
       <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
         <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
           <div>
-            <h3 className="font-serif text-base font-bold text-luxury-green">System Audit Trail</h3>
+            <h3 className="font-serif text-base font-bold text-luxury-onyx">System Audit Trail</h3>
             <p className="text-xs text-luxury-muted">Immutable log of critical operations across all modules</p>
           </div>
-          <Shield className="h-5 w-5 text-luxury-green" />
+          <Shield className="h-5 w-5 text-luxury-gold" />
         </div>
 
         <div className="mt-4 space-y-2.5 max-h-96 overflow-y-auto pr-1">
@@ -427,10 +427,10 @@ export default function SettingsPage() {
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-luxury-green font-mono uppercase text-[11px]">
+                    <span className="font-bold text-luxury-gold-dark font-mono uppercase text-[11px]">
                       {log.action}
                     </span>
-                    <span className="rounded bg-luxury-gold/20 px-1.5 py-0.2 text-[9px] font-semibold text-luxury-green uppercase">
+                    <span className="rounded bg-luxury-gold-subtle border border-luxury-gold/30 px-1.5 py-0.5 text-[9px] font-semibold text-luxury-gold-dark uppercase">
                       {log.module}
                     </span>
                   </div>

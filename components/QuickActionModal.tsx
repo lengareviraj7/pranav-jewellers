@@ -251,12 +251,12 @@ export default function QuickActionModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-luxury-beige bg-gradient-to-r from-luxury-ivory/60 to-white px-6 py-4">
           <div>
-            <h3 className="font-serif text-lg font-bold text-luxury-green">Quick Action Hub</h3>
+            <h3 className="font-serif text-lg font-bold text-luxury-onyx">Quick Action Hub</h3>
             <p className="text-xs text-luxury-muted">Fast transactional entry directly to MongoDB</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-ivory transition"
+            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-ivory hover:text-luxury-onyx transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -268,8 +268,8 @@ export default function QuickActionModal({
             onClick={() => setActiveTab("gold_stock")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
               activeTab === "gold_stock"
-                ? "bg-luxury-green text-white shadow-sm"
-                : "text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             <Coins className="h-4 w-4 text-luxury-gold" />
@@ -280,8 +280,8 @@ export default function QuickActionModal({
             onClick={() => setActiveTab("silver_stock")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
               activeTab === "silver_stock"
-                ? "bg-luxury-green text-white shadow-sm"
-                : "text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             <Gem className="h-4 w-4 text-luxury-gold" />
@@ -292,8 +292,8 @@ export default function QuickActionModal({
             onClick={() => setActiveTab("used_purchase")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
               activeTab === "used_purchase"
-                ? "bg-luxury-green text-white shadow-sm"
-                : "text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             <RefreshCw className="h-4 w-4 text-luxury-gold" />
@@ -304,8 +304,8 @@ export default function QuickActionModal({
             onClick={() => setActiveTab("finance_client")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
               activeTab === "finance_client"
-                ? "bg-luxury-green text-white shadow-sm"
-                : "text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             <UserPlus className="h-4 w-4 text-luxury-gold" />
@@ -316,8 +316,8 @@ export default function QuickActionModal({
             onClick={() => setActiveTab("finance_payment")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
               activeTab === "finance_payment"
-                ? "bg-luxury-green text-white shadow-sm"
-                : "text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             <CreditCard className="h-4 w-4 text-luxury-gold" />
@@ -334,8 +334,8 @@ export default function QuickActionModal({
             </div>
           )}
           {successMsg && (
-            <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 border border-emerald-200">
-              <Check className="h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
+              <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
               <span>{successMsg}</span>
             </div>
           )}
@@ -353,7 +353,7 @@ export default function QuickActionModal({
                   placeholder="e.g. 22K Peacock Necklace"
                   value={goldForm.name}
                   onChange={(e) => setGoldForm({ ...goldForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -363,7 +363,7 @@ export default function QuickActionModal({
                   required
                   value={goldForm.categoryId}
                   onChange={(e) => setGoldForm({ ...goldForm, categoryId: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="">Select Category</option>
                   {goldCategories.map((c) => (
@@ -379,7 +379,7 @@ export default function QuickActionModal({
                 <select
                   value={goldForm.purity}
                   onChange={(e) => setGoldForm({ ...goldForm, purity: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="24K">24K (99.9% Fine)</option>
                   <option value="22K">22K (91.6% Hallmark)</option>
@@ -396,7 +396,7 @@ export default function QuickActionModal({
                   required
                   value={goldForm.quantity}
                   onChange={(e) => setGoldForm({ ...goldForm, quantity: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -409,7 +409,7 @@ export default function QuickActionModal({
                   placeholder="0.000"
                   value={goldForm.grossWeight}
                   onChange={(e) => setGoldForm({ ...goldForm, grossWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -420,7 +420,7 @@ export default function QuickActionModal({
                   step="0.001"
                   value={goldForm.stoneWeight}
                   onChange={(e) => setGoldForm({ ...goldForm, stoneWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -428,7 +428,7 @@ export default function QuickActionModal({
             {/* Calculated Net Weight Indicator */}
             <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige">
               <span className="text-xs font-semibold text-luxury-charcoal">Calculated Net Gold Weight:</span>
-              <span className="font-serif text-sm font-bold text-luxury-green">
+              <span className="font-serif text-sm font-bold text-luxury-gold-dark">
                 {goldNet > 0 ? goldNet.toFixed(3) : "0.000"} g
               </span>
             </div>
@@ -441,7 +441,7 @@ export default function QuickActionModal({
                   placeholder="₹ Total cost"
                   value={goldForm.purchaseCostRupees}
                   onChange={(e) => setGoldForm({ ...goldForm, purchaseCostRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -452,7 +452,7 @@ export default function QuickActionModal({
                   placeholder="e.g. ABC123"
                   value={goldForm.hallmarkUid}
                   onChange={(e) => setGoldForm({ ...goldForm, hallmarkUid: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -468,7 +468,7 @@ export default function QuickActionModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {loading ? "Saving..." : "Add Gold Stock"}
               </button>
@@ -488,7 +488,7 @@ export default function QuickActionModal({
                   placeholder="e.g. Pure Silver Diya Set"
                   value={silverForm.name}
                   onChange={(e) => setSilverForm({ ...silverForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -498,7 +498,7 @@ export default function QuickActionModal({
                   required
                   value={silverForm.categoryId}
                   onChange={(e) => setSilverForm({ ...silverForm, categoryId: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="">Select Silver Category</option>
                   {silverCategories.map((c) => (
@@ -514,7 +514,7 @@ export default function QuickActionModal({
                 <select
                   value={silverForm.purity}
                   onChange={(e) => setSilverForm({ ...silverForm, purity: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="999">999 (Fine Silver)</option>
                   <option value="925">925 (Sterling Silver)</option>
@@ -530,7 +530,7 @@ export default function QuickActionModal({
                   required
                   value={silverForm.quantity}
                   onChange={(e) => setSilverForm({ ...silverForm, quantity: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -543,7 +543,7 @@ export default function QuickActionModal({
                   placeholder="0.000"
                   value={silverForm.grossWeight}
                   onChange={(e) => setSilverForm({ ...silverForm, grossWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -554,14 +554,14 @@ export default function QuickActionModal({
                   step="0.001"
                   value={silverForm.stoneWeight}
                   onChange={(e) => setSilverForm({ ...silverForm, stoneWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
 
             <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige">
               <span className="text-xs font-semibold text-luxury-charcoal">Calculated Net Silver Weight:</span>
-              <span className="font-serif text-sm font-bold text-luxury-green">
+              <span className="font-serif text-sm font-bold text-luxury-gold-dark">
                 {silverNet > 0 ? silverNet.toFixed(3) : "0.000"} g
               </span>
             </div>
@@ -577,7 +577,7 @@ export default function QuickActionModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {loading ? "Saving..." : "Add Silver Stock"}
               </button>
@@ -594,7 +594,7 @@ export default function QuickActionModal({
                 <select
                   value={usedForm.metalType}
                   onChange={(e) => setUsedForm({ ...usedForm, metalType: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="gold">Used Gold</option>
                   <option value="silver">Used Silver</option>
@@ -609,7 +609,7 @@ export default function QuickActionModal({
                   placeholder="Full name"
                   value={usedForm.sellerName}
                   onChange={(e) => setUsedForm({ ...usedForm, sellerName: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -621,7 +621,7 @@ export default function QuickActionModal({
                   placeholder="e.g. Old broken 22K bangles"
                   value={usedForm.itemDescription}
                   onChange={(e) => setUsedForm({ ...usedForm, itemDescription: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -633,7 +633,7 @@ export default function QuickActionModal({
                   placeholder="e.g. 22K / 916"
                   value={usedForm.purity}
                   onChange={(e) => setUsedForm({ ...usedForm, purity: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -645,7 +645,7 @@ export default function QuickActionModal({
                   required
                   value={usedForm.grossWeight}
                   onChange={(e) => setUsedForm({ ...usedForm, grossWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -656,7 +656,7 @@ export default function QuickActionModal({
                   step="0.001"
                   value={usedForm.deductionsWeight}
                   onChange={(e) => setUsedForm({ ...usedForm, deductionsWeight: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -677,7 +677,7 @@ export default function QuickActionModal({
                       amountPaidRupees: c.toFixed(2),
                     });
                   }}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -688,7 +688,7 @@ export default function QuickActionModal({
                   required
                   value={usedForm.finalAgreedCostRupees}
                   onChange={(e) => setUsedForm({ ...usedForm, finalAgreedCostRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -699,7 +699,7 @@ export default function QuickActionModal({
                   required
                   value={usedForm.amountPaidRupees}
                   onChange={(e) => setUsedForm({ ...usedForm, amountPaidRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -708,7 +708,7 @@ export default function QuickActionModal({
                 <select
                   value={usedForm.paymentMethod}
                   onChange={(e) => setUsedForm({ ...usedForm, paymentMethod: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="cash">Cash</option>
                   <option value="upi">UPI</option>
@@ -721,11 +721,11 @@ export default function QuickActionModal({
             <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige text-xs">
               <div>
                 <span className="font-semibold text-luxury-charcoal">Net Weight: </span>
-                <span className="font-bold text-luxury-green">{usedNet > 0 ? usedNet.toFixed(3) : "0.000"} g</span>
+                <span className="font-bold text-luxury-gold-dark">{usedNet > 0 ? usedNet.toFixed(3) : "0.000"} g</span>
               </div>
               <div>
                 <span className="font-semibold text-luxury-charcoal">Calculated Value: </span>
-                <span className="font-bold text-luxury-green">₹{usedCalcVal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
+                <span className="font-bold text-luxury-gold-dark">₹{usedCalcVal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</span>
               </div>
             </div>
 
@@ -740,7 +740,7 @@ export default function QuickActionModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {loading ? "Recording..." : "Record Purchase"}
               </button>
@@ -760,7 +760,7 @@ export default function QuickActionModal({
                   placeholder="e.g. Ramesh Patil"
                   value={clientForm.fullName}
                   onChange={(e) => setClientForm({ ...clientForm, fullName: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -772,7 +772,7 @@ export default function QuickActionModal({
                   placeholder="10-digit mobile"
                   value={clientForm.mobileNumber}
                   onChange={(e) => setClientForm({ ...clientForm, mobileNumber: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -781,7 +781,7 @@ export default function QuickActionModal({
                 <select
                   value={clientForm.identificationType}
                   onChange={(e) => setClientForm({ ...clientForm, identificationType: e.target.value as any })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="aadhar">Aadhaar Card</option>
                   <option value="pan">PAN Card</option>
@@ -797,7 +797,7 @@ export default function QuickActionModal({
                   placeholder="e.g. XXXX-XXXX-1234"
                   value={clientForm.identificationNumber}
                   onChange={(e) => setClientForm({ ...clientForm, identificationNumber: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -809,7 +809,7 @@ export default function QuickActionModal({
                 placeholder="Residential address"
                 value={clientForm.address}
                 onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               />
             </div>
 
@@ -824,7 +824,7 @@ export default function QuickActionModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {loading ? "Creating..." : "Register Client"}
               </button>
@@ -851,7 +851,7 @@ export default function QuickActionModal({
                     principalAppliedRupees: "0",
                   });
                 }}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               >
                 <option value="">Select an active loan...</option>
                 {loans.map((l) => (
@@ -870,7 +870,7 @@ export default function QuickActionModal({
                   required
                   value={paymentForm.totalAmountRupees}
                   onChange={(e) => setPaymentForm({ ...paymentForm, totalAmountRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -880,7 +880,7 @@ export default function QuickActionModal({
                   type="number"
                   value={paymentForm.interestAppliedRupees}
                   onChange={(e) => setPaymentForm({ ...paymentForm, interestAppliedRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -890,7 +890,7 @@ export default function QuickActionModal({
                   type="number"
                   value={paymentForm.principalAppliedRupees}
                   onChange={(e) => setPaymentForm({ ...paymentForm, principalAppliedRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -901,7 +901,7 @@ export default function QuickActionModal({
                 <select
                   value={paymentForm.paymentMethod}
                   onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value as any })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="cash">Cash</option>
                   <option value="upi">UPI</option>
@@ -916,7 +916,7 @@ export default function QuickActionModal({
                   type="date"
                   value={paymentForm.paymentDate}
                   onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -932,7 +932,7 @@ export default function QuickActionModal({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
               >
                 {loading ? "Recording..." : "Record Payment & Print Receipt"}
               </button>

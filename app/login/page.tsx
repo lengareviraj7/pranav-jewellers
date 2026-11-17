@@ -25,23 +25,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-luxury-ivory via-white to-luxury-ivory p-4 sm:p-6 selection:bg-luxury-gold/30 selection:text-luxury-green">
-      {/* Decorative luxury pattern */}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-luxury-ivory via-white to-luxury-ivory p-4 sm:p-6 selection:bg-luxury-gold/30 selection:text-luxury-onyx">
       <div className="w-full max-w-md">
         <div className="rounded-3xl border border-luxury-beige bg-white p-8 sm:p-10 shadow-luxury-lg">
-          {/* Brand Crest */}
+          {/* Jeweller's Gold Medallion Crest */}
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-luxury-green text-luxury-gold shadow-luxury">
-              <Sparkles className="h-8 w-8" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx border-2 border-luxury-gold/60 text-luxury-gold shadow-gold-glow">
+              <Sparkles className="h-8 w-8 text-luxury-gold" />
             </div>
-            <h1 className="mt-4 font-serif text-2xl font-bold tracking-tight text-luxury-green sm:text-3xl">
+            <h1 className="mt-4 font-serif text-2xl font-bold tracking-wider text-luxury-onyx sm:text-3xl">
               SIDHESHWAR
             </h1>
-            <p className="mt-0.5 text-xs font-semibold tracking-widest text-luxury-gold uppercase">
+            <p className="mt-0.5 text-xs font-semibold tracking-widest text-luxury-gold-dark uppercase">
               Jewellers • ERP Portal
             </p>
             <p className="mt-2 text-xs text-luxury-muted">
-              Sarafa Bazaar Gold & Silver Management System
+              Sarafa Bazaar Gold, Silver & Finance Management System
             </p>
           </div>
 
@@ -67,7 +66,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@sidheshwar.com"
-                  className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2.5 pl-10 pr-3 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-green focus:bg-white focus:outline-none transition"
+                  className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/40 py-2.5 pl-10 pr-3 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold/30 focus:bg-white focus:outline-none transition"
                 />
               </div>
             </div>
@@ -86,7 +85,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2.5 pl-10 pr-10 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-green focus:bg-white focus:outline-none transition"
+                  className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/40 py-2.5 pl-10 pr-10 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold/30 focus:bg-white focus:outline-none transition"
                 />
                 <button
                   type="button"
@@ -101,23 +100,23 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-luxury-green py-3 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light active:scale-[0.99] transition disabled:opacity-50"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark py-3 text-xs font-bold text-white shadow-luxury hover:brightness-105 active:scale-[0.99] transition disabled:opacity-50"
             >
               {loading ? (
                 <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
               ) : (
                 <>
-                  <ShieldCheck className="h-4 w-4 text-luxury-gold" />
+                  <ShieldCheck className="h-4 w-4 text-luxury-gold-light" />
                   <span>Sign In to Dashboard</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Quick Credential Hint for Owner/Evaluator */}
-          <div className="mt-8 rounded-xl border border-luxury-beige bg-luxury-ivory/60 p-3 text-center text-[11px] text-luxury-muted">
-            <span className="font-semibold text-luxury-green">Default Administrator:</span>
-            <p className="font-mono text-[10px] mt-0.5">admin@sidheshwar.com / Admin@Sidheshwar2026</p>
+          {/* Quick Credential Hint */}
+          <div className="mt-8 rounded-xl border border-luxury-gold/20 bg-luxury-gold-subtle p-3 text-center text-[11px] text-luxury-muted">
+            <span className="font-semibold text-luxury-gold-dark">Default Administrator:</span>
+            <p className="font-mono text-[10px] mt-0.5 text-luxury-charcoal">admin@sidheshwar.com / Admin@Sidheshwar2026</p>
           </div>
         </div>
 

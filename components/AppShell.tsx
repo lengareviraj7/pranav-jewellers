@@ -23,7 +23,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-screen items-center justify-center bg-luxury-ivory">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 rounded-full border-4 border-luxury-gold border-t-transparent animate-spin"></div>
-          <p className="font-serif text-lg font-semibold text-luxury-green">SIDHESHWAR JEWELLERS</p>
+          <p className="font-serif text-lg font-bold text-luxury-onyx">SIDHESHWAR JEWELLERS</p>
           <p className="text-xs text-luxury-muted">Initializing secure ERP environment...</p>
         </div>
       </div>

@@ -317,7 +317,7 @@ export default function InventoryManager({
           <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
             Showroom Stock Management
           </span>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-green sm:text-3xl">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
             {title}
           </h1>
           <p className="mt-1 text-xs text-luxury-muted">{subtitle}</p>
@@ -346,9 +346,9 @@ export default function InventoryManager({
 
           <button
             onClick={() => setIsAddStockOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-luxury-green px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light active:scale-95 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
           >
-            <Plus className="h-4 w-4 text-luxury-gold" />
+            <Plus className="h-4 w-4 text-white" />
             <span>Add {metalType === "gold" ? "Gold" : "Silver"} Stock</span>
           </button>
         </div>
@@ -365,9 +365,9 @@ export default function InventoryManager({
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 border border-emerald-200">
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0" />
+            <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}><X className="h-4 w-4" /></button>
@@ -380,7 +380,7 @@ export default function InventoryManager({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Pieces in Stock
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">{totalPieces}</p>
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">{totalPieces}</p>
           <span className="text-[11px] text-luxury-muted">Verified showroom items</span>
         </div>
 
@@ -388,7 +388,7 @@ export default function InventoryManager({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Gross Weight
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">
             {totalGrossWeight.toFixed(3)}{" "}
             <span className="text-xs font-sans font-normal text-luxury-muted">g</span>
           </p>
@@ -399,7 +399,7 @@ export default function InventoryManager({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Net Metal Weight
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-gold-dark">
             {totalNetWeight.toFixed(3)}{" "}
             <span className="text-xs font-sans font-normal text-luxury-gold">g pure</span>
           </p>
@@ -410,7 +410,7 @@ export default function InventoryManager({
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Active Categories
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">{categories.length}</p>
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">{categories.length}</p>
           <span className="text-[11px] text-luxury-muted">Dynamic & customizable</span>
         </div>
       </div>
@@ -418,7 +418,7 @@ export default function InventoryManager({
       {/* Dynamic Category Summary Carousel / Pills */}
       <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
         <div className="flex items-center justify-between pb-3 border-b border-luxury-beige">
-          <span className="text-xs font-bold uppercase tracking-wider text-luxury-green">
+          <span className="text-xs font-bold uppercase tracking-wider text-luxury-onyx">
             Category-wise Stock Breakdown
           </span>
           <span className="text-[11px] text-luxury-muted">Click any category to filter inventory</span>
@@ -429,8 +429,8 @@ export default function InventoryManager({
             onClick={() => setSelectedCategory("all")}
             className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
               selectedCategory === "all"
-                ? "bg-luxury-green text-white shadow-xs"
-                : "border border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white"
+                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-xs"
+                : "border border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
             }`}
           >
             All Categories ({items.length})
@@ -441,8 +441,8 @@ export default function InventoryManager({
               key={cat.id || cat._id}
               className={`flex items-center rounded-xl border transition overflow-hidden ${
                 selectedCategory === (cat.id || cat._id)
-                  ? "border-luxury-green bg-luxury-green text-white shadow-xs"
-                  : "border-luxury-beige bg-luxury-ivory/40 text-luxury-charcoal hover:bg-white"
+                  ? "border-luxury-gold bg-luxury-onyx text-luxury-gold shadow-xs"
+                  : "border-luxury-beige bg-luxury-ivory/40 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
               }`}
             >
               <button
@@ -479,7 +479,7 @@ export default function InventoryManager({
             placeholder="Search by Item name, SKU, HUID, or Supplier..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-green focus:bg-white focus:outline-none transition"
+            className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:bg-white focus:outline-none transition"
           />
         </div>
 
@@ -488,7 +488,7 @@ export default function InventoryManager({
           <select
             value={selectedPurity}
             onChange={(e) => setSelectedPurity(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-green focus:outline-none"
+            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
             <option value="all">All Purities</option>
             {purityOptions.map((p) => (
@@ -502,7 +502,7 @@ export default function InventoryManager({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-green focus:outline-none"
+            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
             <option value="latest">Sort: Latest Added</option>
             <option value="weight_desc">Sort: Highest Net Weight</option>
@@ -516,7 +516,7 @@ export default function InventoryManager({
       <div className="overflow-hidden rounded-2xl border border-luxury-beige bg-white shadow-luxury">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-green uppercase font-semibold">
+            <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
               <tr>
                 <th className="px-4 py-3.5">SKU / Item</th>
                 <th className="px-4 py-3.5">Category</th>
@@ -563,7 +563,7 @@ export default function InventoryManager({
                       <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">{item.quantity}</td>
                       <td className="px-4 py-3 text-right text-luxury-charcoal">{item.grossWeight.toFixed(3)}g</td>
                       <td className="px-4 py-3 text-right text-luxury-muted">{item.stoneWeight.toFixed(3)}g</td>
-                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-green">
+                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
                         {item.netWeight.toFixed(3)}g
                       </td>
                       <td className="px-4 py-3 text-right text-luxury-charcoal">
@@ -571,7 +571,7 @@ export default function InventoryManager({
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.hallmarkUid ? (
-                          <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-mono font-bold text-emerald-800 border border-emerald-200">
+                          <span className="rounded bg-luxury-gold-subtle px-1.5 py-0.5 text-[10px] font-mono font-bold text-luxury-gold-dark border border-luxury-gold/30">
                             {item.hallmarkUid}
                           </span>
                         ) : (
@@ -583,14 +583,14 @@ export default function InventoryManager({
                           <button
                             onClick={() => openAdjustModal(item)}
                             title="Adjust Stock (Non-destructive)"
-                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-green transition"
+                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
                           >
                             <Scale className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openHistoryModal(item)}
                             title="View Stock Movement Audit Trail"
-                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-green transition"
+                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
                           >
                             <History className="h-4 w-4" />
                           </button>
@@ -618,7 +618,7 @@ export default function InventoryManager({
           <div className="relative w-full max-w-xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
                   Add {metalType === "gold" ? "Gold" : "Silver"} Stock
                 </h3>
                 <p className="text-xs text-luxury-muted">Record new jewellery pieces into showroom stock</p>
@@ -638,7 +638,7 @@ export default function InventoryManager({
                     placeholder={`e.g. ${metalType === "gold" ? "22K Traditional Kada" : "Pure Silver Pooja Thali"}`}
                     value={stockForm.name}
                     onChange={(e) => setStockForm({ ...stockForm, name: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -648,7 +648,7 @@ export default function InventoryManager({
                     required
                     value={stockForm.categoryId}
                     onChange={(e) => setStockForm({ ...stockForm, categoryId: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="">Select Category</option>
                     {categories.map((c) => (
@@ -664,7 +664,7 @@ export default function InventoryManager({
                   <select
                     value={stockForm.purity}
                     onChange={(e) => setStockForm({ ...stockForm, purity: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     {purityOptions.map((p) => (
                       <option key={p} value={p}>
@@ -682,7 +682,7 @@ export default function InventoryManager({
                     required
                     value={stockForm.quantity}
                     onChange={(e) => setStockForm({ ...stockForm, quantity: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -695,7 +695,7 @@ export default function InventoryManager({
                     placeholder="0.000"
                     value={stockForm.grossWeight}
                     onChange={(e) => setStockForm({ ...stockForm, grossWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -707,7 +707,7 @@ export default function InventoryManager({
                     placeholder="0.000"
                     value={stockForm.stoneWeight}
                     onChange={(e) => setStockForm({ ...stockForm, stoneWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -715,7 +715,7 @@ export default function InventoryManager({
               {/* Live Net Weight Banner */}
               <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige">
                 <span className="text-xs font-semibold text-luxury-charcoal">Calculated Net Metal Weight:</span>
-                <span className="font-serif text-sm font-bold text-luxury-green">
+                <span className="font-serif text-sm font-bold text-luxury-gold-dark">
                   {formNetWeight > 0 ? formNetWeight.toFixed(3) : "0.000"} g
                 </span>
               </div>
@@ -728,7 +728,7 @@ export default function InventoryManager({
                     placeholder="₹ Total cost"
                     value={stockForm.purchaseCostRupees}
                     onChange={(e) => setStockForm({ ...stockForm, purchaseCostRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -739,7 +739,7 @@ export default function InventoryManager({
                     placeholder="Leave empty to auto-generate"
                     value={stockForm.sku}
                     onChange={(e) => setStockForm({ ...stockForm, sku: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -750,7 +750,7 @@ export default function InventoryManager({
                     placeholder="6-character alphanumeric"
                     value={stockForm.hallmarkUid}
                     onChange={(e) => setStockForm({ ...stockForm, hallmarkUid: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -761,7 +761,7 @@ export default function InventoryManager({
                     placeholder="e.g. Zaveri Bullion Works"
                     value={stockForm.supplierName}
                     onChange={(e) => setStockForm({ ...stockForm, supplierName: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -776,7 +776,7 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Save Stock Item
                 </button>
@@ -792,7 +792,7 @@ export default function InventoryManager({
           <div className="relative w-full max-w-lg rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">Adjust Stock Item</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Adjust Stock Item</h3>
                 <p className="text-xs text-luxury-muted">
                   Non-destructive adjustment with mandatory audit explanation
                 </p>
@@ -808,7 +808,7 @@ export default function InventoryManager({
               <div className="mt-1 flex gap-4 text-luxury-muted">
                 <span>Current Qty: <strong className="text-luxury-charcoal">{activeItem.quantity}</strong></span>
                 <span>Gross: <strong className="text-luxury-charcoal">{activeItem.grossWeight.toFixed(3)}g</strong></span>
-                <span>Net: <strong className="text-luxury-green">{activeItem.netWeight.toFixed(3)}g</strong></span>
+                <span>Net: <strong className="text-luxury-gold-dark">{activeItem.netWeight.toFixed(3)}g</strong></span>
               </div>
             </div>
 
@@ -822,7 +822,7 @@ export default function InventoryManager({
                     required
                     value={adjustForm.newQuantity}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newQuantity: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -835,7 +835,7 @@ export default function InventoryManager({
                     required
                     value={adjustForm.newGrossWeight}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newGrossWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -847,7 +847,7 @@ export default function InventoryManager({
                     min="0"
                     value={adjustForm.newStoneWeight}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newStoneWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -862,7 +862,7 @@ export default function InventoryManager({
                   placeholder="Explain reason for adjustment (e.g. physical inventory audit discrepancy, re-weighed after polishing, sold 1 piece)"
                   value={adjustForm.reason}
                   onChange={(e) => setAdjustForm({ ...adjustForm, reason: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -876,7 +876,7 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Record Adjustment
                 </button>
@@ -892,7 +892,7 @@ export default function InventoryManager({
           <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">Stock Movement Audit Trail</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Stock Movement Audit Trail</h3>
                 <p className="text-xs text-luxury-muted">
                   Full transaction history for {activeItem.name} ({activeItem.sku})
                 </p>
@@ -914,7 +914,7 @@ export default function InventoryManager({
                     className="rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-3.5 text-xs space-y-1"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-luxury-green uppercase tracking-wide">
+                      <span className="font-bold text-luxury-gold-dark uppercase tracking-wide">
                         {tx.transactionType.replace("_", " ")}
                       </span>
                       <span className="text-[10px] text-luxury-muted">
@@ -931,7 +931,7 @@ export default function InventoryManager({
                         Qty: {tx.previousQuantity} → <strong className="text-luxury-charcoal">{tx.newQuantity}</strong> (Δ {tx.quantityChange > 0 ? `+${tx.quantityChange}` : tx.quantityChange})
                       </div>
                       <div>
-                        Net Wt: {tx.previousNetWeight.toFixed(3)}g → <strong className="text-luxury-green">{tx.newNetWeight.toFixed(3)}g</strong>
+                        Net Wt: {tx.previousNetWeight.toFixed(3)}g → <strong className="text-luxury-gold-dark">{tx.newNetWeight.toFixed(3)}g</strong>
                       </div>
                     </div>
                   </div>
@@ -942,7 +942,7 @@ export default function InventoryManager({
             <div className="border-t border-luxury-beige pt-3 flex justify-end">
               <button
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="rounded-xl bg-luxury-green px-4 py-2 text-xs font-semibold text-white"
+                className="rounded-xl bg-luxury-onyx px-4 py-2 text-xs font-semibold text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-onyx-surface transition"
               >
                 Close Audit Trail
               </button>
@@ -957,7 +957,7 @@ export default function InventoryManager({
           <div className="relative w-full max-w-md rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
                   {categoryForm.id ? "Edit Category" : "Add Dynamic Category"}
                 </h3>
                 <p className="text-xs text-luxury-muted">
@@ -978,7 +978,7 @@ export default function InventoryManager({
                   placeholder="e.g. Bridal Chokers, Antique Bangles"
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -989,7 +989,7 @@ export default function InventoryManager({
                   placeholder="Category purpose or style notes"
                   value={categoryForm.description || ""}
                   onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -1003,7 +1003,7 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   {categoryForm.id ? "Update Category" : "Create Category"}
                 </button>

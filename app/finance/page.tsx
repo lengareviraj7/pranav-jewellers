@@ -385,7 +385,7 @@ export default function GoldFinancePage() {
           <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
             Secured Gold Lending & Mortgage Engine
           </span>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-green sm:text-3xl">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
             Gold Finance & Mortgage Management
           </h1>
           <p className="mt-1 text-xs text-luxury-muted">
@@ -405,9 +405,9 @@ export default function GoldFinancePage() {
 
           <button
             onClick={() => setIsNewLoanOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-luxury-green px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light active:scale-95 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
           >
-            <Plus className="h-4 w-4 text-luxury-gold" />
+            <Plus className="h-4 w-4 text-white" />
             <span>Issue New Gold Loan</span>
           </button>
         </div>
@@ -424,9 +424,9 @@ export default function GoldFinancePage() {
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 border border-emerald-200">
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0" />
+            <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}><X className="h-4 w-4" /></button>
@@ -439,8 +439,8 @@ export default function GoldFinancePage() {
           onClick={() => setActiveTab("loans")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
             activeTab === "loans"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <Landmark className="h-4 w-4 text-luxury-gold" />
@@ -451,8 +451,8 @@ export default function GoldFinancePage() {
           onClick={() => setActiveTab("dues")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
             activeTab === "dues"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <AlertTriangle className="h-4 w-4 text-luxury-gold" />
@@ -463,8 +463,8 @@ export default function GoldFinancePage() {
           onClick={() => setActiveTab("customers")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
             activeTab === "customers"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <Users className="h-4 w-4 text-luxury-gold" />
@@ -475,8 +475,8 @@ export default function GoldFinancePage() {
           onClick={() => setActiveTab("calculator")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
             activeTab === "calculator"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <Calculator className="h-4 w-4 text-luxury-gold" />
@@ -496,7 +496,7 @@ export default function GoldFinancePage() {
                 placeholder="Search by Loan No, Customer Name, or Mobile..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-green focus:bg-white focus:outline-none transition"
+                className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:bg-white focus:outline-none transition"
               />
             </div>
 
@@ -504,7 +504,7 @@ export default function GoldFinancePage() {
               <select
                 value={loanStatusFilter}
                 onChange={(e) => setLoanStatusFilter(e.target.value)}
-                className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-green focus:outline-none"
+                className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               >
                 <option value="all">All Loan Statuses</option>
                 <option value="active">Active</option>
@@ -519,7 +519,7 @@ export default function GoldFinancePage() {
           <div className="overflow-hidden rounded-2xl border border-luxury-beige bg-white shadow-luxury">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-green uppercase font-semibold">
+                <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
                   <tr>
                     <th className="px-4 py-3.5">Loan No / Date</th>
                     <th className="px-4 py-3.5">Customer</th>
@@ -551,7 +551,7 @@ export default function GoldFinancePage() {
                     loans.map((loan) => (
                       <tr key={loan.id || loan._id} className="hover:bg-luxury-ivory/40 transition">
                         <td className="px-4 py-3 font-medium">
-                          <p className="font-mono font-bold text-luxury-green">{loan.loanNumber}</p>
+                          <p className="font-mono font-bold text-luxury-gold-dark">{loan.loanNumber}</p>
                           <p className="text-[10px] text-luxury-muted">
                             {loan.mortgageDate} {loan.dueDate ? `• Due: ${loan.dueDate}` : ""}
                           </p>
@@ -559,7 +559,7 @@ export default function GoldFinancePage() {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => handleViewCustomerProfile(loan.customerId?._id || (loan.customerId as any))}
-                            className="font-semibold text-luxury-charcoal hover:text-luxury-green text-left"
+                            className="font-semibold text-luxury-charcoal hover:text-luxury-gold-dark text-left"
                           >
                             {loan.customerId?.fullName || "Client"}
                           </button>
@@ -582,7 +582,7 @@ export default function GoldFinancePage() {
                         <td className="px-4 py-3 text-right font-medium text-amber-800">
                           +₹{(loan.accruedInterestRupees || 0).toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-green">
+                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
                           ₹{(loan.totalDueRupees || 0).toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -594,7 +594,7 @@ export default function GoldFinancePage() {
                           <span
                             className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                               loan.status === "active"
-                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                ? "bg-luxury-gold-subtle text-luxury-gold-dark border border-luxury-gold/30"
                                 : loan.status === "partially_paid"
                                 ? "bg-blue-50 text-blue-800 border border-blue-200"
                                 : loan.status === "overdue"
@@ -611,7 +611,7 @@ export default function GoldFinancePage() {
                               <button
                                 onClick={() => handleOpenPaymentModal(loan)}
                                 title="Record Loan Payment"
-                                className="rounded-lg bg-luxury-green px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-luxury-green-light transition shadow-xs"
+                                className="rounded-lg bg-gradient-to-r from-luxury-gold-dark to-luxury-gold px-2.5 py-1 text-[11px] font-semibold text-white hover:brightness-105 transition shadow-xs"
                               >
                                 Pay
                               </button>
@@ -619,7 +619,7 @@ export default function GoldFinancePage() {
                             <button
                               onClick={() => handleOpenLoanInCalculator(loan)}
                               title="Calculate in Mortgage Engine"
-                              className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-green transition"
+                              className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
                             >
                               <Calculator className="h-4 w-4" />
                             </button>
@@ -644,7 +644,7 @@ export default function GoldFinancePage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
                 Outstanding Principal
               </span>
-              <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+              <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">
                 ₹{(duesSummary?.grandTotalOutstandingPrincipalRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
               </p>
               <span className="text-[11px] text-luxury-muted">Capital locked in gold loans</span>
@@ -664,7 +664,7 @@ export default function GoldFinancePage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
                 Total Outstanding Receivables
               </span>
-              <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+              <p className="mt-2 font-serif text-2xl font-bold text-luxury-gold-dark">
                 ₹{(duesSummary?.grandTotalDueRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
               </p>
               <span className="text-[11px] text-luxury-gold font-semibold">Principal + Interest</span>
@@ -674,7 +674,7 @@ export default function GoldFinancePage() {
               <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
                 Total Repaid So Far
               </span>
-              <p className="mt-2 font-serif text-2xl font-bold text-emerald-800">
+              <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">
                 ₹{(duesSummary?.grandTotalPaidRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
               </p>
               <span className="text-[11px] text-luxury-muted">Cumulative payments received</span>
@@ -685,7 +685,7 @@ export default function GoldFinancePage() {
           <div className="overflow-hidden rounded-2xl border border-luxury-beige bg-white shadow-luxury">
             <div className="flex items-center justify-between border-b border-luxury-beige bg-luxury-ivory/60 px-6 py-4">
               <div>
-                <h3 className="font-serif text-base font-bold text-luxury-green">Client Outstanding Dues Ledger</h3>
+                <h3 className="font-serif text-base font-bold text-luxury-onyx">Client Outstanding Dues Ledger</h3>
                 <p className="text-xs text-luxury-muted">
                   Direct breakdown of all active debtors as of today ({getTodayIST()})
                 </p>
@@ -701,7 +701,7 @@ export default function GoldFinancePage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-green uppercase font-semibold">
+                <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
                   <tr>
                     <th className="px-4 py-3.5">Customer / Mobile</th>
                     <th className="px-4 py-3.5">Loan No</th>
@@ -727,7 +727,7 @@ export default function GoldFinancePage() {
                           <p className="font-semibold text-luxury-charcoal">{d.customer.fullName}</p>
                           <p className="text-[10px] text-luxury-muted">{d.customer.mobileNumber}</p>
                         </td>
-                        <td className="px-4 py-3 font-mono font-medium text-luxury-green">{d.loanNumber}</td>
+                        <td className="px-4 py-3 font-mono font-medium text-luxury-gold-dark">{d.loanNumber}</td>
                         <td className="px-4 py-3 text-luxury-muted">
                           {d.elapsedDescription || "0 days"} ({d.chargeableMonths} mo charged)
                         </td>
@@ -737,10 +737,10 @@ export default function GoldFinancePage() {
                         <td className="px-4 py-3 text-right text-amber-800 font-medium">
                           +₹{d.accruedInterestRupees.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-green">
+                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
                           ₹{d.totalDueRupees.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right text-emerald-800">
+                        <td className="px-4 py-3 text-right text-luxury-charcoal font-medium">
                           ₹{d.totalPaidRupees.toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -749,7 +749,7 @@ export default function GoldFinancePage() {
                               const matchLoan = loans.find((l) => (l.id || l._id) === d.id);
                               if (matchLoan) handleOpenPaymentModal(matchLoan);
                             }}
-                            className="rounded-lg bg-luxury-green px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-luxury-green-light"
+                            className="rounded-lg bg-gradient-to-r from-luxury-gold-dark to-luxury-gold px-2.5 py-1 text-[11px] font-semibold text-white hover:brightness-105 transition shadow-xs"
                           >
                             Receive Payment
                           </button>
@@ -770,7 +770,7 @@ export default function GoldFinancePage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Customer Registration Form */}
             <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury h-fit">
-              <h3 className="font-serif text-base font-bold text-luxury-green">Register New Client</h3>
+              <h3 className="font-serif text-base font-bold text-luxury-onyx">Register New Client</h3>
               <p className="text-xs text-luxury-muted mt-0.5">Add finance & mortgage customer profile</p>
 
               <form onSubmit={handleCustomerSubmit} className="mt-4 space-y-3">
@@ -782,7 +782,7 @@ export default function GoldFinancePage() {
                     placeholder="e.g. Anand Kulkarni"
                     value={customerForm.fullName}
                     onChange={(e) => setCustomerForm({ ...customerForm, fullName: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -794,7 +794,7 @@ export default function GoldFinancePage() {
                     placeholder="10-digit mobile"
                     value={customerForm.mobileNumber}
                     onChange={(e) => setCustomerForm({ ...customerForm, mobileNumber: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -805,7 +805,7 @@ export default function GoldFinancePage() {
                     placeholder="Alternate phone number"
                     value={customerForm.secondaryPhone}
                     onChange={(e) => setCustomerForm({ ...customerForm, secondaryPhone: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -816,7 +816,7 @@ export default function GoldFinancePage() {
                     placeholder="Full street address and city"
                     value={customerForm.address}
                     onChange={(e) => setCustomerForm({ ...customerForm, address: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -826,7 +826,7 @@ export default function GoldFinancePage() {
                     <select
                       value={customerForm.identificationType}
                       onChange={(e) => setCustomerForm({ ...customerForm, identificationType: e.target.value })}
-                      className="w-full rounded-xl border border-luxury-beige px-2.5 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                      className="w-full rounded-xl border border-luxury-beige px-2.5 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                     >
                       <option value="aadhar">Aadhaar</option>
                       <option value="pan">PAN</option>
@@ -842,14 +842,14 @@ export default function GoldFinancePage() {
                       placeholder="e.g. 1234-5678"
                       value={customerForm.identificationNumber}
                       onChange={(e) => setCustomerForm({ ...customerForm, identificationNumber: e.target.value })}
-                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full mt-2 rounded-xl bg-luxury-green py-2.5 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="w-full mt-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark py-2.5 text-xs font-semibold text-white shadow-luxury hover:brightness-105 transition"
                 >
                   Save Customer Record
                 </button>
@@ -860,7 +860,7 @@ export default function GoldFinancePage() {
             <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury lg:col-span-2">
               <div className="flex items-center justify-between border-b border-luxury-beige pb-4">
                 <div>
-                  <h3 className="font-serif text-base font-bold text-luxury-green">Client Directory</h3>
+                  <h3 className="font-serif text-base font-bold text-luxury-onyx">Client Directory</h3>
                   <p className="text-xs text-luxury-muted">Registered customers with active loan summary</p>
                 </div>
               </div>
@@ -886,7 +886,7 @@ export default function GoldFinancePage() {
                           <span className="text-luxury-charcoal">
                             Active Loans: <strong>{c.activeLoansCount || 0}</strong>
                           </span>
-                          <span className="text-luxury-green font-semibold">
+                          <span className="text-luxury-gold-dark font-semibold">
                             Total Due: ₹{(c.totalDueRupees || 0).toLocaleString("en-IN")}
                           </span>
                         </div>
@@ -894,7 +894,7 @@ export default function GoldFinancePage() {
 
                       <button
                         onClick={() => handleViewCustomerProfile(c.id || c._id)}
-                        className="flex items-center gap-1 rounded-xl border border-luxury-beige bg-white px-3 py-1.5 text-xs font-semibold text-luxury-green hover:bg-luxury-green hover:text-white transition shadow-xs"
+                        className="flex items-center gap-1 rounded-xl border border-luxury-gold/40 bg-luxury-gold-subtle px-3 py-1.5 text-xs font-semibold text-luxury-gold-dark hover:bg-luxury-gold hover:text-white transition shadow-xs"
                       >
                         <span>Profile & Ledger</span>
                         <ChevronRight className="h-4 w-4" />
@@ -916,7 +916,7 @@ export default function GoldFinancePage() {
             <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury lg:col-span-5 h-fit space-y-4">
               <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
                 <div>
-                  <h3 className="font-serif text-base font-bold text-luxury-green">
+                  <h3 className="font-serif text-base font-bold text-luxury-onyx">
                     Mortgage Interest Engine
                   </h3>
                   <p className="text-xs text-luxury-muted">
@@ -934,7 +934,7 @@ export default function GoldFinancePage() {
                   type="date"
                   value={calcInputs.mortgageDate}
                   onChange={(e) => setCalcInputs({ ...calcInputs, mortgageDate: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -944,7 +944,7 @@ export default function GoldFinancePage() {
                   type="date"
                   value={calcInputs.asOfDate}
                   onChange={(e) => setCalcInputs({ ...calcInputs, asOfDate: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -955,7 +955,7 @@ export default function GoldFinancePage() {
                   min="1"
                   value={calcInputs.principalRupees}
                   onChange={(e) => setCalcInputs({ ...calcInputs, principalRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -970,8 +970,8 @@ export default function GoldFinancePage() {
                       onClick={() => setCalcInputs({ ...calcInputs, monthlyRate: r })}
                       className={`rounded-lg py-1.5 text-xs font-semibold transition ${
                         calcInputs.monthlyRate === r
-                          ? "bg-luxury-green text-white shadow-xs"
-                          : "border border-luxury-beige bg-luxury-ivory/60 hover:bg-white text-luxury-charcoal"
+                          ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-xs"
+                          : "border border-luxury-beige bg-luxury-ivory/60 hover:bg-white text-luxury-charcoal hover:text-luxury-gold-dark"
                       }`}
                     >
                       {r}%
@@ -982,8 +982,8 @@ export default function GoldFinancePage() {
                     onClick={() => setCalcInputs({ ...calcInputs, monthlyRate: "1.5" })}
                     className={`rounded-lg py-1.5 text-xs font-semibold transition ${
                       !["2.0", "2.5", "3.0"].includes(calcInputs.monthlyRate)
-                        ? "bg-luxury-green text-white shadow-xs"
-                        : "border border-luxury-beige bg-luxury-ivory/60 hover:bg-white text-luxury-charcoal"
+                        ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-xs"
+                        : "border border-luxury-beige bg-luxury-ivory/60 hover:bg-white text-luxury-charcoal hover:text-luxury-gold-dark"
                     }`}
                   >
                     Custom
@@ -995,7 +995,7 @@ export default function GoldFinancePage() {
                   value={calcInputs.monthlyRate}
                   onChange={(e) => setCalcInputs({ ...calcInputs, monthlyRate: e.target.value })}
                   placeholder="Custom monthly rate"
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-1.5 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-1.5 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -1008,8 +1008,8 @@ export default function GoldFinancePage() {
                     onClick={() => setCalcInputs({ ...calcInputs, interestMode: "yearly_compound" })}
                     className={`rounded-xl p-2.5 text-left text-xs transition border ${
                       calcInputs.interestMode === "yearly_compound"
-                        ? "border-luxury-green bg-luxury-green text-white shadow-xs font-semibold"
-                        : "border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white"
+                        ? "border-luxury-gold bg-luxury-onyx text-luxury-gold shadow-xs font-semibold"
+                        : "border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
                     }`}
                   >
                     <p className="font-bold">Yearly Compound</p>
@@ -1021,8 +1021,8 @@ export default function GoldFinancePage() {
                     onClick={() => setCalcInputs({ ...calcInputs, interestMode: "simple" })}
                     className={`rounded-xl p-2.5 text-left text-xs transition border ${
                       calcInputs.interestMode === "simple"
-                        ? "border-luxury-green bg-luxury-green text-white shadow-xs font-semibold"
-                        : "border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white"
+                        ? "border-luxury-gold bg-luxury-onyx text-luxury-gold shadow-xs font-semibold"
+                        : "border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
                     }`}
                   >
                     <p className="font-bold">Simple Interest</p>
@@ -1045,7 +1045,7 @@ export default function GoldFinancePage() {
                     });
                     setIsNewLoanOpen(true);
                   }}
-                  className="flex-1 rounded-xl bg-luxury-green py-2.5 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark py-2.5 text-xs font-semibold text-white shadow-luxury hover:brightness-105 transition"
                 >
                   Save as Finance Loan
                 </button>
@@ -1073,7 +1073,7 @@ export default function GoldFinancePage() {
                         <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
                           Duration & Chargeable Period
                         </span>
-                        <p className="font-serif text-lg font-bold text-luxury-green">
+                        <p className="font-serif text-lg font-bold text-luxury-onyx">
                           {calcResult.elapsedDescription}
                         </p>
                       </div>
@@ -1106,11 +1106,11 @@ export default function GoldFinancePage() {
                         </p>
                       </div>
 
-                      <div className="rounded-xl border border-luxury-green/20 bg-luxury-green/10 p-3">
-                        <span className="text-[10px] uppercase font-semibold text-luxury-green">
+                      <div className="rounded-xl border border-luxury-gold/30 bg-luxury-gold-subtle p-3">
+                        <span className="text-[10px] uppercase font-semibold text-luxury-gold-dark">
                           Total Payable Due
                         </span>
-                        <p className="font-serif text-lg font-bold text-luxury-green mt-1">
+                        <p className="font-serif text-lg font-bold text-luxury-gold-dark mt-1">
                           ₹{calcResult.totalDueRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </p>
                       </div>
@@ -1119,13 +1119,13 @@ export default function GoldFinancePage() {
 
                   {/* Multi-Year Breakdown Table */}
                   <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-                    <h4 className="font-serif text-sm font-bold text-luxury-green mb-3">
+                    <h4 className="font-serif text-sm font-bold text-luxury-onyx mb-3">
                       Year-by-Year Capitalization Ledger
                     </h4>
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-xs text-left">
-                        <thead className="bg-luxury-ivory text-luxury-green uppercase font-semibold">
+                        <thead className="bg-luxury-ivory text-luxury-onyx uppercase font-semibold">
                           <tr>
                             <th className="px-3 py-2">Period</th>
                             <th className="px-3 py-2 text-right">Months</th>
@@ -1145,7 +1145,7 @@ export default function GoldFinancePage() {
                               <td className="px-3 py-2 text-right font-medium text-amber-800">
                                 ₹{item.interestRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </td>
-                              <td className="px-3 py-2 text-right font-serif font-bold text-luxury-green">
+                              <td className="px-3 py-2 text-right font-serif font-bold text-luxury-gold-dark">
                                 ₹{item.endingAmountRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </td>
                             </tr>
@@ -1167,7 +1167,7 @@ export default function GoldFinancePage() {
           <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">Issue New Gold Loan</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Issue New Gold Loan</h3>
                 <p className="text-xs text-luxury-muted">Pledge ornaments securely and configure mortgage agreement</p>
               </div>
               <button onClick={() => setIsNewLoanOpen(false)}>
@@ -1183,7 +1183,7 @@ export default function GoldFinancePage() {
                     required
                     value={newLoanForm.customerId}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, customerId: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="">Select Borrower Client...</option>
                     {customers.map((c) => (
@@ -1201,7 +1201,7 @@ export default function GoldFinancePage() {
                     required
                     value={newLoanForm.mortgageDate}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, mortgageDate: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -1214,7 +1214,7 @@ export default function GoldFinancePage() {
                     placeholder="₹ Principal loaned"
                     value={newLoanForm.principalRupees}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, principalRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -1223,7 +1223,7 @@ export default function GoldFinancePage() {
                   <select
                     value={newLoanForm.monthlyRate}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, monthlyRate: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="2.0">2.0% / month</option>
                     <option value="2.5">2.5% / month</option>
@@ -1238,7 +1238,7 @@ export default function GoldFinancePage() {
                   <select
                     value={newLoanForm.interestMode}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, interestMode: e.target.value as any })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="yearly_compound">Yearly Compound (Adds to capital every 12 months)</option>
                     <option value="simple">Simple Interest (Original principal only)</option>
@@ -1251,7 +1251,7 @@ export default function GoldFinancePage() {
                     type="date"
                     value={newLoanForm.dueDate}
                     onChange={(e) => setNewLoanForm({ ...newLoanForm, dueDate: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -1365,7 +1365,7 @@ export default function GoldFinancePage() {
                   rows={2}
                   value={newLoanForm.notes}
                   onChange={(e) => setNewLoanForm({ ...newLoanForm, notes: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -1379,7 +1379,7 @@ export default function GoldFinancePage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Create Mortgage Agreement
                 </button>
@@ -1395,7 +1395,7 @@ export default function GoldFinancePage() {
           <div className="relative w-full max-w-lg rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">Record Loan Payment</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Record Loan Payment</h3>
                 <p className="text-xs text-luxury-muted">
                   Loan {selectedLoanForPayment.loanNumber} • {selectedLoanForPayment.customerId?.fullName}
                 </p>
@@ -1430,7 +1430,7 @@ export default function GoldFinancePage() {
                     required
                     value={paymentForm.totalAmountRupees}
                     onChange={(e) => setPaymentForm({ ...paymentForm, totalAmountRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-green focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -1440,7 +1440,7 @@ export default function GoldFinancePage() {
                     type="number"
                     value={paymentForm.interestAppliedRupees}
                     onChange={(e) => setPaymentForm({ ...paymentForm, interestAppliedRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs text-amber-900 focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs text-amber-900 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -1450,7 +1450,7 @@ export default function GoldFinancePage() {
                     type="number"
                     value={paymentForm.principalAppliedRupees}
                     onChange={(e) => setPaymentForm({ ...paymentForm, principalAppliedRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs text-emerald-900 focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs text-luxury-charcoal font-semibold focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -1461,7 +1461,7 @@ export default function GoldFinancePage() {
                   <select
                     value={paymentForm.paymentMethod}
                     onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value as any })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="cash">Cash</option>
                     <option value="upi">UPI</option>
@@ -1476,7 +1476,7 @@ export default function GoldFinancePage() {
                     type="date"
                     value={paymentForm.paymentDate}
                     onChange={(e) => setPaymentForm({ ...paymentForm, paymentDate: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -1488,7 +1488,7 @@ export default function GoldFinancePage() {
                   placeholder="UPI transaction ID / Cheque number"
                   value={paymentForm.referenceTransactionId}
                   onChange={(e) => setPaymentForm({ ...paymentForm, referenceTransactionId: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -1502,7 +1502,7 @@ export default function GoldFinancePage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Acknowledge Payment & Print Voucher
                 </button>
@@ -1518,7 +1518,7 @@ export default function GoldFinancePage() {
           <div className="relative w-full max-w-3xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
                   {selectedCustomerForView.customer.fullName}
                 </h3>
                 <p className="text-xs text-luxury-muted">
@@ -1535,19 +1535,19 @@ export default function GoldFinancePage() {
               <div className="grid grid-cols-3 gap-3 text-center text-xs">
                 <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-2.5">
                   <span className="text-luxury-muted text-[10px] uppercase">Active Loans</span>
-                  <p className="font-serif text-base font-bold text-luxury-green mt-0.5">
+                  <p className="font-serif text-base font-bold text-luxury-onyx mt-0.5">
                     {selectedCustomerForView.summary.activeLoansCount}
                   </p>
                 </div>
                 <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-2.5">
                   <span className="text-luxury-muted text-[10px] uppercase">Outstanding Due</span>
-                  <p className="font-serif text-base font-bold text-luxury-green mt-0.5">
+                  <p className="font-serif text-base font-bold text-luxury-gold-dark mt-0.5">
                     ₹{selectedCustomerForView.summary.totalOutstandingDueRupees.toLocaleString("en-IN")}
                   </p>
                 </div>
                 <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-2.5">
                   <span className="text-luxury-muted text-[10px] uppercase">Total Repaid</span>
-                  <p className="font-serif text-base font-bold text-emerald-800 mt-0.5">
+                  <p className="font-serif text-base font-bold text-luxury-onyx mt-0.5">
                     ₹{selectedCustomerForView.summary.totalPaidRupees.toLocaleString("en-IN")}
                   </p>
                 </div>
@@ -1555,7 +1555,7 @@ export default function GoldFinancePage() {
 
               {/* Active Loans */}
               <div>
-                <h4 className="font-bold text-xs text-luxury-green uppercase tracking-wider mb-2">Active Loans</h4>
+                <h4 className="font-bold text-xs text-luxury-onyx uppercase tracking-wider mb-2">Active Loans</h4>
                 {selectedCustomerForView.activeLoans.length === 0 ? (
                   <p className="text-xs text-luxury-muted italic">No active loans.</p>
                 ) : (
@@ -1563,14 +1563,14 @@ export default function GoldFinancePage() {
                     {selectedCustomerForView.activeLoans.map((l: any) => (
                       <div key={l._id} className="rounded-xl border border-luxury-beige p-3 text-xs flex justify-between items-center bg-luxury-ivory/20">
                         <div>
-                          <span className="font-mono font-bold text-luxury-green">{l.loanNumber}</span>
+                          <span className="font-mono font-bold text-luxury-gold-dark">{l.loanNumber}</span>
                           <span className="text-luxury-muted ml-2">Date: {l.mortgageDate}</span>
                           <p className="text-luxury-charcoal mt-0.5">
                             Principal: ₹{l.currentOutstandingPrincipalRupees.toLocaleString("en-IN")} • Rate: {l.monthlyRate}%/mo
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-serif font-bold text-luxury-green">₹{l.totalDueRupees.toLocaleString("en-IN")}</p>
+                          <p className="font-serif font-bold text-luxury-gold-dark">₹{l.totalDueRupees.toLocaleString("en-IN")}</p>
                           <span className="text-[10px] text-amber-800">(+₹{l.accruedInterestRupees.toLocaleString("en-IN")} int)</span>
                         </div>
                       </div>
@@ -1581,7 +1581,7 @@ export default function GoldFinancePage() {
 
               {/* Payment History */}
               <div>
-                <h4 className="font-bold text-xs text-luxury-green uppercase tracking-wider mb-2">Repayment History</h4>
+                <h4 className="font-bold text-xs text-luxury-onyx uppercase tracking-wider mb-2">Repayment History</h4>
                 {selectedCustomerForView.payments.length === 0 ? (
                   <p className="text-xs text-luxury-muted italic">No payments recorded.</p>
                 ) : (
@@ -1595,7 +1595,7 @@ export default function GoldFinancePage() {
                             Interest: ₹{p.interestAppliedRupees} | Principal: ₹{p.principalAppliedRupees} | Mode: {p.paymentMethod.toUpperCase()}
                           </p>
                         </div>
-                        <div className="text-right font-serif font-bold text-emerald-800">
+                        <div className="text-right font-serif font-bold text-luxury-gold-dark">
                           ₹{p.totalAmountRupees.toLocaleString("en-IN")}
                         </div>
                       </div>
@@ -1608,7 +1608,7 @@ export default function GoldFinancePage() {
             <div className="border-t border-luxury-beige pt-3 flex justify-end">
               <button
                 onClick={() => setIsCustomerModalOpen(false)}
-                className="rounded-xl bg-luxury-green px-4 py-2 text-xs font-semibold text-white"
+                className="rounded-xl bg-luxury-onyx px-4 py-2 text-xs font-semibold text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-onyx-surface transition"
               >
                 Close Profile
               </button>

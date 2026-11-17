@@ -226,7 +226,7 @@ export default function UsedMetalPage() {
           <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
             Scrap & Exchange Acquisition
           </span>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-green sm:text-3xl">
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
             Used Gold & Silver Purchases
           </h1>
           <p className="mt-1 text-xs text-luxury-muted">
@@ -246,9 +246,9 @@ export default function UsedMetalPage() {
 
           <button
             onClick={() => setIsAddOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-luxury-green px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light active:scale-95 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
           >
-            <Plus className="h-4 w-4 text-luxury-gold" />
+            <Plus className="h-4 w-4 text-white" />
             <span>Record Used {activeTab === "gold" ? "Gold" : "Silver"} Purchase</span>
           </button>
         </div>
@@ -265,9 +265,9 @@ export default function UsedMetalPage() {
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center justify-between rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700 border border-emerald-200">
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0" />
+            <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}><X className="h-4 w-4" /></button>
@@ -280,8 +280,8 @@ export default function UsedMetalPage() {
           onClick={() => setActiveTab("gold")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
             activeTab === "gold"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <Coins className="h-4 w-4 text-luxury-gold" />
@@ -292,8 +292,8 @@ export default function UsedMetalPage() {
           onClick={() => setActiveTab("silver")}
           className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition ${
             activeTab === "silver"
-              ? "bg-luxury-green text-white shadow-luxury"
-              : "text-luxury-charcoal hover:bg-luxury-ivory"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
           }`}
         >
           <Gem className="h-4 w-4 text-luxury-gold" />
@@ -307,7 +307,7 @@ export default function UsedMetalPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Purchases
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">{totalCount}</p>
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">{totalCount}</p>
           <span className="text-[11px] text-luxury-muted">Old {activeTab} vouchers</span>
         </div>
 
@@ -315,7 +315,7 @@ export default function UsedMetalPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Net Weight Acquired
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-gold-dark">
             {totalWeight.toFixed(3)}{" "}
             <span className="text-xs font-sans font-normal text-luxury-muted">g</span>
           </p>
@@ -326,7 +326,7 @@ export default function UsedMetalPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Purchase Outlay
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-gold-dark">
             ₹{totalAmount.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
           </p>
           <span className="text-[11px] text-luxury-muted">Agreed settlement amount</span>
@@ -336,7 +336,7 @@ export default function UsedMetalPage() {
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Converted to Showroom
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-green">
+          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">
             {totalConvertedCount} / {totalCount}
           </p>
           <span className="text-[11px] text-luxury-muted">Refined & added to stock</span>
@@ -352,7 +352,7 @@ export default function UsedMetalPage() {
             placeholder="Search by Seller name, Phone, Voucher number, or Description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-green focus:bg-white focus:outline-none transition"
+            className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:bg-white focus:outline-none transition"
           />
         </div>
 
@@ -361,7 +361,7 @@ export default function UsedMetalPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-green focus:outline-none"
+            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
             <option value="all">All Payment Statuses</option>
             <option value="paid">Paid</option>
@@ -375,7 +375,7 @@ export default function UsedMetalPage() {
       <div className="overflow-hidden rounded-2xl border border-luxury-beige bg-white shadow-luxury">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-green uppercase font-semibold">
+            <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
               <tr>
                 <th className="px-4 py-3.5">Voucher / Date</th>
                 <th className="px-4 py-3.5">Seller</th>
@@ -415,7 +415,7 @@ export default function UsedMetalPage() {
                   return (
                     <tr key={p.id || p._id} className="hover:bg-luxury-ivory/40 transition">
                       <td className="px-4 py-3 font-medium">
-                        <p className="font-mono font-bold text-luxury-green">{p.transactionNumber}</p>
+                        <p className="font-mono font-bold text-luxury-gold-dark">{p.transactionNumber}</p>
                         <p className="text-[10px] text-luxury-muted">{dateStr}</p>
                       </td>
                       <td className="px-4 py-3">
@@ -426,7 +426,7 @@ export default function UsedMetalPage() {
                         {p.itemDescription}
                       </td>
                       <td className="px-4 py-3 font-semibold text-luxury-gold">{p.purity}</td>
-                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-green">
+                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
                         {p.netWeight.toFixed(3)}g
                         <span className="block text-[9px] font-sans font-normal text-luxury-muted">
                           (Gross: {p.grossWeight.toFixed(3)}g)
@@ -438,14 +438,14 @@ export default function UsedMetalPage() {
                       <td className="px-4 py-3 text-right font-bold text-luxury-charcoal">
                         ₹{p.finalAgreedCostRupees.toLocaleString("en-IN")}
                       </td>
-                      <td className="px-4 py-3 text-right text-emerald-800 font-medium">
+                      <td className="px-4 py-3 text-right text-luxury-charcoal font-medium">
                         ₹{p.amountPaidRupees.toLocaleString("en-IN")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                             p.paymentStatus === "paid"
-                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              ? "bg-luxury-gold-subtle text-luxury-gold-dark border border-luxury-gold/30"
                               : p.paymentStatus === "partially_paid"
                               ? "bg-amber-50 text-amber-800 border border-amber-200"
                               : "bg-red-50 text-red-800 border border-red-200"
@@ -456,14 +456,14 @@ export default function UsedMetalPage() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {p.isConvertedToInventory ? (
-                          <div className="flex items-center justify-center gap-1 text-emerald-700 font-medium text-[11px]">
-                            <ShieldCheck className="h-4 w-4" />
+                          <div className="flex items-center justify-center gap-1 text-luxury-gold-dark font-medium text-[11px]">
+                            <ShieldCheck className="h-4 w-4 text-luxury-gold" />
                             <span>Converted</span>
                           </div>
                         ) : (
                           <button
                             onClick={() => openConvertModal(p)}
-                            className="flex items-center gap-1 mx-auto rounded-lg bg-luxury-green/10 border border-luxury-green/30 px-2.5 py-1 text-[11px] font-semibold text-luxury-green hover:bg-luxury-green hover:text-white transition active:scale-95"
+                            className="flex items-center gap-1 mx-auto rounded-lg bg-luxury-gold-subtle border border-luxury-gold/40 px-2.5 py-1 text-[11px] font-semibold text-luxury-gold-dark hover:bg-luxury-gold hover:text-white transition active:scale-95"
                           >
                             <span>Convert to Stock</span>
                             <ArrowRight className="h-3 w-3" />
@@ -485,7 +485,7 @@ export default function UsedMetalPage() {
           <div className="relative w-full max-w-xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
                   Record Used {activeTab === "gold" ? "Gold" : "Silver"} Purchase
                 </h3>
                 <p className="text-xs text-luxury-muted">Record customer scrap or exchange voucher</p>
@@ -505,7 +505,7 @@ export default function UsedMetalPage() {
                     placeholder="Full name"
                     value={addForm.sellerName}
                     onChange={(e) => setAddForm({ ...addForm, sellerName: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -516,7 +516,7 @@ export default function UsedMetalPage() {
                     placeholder="10-digit mobile"
                     value={addForm.sellerPhone}
                     onChange={(e) => setAddForm({ ...addForm, sellerPhone: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -528,7 +528,7 @@ export default function UsedMetalPage() {
                     placeholder="e.g. Old broken necklace with wax and stones"
                     value={addForm.itemDescription}
                     onChange={(e) => setAddForm({ ...addForm, itemDescription: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -540,7 +540,7 @@ export default function UsedMetalPage() {
                     placeholder={activeTab === "gold" ? "22K / 91.6%" : "925 / Sterling"}
                     value={addForm.purity}
                     onChange={(e) => setAddForm({ ...addForm, purity: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -550,7 +550,7 @@ export default function UsedMetalPage() {
                     type="date"
                     value={addForm.date}
                     onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -563,7 +563,7 @@ export default function UsedMetalPage() {
                     placeholder="0.000"
                     value={addForm.grossWeight}
                     onChange={(e) => setAddForm({ ...addForm, grossWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -574,7 +574,7 @@ export default function UsedMetalPage() {
                     step="0.001"
                     value={addForm.deductionsWeight}
                     onChange={(e) => setAddForm({ ...addForm, deductionsWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -583,13 +583,13 @@ export default function UsedMetalPage() {
               <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige text-xs">
                 <div>
                   <span className="font-semibold text-luxury-charcoal">Net Weight: </span>
-                  <span className="font-serif font-bold text-luxury-green">
+                  <span className="font-serif font-bold text-luxury-gold-dark">
                     {addNetWeight > 0 ? addNetWeight.toFixed(3) : "0.000"} g
                   </span>
                 </div>
                 <div>
                   <span className="font-semibold text-luxury-charcoal">Formula Estimate: </span>
-                  <span className="font-bold text-luxury-green">
+                  <span className="font-bold text-luxury-gold-dark">
                     ₹{addCalcVal.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -613,7 +613,7 @@ export default function UsedMetalPage() {
                         amountPaidRupees: c.toFixed(2),
                       });
                     }}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -624,7 +624,7 @@ export default function UsedMetalPage() {
                     required
                     value={addForm.finalAgreedCostRupees}
                     onChange={(e) => setAddForm({ ...addForm, finalAgreedCostRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -635,7 +635,7 @@ export default function UsedMetalPage() {
                     required
                     value={addForm.amountPaidRupees}
                     onChange={(e) => setAddForm({ ...addForm, amountPaidRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -644,7 +644,7 @@ export default function UsedMetalPage() {
                   <select
                     value={addForm.paymentMethod}
                     onChange={(e) => setAddForm({ ...addForm, paymentMethod: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     <option value="cash">Cash</option>
                     <option value="upi">UPI</option>
@@ -664,7 +664,7 @@ export default function UsedMetalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Record Used Purchase
                 </button>
@@ -680,7 +680,7 @@ export default function UsedMetalPage() {
           <div className="relative w-full max-w-lg rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
             <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-green">Convert to Showroom Stock</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Convert to Showroom Stock</h3>
                 <p className="text-xs text-luxury-muted">
                   Transform refined scrap into active showroom inventory
                 </p>
@@ -696,7 +696,7 @@ export default function UsedMetalPage() {
               <div className="mt-1 flex gap-4 text-luxury-muted">
                 <span>Original Net: <strong className="text-luxury-charcoal">{selectedPurchase.netWeight.toFixed(3)}g</strong></span>
                 <span>Purity: <strong className="text-luxury-charcoal">{selectedPurchase.purity}</strong></span>
-                <span>Cost: <strong className="text-luxury-green">₹{selectedPurchase.finalAgreedCostRupees.toLocaleString("en-IN")}</strong></span>
+                <span>Cost: <strong className="text-luxury-gold-dark">₹{selectedPurchase.finalAgreedCostRupees.toLocaleString("en-IN")}</strong></span>
               </div>
             </div>
 
@@ -709,7 +709,7 @@ export default function UsedMetalPage() {
                   required
                   value={convertForm.targetCategoryId}
                   onChange={(e) => setConvertForm({ ...convertForm, targetCategoryId: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 >
                   <option value="">Select Destination Category</option>
                   {(selectedPurchase.metalType === "gold" ? goldCategories : silverCategories).map((c) => (
@@ -731,7 +731,7 @@ export default function UsedMetalPage() {
                     required
                     value={convertForm.refinedNetWeight}
                     onChange={(e) => setConvertForm({ ...convertForm, refinedNetWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
@@ -744,7 +744,7 @@ export default function UsedMetalPage() {
                     required
                     value={convertForm.purity}
                     onChange={(e) => setConvertForm({ ...convertForm, purity: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
@@ -758,7 +758,7 @@ export default function UsedMetalPage() {
                   required
                   value={convertForm.itemName}
                   onChange={(e) => setConvertForm({ ...convertForm, itemName: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -768,7 +768,7 @@ export default function UsedMetalPage() {
                   rows={2}
                   value={convertForm.notes}
                   onChange={(e) => setConvertForm({ ...convertForm, notes: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-green focus:outline-none"
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
@@ -782,7 +782,7 @@ export default function UsedMetalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-luxury-green px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:bg-luxury-green-light"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
                 >
                   Confirm Showroom Conversion
                 </button>

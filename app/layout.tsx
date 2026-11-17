@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-luxury-ivory text-luxury-charcoal antialiased selection:bg-luxury-gold/30 selection:text-luxury-green">
+      <body className="bg-luxury-ivory text-luxury-charcoal antialiased selection:bg-luxury-gold/30 selection:text-luxury-onyx">
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>

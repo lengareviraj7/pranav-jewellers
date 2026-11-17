@@ -48,16 +48,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         <div>
           {/* Brand Identity / Crest */}
-          <div className="flex h-24 items-center justify-between border-b border-luxury-beige px-6 bg-gradient-to-b from-luxury-ivory/50 to-white">
+          <div className="flex h-24 items-center justify-between border-b border-luxury-beige px-6 bg-gradient-to-b from-luxury-ivory/80 via-white to-white">
             <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-luxury-green shadow-luxury text-luxury-gold">
-                <Sparkles className="h-6 w-6" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx border border-luxury-gold/50 shadow-gold-glow text-luxury-gold">
+                <Sparkles className="h-6 w-6 text-luxury-gold" />
               </div>
               <div>
-                <h1 className="font-serif text-base font-bold tracking-tight text-luxury-green">
+                <h1 className="font-serif text-base font-bold tracking-wider text-luxury-onyx">
                   SIDHESHWAR
                 </h1>
-                <p className="text-[10px] font-medium tracking-widest text-luxury-gold uppercase">
+                <p className="text-[10px] font-semibold tracking-widest text-luxury-gold-dark uppercase">
                   Jewellers • Estd 1994
                 </p>
               </div>
@@ -87,10 +87,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     key={item.name}
                     href={item.href}
                     onClick={onClose}
-                    className={`group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm font-medium transition-all ${
+                    className={`group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm transition-all ${
                       isActive
-                        ? "bg-luxury-green text-white shadow-luxury font-semibold"
-                        : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-green"
+                        ? "bg-gradient-to-r from-luxury-onyx to-luxury-onyx-surface text-luxury-gold font-bold shadow-luxury border-l-4 border-luxury-gold"
+                        : "text-luxury-charcoal hover:bg-luxury-gold-subtle hover:text-luxury-gold-dark font-medium"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         className={`h-5 w-5 transition-colors ${
                           isActive
                             ? "text-luxury-gold"
-                            : "text-luxury-muted group-hover:text-luxury-green"
+                            : "text-luxury-muted group-hover:text-luxury-gold-dark"
                         }`}
                       />
                       <span>{item.name}</span>
@@ -106,10 +106,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                     {item.badge && (
                       <span
-                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                           isActive
-                            ? "bg-luxury-gold text-luxury-green"
-                            : "bg-luxury-ivory border border-luxury-beige text-luxury-charcoal"
+                            ? "bg-luxury-gold/20 text-luxury-gold-light border border-luxury-gold/40"
+                            : "bg-luxury-gold-subtle border border-luxury-beige text-luxury-gold-dark"
                         }`}
                       >
                         {item.badge}
@@ -129,14 +129,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* Footer info in sidebar */}
-        <div className="border-t border-luxury-beige p-5 bg-luxury-ivory/40">
-          <div className="rounded-xl border border-luxury-beige/80 bg-white p-3.5 shadow-xs">
+        <div className="border-t border-luxury-beige p-5 bg-luxury-ivory/50">
+          <div className="rounded-xl border border-luxury-gold/30 bg-white p-3.5 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-luxury-green font-serif">Sarafa Edition</span>
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+              <span className="text-xs font-bold text-luxury-onyx font-serif">Sarafa Edition</span>
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-luxury-gold opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-luxury-gold"></span>
+              </span>
             </div>
-            <p className="mt-1 text-[11px] text-luxury-muted leading-relaxed">
-              Production Database Connected
+            <p className="mt-1 text-[11px] text-luxury-muted leading-relaxed font-medium">
+              Live Jewellery Database Connected
             </p>
           </div>
         </div>
