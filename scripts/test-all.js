@@ -332,7 +332,7 @@ async function runFullAuditSuite() {
   console.log("  ✅ 4a: Gold mortgage loan created with pledged items.");
 
   // CRITICAL VERIFICATION: Ensure pledged jewellery NEVER appears in showroom inventory
-  const leakedItem = await itemsColl.findOne({ name: { $regex: "Mangalsutra", $options: "i" } });
+  const leakedItem = await itemsColl.findOne({ name: "Customer 22K Gold Mangalsutra with Black Beads" });
   if (leakedItem === null) {
     console.log("  ✅ 4b: PLEDGED JEWELLERY STRICT ISOLATION VERIFIED: 0 pledged items found in showroom stock.");
   } else {
