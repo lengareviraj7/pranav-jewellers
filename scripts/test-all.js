@@ -115,8 +115,9 @@ async function runFullAuditSuite() {
   const txnsColl = db.collection("inventorytransactions");
 
   // Create Category
+  const testRunId = Date.now().toString().slice(-6);
   const catRes = await catColl.insertOne({
-    name: "Audit Test Bangles",
+    name: `Audit Test Bangles ${testRunId}`,
     metalType: "gold",
     displayOrder: 1,
     isActive: true,
@@ -289,7 +290,7 @@ async function runFullAuditSuite() {
   const paymentsColl = db.collection("financepayments");
 
   const custRes = await custColl.insertOne({
-    customerId: "SJ-CUST-AUDIT",
+    customerId: `SJ-CUST-AUDIT-${testRunId}`,
     fullName: "Sanjay Deshmukh",
     mobileNumber: "9876543210",
     isActive: true,
