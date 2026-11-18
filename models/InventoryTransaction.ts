@@ -4,7 +4,7 @@ export interface IInventoryTransaction extends Document {
   itemId: Types.ObjectId;
   metalType: "gold" | "silver";
   categoryId: Types.ObjectId;
-  transactionType: "stock_in" | "stock_out" | "adjustment" | "conversion_in" | "archive";
+  transactionType: "stock_in" | "stock_out" | "adjustment" | "conversion_in" | "archive" | "sale";
   previousQuantity: number;
   newQuantity: number;
   quantityChange: number;
@@ -26,7 +26,7 @@ const InventoryTransactionSchema = new Schema<IInventoryTransaction>(
     categoryId: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     transactionType: {
       type: String,
-      enum: ["stock_in", "stock_out", "adjustment", "conversion_in", "archive"],
+      enum: ["stock_in", "stock_out", "adjustment", "conversion_in", "archive", "sale"],
       required: true,
     },
     previousQuantity: { type: Number, required: true },

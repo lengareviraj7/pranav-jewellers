@@ -8,6 +8,8 @@ import FinanceLoan from "@/models/FinanceLoan";
 import Customer from "@/models/Customer";
 import InventoryTransaction from "@/models/InventoryTransaction";
 import FinancePayment from "@/models/FinancePayment";
+import SaleRecord from "@/models/SaleRecord";
+import CashTransaction from "@/models/CashTransaction";
 import { calculateMortgageInterest, getTodayIST } from "@/lib/mortgage-engine";
 
 export async function GET(req: NextRequest) {
@@ -82,7 +84,33 @@ export async function GET(req: NextRequest) {
 
     const totalOutstandingDuePaise = totalOutstandingPrincipalPaise + totalAccruedInterestPaise;
 
-    // 5. Recent Activity Feed (Combine stock transactions, used purchases, and finance payments)
+    // 5. Cash Counter & Sales / Profit Aggregates
+    const allCashTx = await CashTransaction.find().lean();
+    let totalCashCreditsPaise = 0;
+    let totalCashDebitsPaise = 0;
+    for (const tx of allCashTx) {
+      if (tx.transactionType === "credit") totalCashCreditsPaise += tx.amountPaise || 0;
+      else totalCashDebitsPaise += tx.amountPaise || 0;
+    }
+    const counterCashRupees = (totalCashCreditsPaise - totalCashDebitsPaise) / 100;
+
+    const allSales = await SaleRecord.find().lean();
+    let totalProfitPaise = 0;
+    let totalOutstandingUdhariPaise = 0;
+    let dueAlertCount = 0;
+    const now = new Date();
+    const threeDaysLater = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    for (const s of allSales) {
+      totalProfitPaise += s.profitPaise || 0;
+      totalOutstandingUdhariPaise += s.balanceDuePaise || 0;
+      if (s.balanceDuePaise > 0 && s.dueDate && new Date(s.dueDate) <= threeDaysLater) {
+        dueAlertCount++;
+      }
+    }
+
+    // 6. Recent Activity Feed (Combine sales, stock transactions, used purchases, and finance payments)
+    const recentSales = await SaleRecord.find().sort({ saleDate: -1 }).limit(5).lean();
     const recentStockTxns = await InventoryTransaction.find()
       .sort({ timestamp: -1 })
       .limit(5)
@@ -102,6 +130,14 @@ export async function GET(req: NextRequest) {
       .lean();
 
     const recentActivities = [
+      ...recentSales.map((s: any) => ({
+        id: s._id.toString(),
+        type: "sale",
+        metalType: s.metalType,
+        title: `Counter Sale: ${s.itemName} (${s.saleNumber})`,
+        subtitle: `Buyer: ${s.customer.name} | Price: ₹${(s.sellingPricePaise / 100).toLocaleString("en-IN")} | Profit: +₹${(s.profitPaise / 100).toLocaleString("en-IN")}`,
+        date: s.saleDate || s.createdAt,
+      })),
       ...recentStockTxns.map((tx: any) => ({
         id: tx._id.toString(),
         type: "inventory",
@@ -159,6 +195,13 @@ export async function GET(req: NextRequest) {
           accruedInterestRupees: totalAccruedInterestPaise / 100,
           totalDueRupees: totalOutstandingDuePaise / 100,
           overdueCount,
+        },
+        counter: {
+          cashInHandRupees: counterCashRupees,
+          totalProfitRupees: totalProfitPaise / 100,
+          outstandingUdhariRupees: totalOutstandingUdhariPaise / 100,
+          dueAlertCount,
+          totalSalesCount: allSales.length,
         },
         recentActivities,
       },

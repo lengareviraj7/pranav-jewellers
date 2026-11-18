@@ -6,6 +6,7 @@ export interface IInventoryItem extends Document {
   name: string;
   sku: string;
   purity: string;
+  size?: string; // e.g. Ring size "14", Anklet length "10.5 in", Bangle "2.4"
   quantity: number;
   grossWeight: number; // In grams (3 decimal places)
   stoneWeight: number; // In grams (3 decimal places)
@@ -18,6 +19,7 @@ export interface IInventoryItem extends Document {
   notes?: string;
   sourceType: "direct_purchase" | "used_metal_conversion" | "opening_stock";
   sourceUsedPurchaseId?: Types.ObjectId;
+  status?: "in_stock" | "sold" | "partial_sold";
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +32,7 @@ const InventoryItemSchema = new Schema<IInventoryItem>(
     name: { type: String, required: true, trim: true },
     sku: { type: String, required: true, unique: true, uppercase: true, trim: true },
     purity: { type: String, required: true, trim: true },
+    size: { type: String, trim: true },
     quantity: { type: Number, required: true, min: 0, default: 1 },
     grossWeight: { type: Number, required: true, min: 0 },
     stoneWeight: { type: Number, required: true, min: 0, default: 0 },
@@ -46,6 +49,11 @@ const InventoryItemSchema = new Schema<IInventoryItem>(
       default: "direct_purchase",
     },
     sourceUsedPurchaseId: { type: Schema.Types.ObjectId, ref: "UsedMetalPurchase" },
+    status: {
+      type: String,
+      enum: ["in_stock", "sold", "partial_sold"],
+      default: "in_stock",
+    },
     isActive: { type: Boolean, default: true },
   },
   {

@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectToDatabase from "@/lib/mongodb";
+import { authenticateRequest, unauthorizedResponse } from "@/lib/api-auth";
+import SaleRecord from "@/models/SaleRecord";
+import CashTransaction from "@/models/CashTransaction";
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const sessionUser = await authenticateRequest(req);
+    if (!sessionUser) return unauthorizedResponse();
+
+    await connectToDatabase();
+    const { id } = params;
+    const body = await req.json();
+
+    const { amountRupees, paymentMode, notes } = body;
+    const amount = parseFloat(amountRupees);
+    if (isNaN(amount) || amount <= 0) {
+      return NextResponse.json({ error: "Valid payment amount is required" }, { status: 400 });
+    }
+
+    const sale = await SaleRecord.findById(id);
+    if (!sale) {
+      return NextResponse.json({ error: "Sale record not found" }, { status: 404 });
+    }
+
+    const amountPaise = Math.round(amount * 100);
+    if (amountPaise > sale.balanceDuePaise) {
+      return NextResponse.json(
+        {
+          error: `Payment amount (₹${amount}) exceeds remaining balance of ₹${sale.balanceDuePaise / 100}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    sale.payments.push({
+      amountPaise,
+      paymentMode: paymentMode === "online" ? "online" : "cash",
+      date: new Date(),
+      notes: notes || "Udhari recovery payment",
+    });
+
+    sale.paidAmountPaise += amountPaise;
+    sale.balanceDuePaise -= amountPaise;
+
+    if (sale.balanceDuePaise === 0) {
+      sale.paymentStatus = "paid";
+    } else {
+      sale.paymentStatus = "partial";
+    }
+
+    await sale.save();
+
+    // Auto-record in Cash Book if cash
+    if (paymentMode === "cash" || !paymentMode) {
+      await CashTransaction.create({
+        transactionType: "credit",
+        amountPaise,
+        category: "udhari_recovery",
+        purpose: `Udhari Collection: ${sale.customer.name} [${sale.saleNumber}]`,
+        referenceId: sale.saleNumber,
+        performedBy: sessionUser.userId,
+        date: new Date(),
+        notes: notes || `Recovery towards ${sale.itemName}`,
+      });
+    }
+
+    // Format WhatsApp receipt URL
+    let cleanPhone = sale.customer.phone.replace(/\D/g, "");
+    if (cleanPhone.length === 10) cleanPhone = `91${cleanPhone}`;
+
+    const paidRs = (amountPaise / 100).toLocaleString("en-IN");
+    const newBalRs = (sale.balanceDuePaise / 100).toLocaleString("en-IN");
+
+    const waText =
+      sale.balanceDuePaise > 0
+        ? `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your payment of *₹${paidRs}* at *SIDHESHWAR JEWELLERS*.\n\n✨ *Updated Account Summary:*\n- Item: ${sale.itemName}\n- *Remaining Balance: ₹${newBalRs}*\n\nThank you for your timely payment! For any questions, please contact us.\n\nHave a blessed day! 🌟`
+        : `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your payment of *₹${paidRs}* at *SIDHESHWAR JEWELLERS*.\n\n✨ *Congratulations!* Your balance for ${sale.itemName} is *FULLY CLEARED (₹0 remaining)* ✅.\n\nThank you for your valuable patronage and trust in Sidheshwar Jewellers!\n\nHave a blessed day! 🌟`;
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
+
+    return NextResponse.json({
+      success: true,
+      sale,
+      whatsappUrl,
+      whatsappText: waText,
+    });
+  } catch (error: any) {
+    console.error("POST /api/sales/[id]/payment error:", error);
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+  }
+}

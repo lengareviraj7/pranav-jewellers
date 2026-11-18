@@ -12,6 +12,9 @@ import {
   Clock,
   Sparkles,
   ChevronRight,
+  Wallet,
+  ShoppingBag,
+  TrendingUp,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -42,9 +45,16 @@ interface DashboardStats {
     totalDueRupees: number;
     overdueCount: number;
   };
+  counter?: {
+    cashInHandRupees: number;
+    totalProfitRupees: number;
+    outstandingUdhariRupees: number;
+    dueAlertCount: number;
+    totalSalesCount: number;
+  };
   recentActivities: Array<{
     id: string;
-    type: "inventory" | "used_purchase" | "finance_payment";
+    type: "inventory" | "used_purchase" | "finance_payment" | "sale";
     metalType: string;
     title: string;
     subtitle: string;
@@ -242,6 +252,118 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* KPI Section 2: Cash Counter & Sales / Profit Performance */}
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+        {/* Card 5: Live Cash in Counter */}
+        <div className="group relative overflow-hidden rounded-2xl border-2 border-luxury-gold/50 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-6 shadow-gold-glow text-white transition hover:border-luxury-gold">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-luxury-gold">
+              Live Cash in Counter
+            </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold/20 text-luxury-gold shadow-xs">
+              <Wallet className="h-5 w-5 text-luxury-gold" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="font-serif text-2xl font-bold text-luxury-gold">
+              ₹{(stats?.counter?.cashInHandRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+            </p>
+            <div className="mt-2 text-xs text-white/70 border-t border-luxury-gold/20 pt-2">
+              <span>Rojmel counter till tally</span>
+            </div>
+          </div>
+          <Link
+            href="/cash-book"
+            className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold hover:underline transition"
+          >
+            <span>Open Cash Book (Rojmel)</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* Card 6: Realized Sales Profit */}
+        <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
+              Realized Sales Profit
+            </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold-subtle border border-luxury-gold/30 text-luxury-gold-dark shadow-xs">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="font-serif text-2xl font-bold text-luxury-gold-dark">
+              +₹{(stats?.counter?.totalProfitRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+            </p>
+            <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
+              <span>{stats?.counter?.totalSalesCount || 0} counter sales logged</span>
+            </div>
+          </div>
+          <Link
+            href="/profit-loss"
+            className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
+          >
+            <span>View Profit &amp; Loss Margins</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* Card 7: Customer Udhari Khata */}
+        <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
+              Pending Udhari Dues
+            </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
+              <ShoppingBag className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="font-serif text-2xl font-bold text-amber-800">
+              ₹{(stats?.counter?.outstandingUdhariRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+            </p>
+            <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
+              <span>Customer balance to collect</span>
+            </div>
+          </div>
+          <Link
+            href="/sales?tab=pending_udhari"
+            className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
+          >
+            <span>Open Udhari Khata</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* Card 8: Due Date Reminders */}
+        <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
+              Udhari Alerts (3 Days)
+            </span>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
+              <Clock className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <p className="font-serif text-2xl font-bold text-luxury-onyx">
+              {stats?.counter?.dueAlertCount || 0}{" "}
+              <span className="text-sm font-sans font-normal text-luxury-muted">due soon</span>
+            </p>
+            <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
+              <span>Automated WhatsApp reminders</span>
+            </div>
+          </div>
+          <Link
+            href="/sales?tab=3_days"
+            className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
+          >
+            <span>Send Due Alerts</span>
+            <ArrowUpRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+
       {/* Finance Overdue Warning Banner */}
       {(stats?.finance.overdueCount || 0) > 0 && (
         <div className="flex items-center justify-between rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
@@ -343,7 +465,7 @@ export default function DashboardPage() {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Gold Finance & Mortgage</span>
+                    <span className="font-serif text-sm font-bold text-luxury-onyx">Gold Finance &amp; Mortgage</span>
                     <Landmark className="h-4 w-4 text-luxury-gold-dark" />
                   </div>
                   <p className="mt-1 text-xs text-luxury-muted">
@@ -352,6 +474,44 @@ export default function DashboardPage() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
                   <span>Enter Finance Engine</span>
+                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                href="/sales"
+                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif text-sm font-bold text-luxury-onyx">Sales &amp; Customer Udhari</span>
+                    <ShoppingBag className="h-4 w-4 text-luxury-gold-dark" />
+                  </div>
+                  <p className="mt-1 text-xs text-luxury-muted">
+                    Direct counter billing, stock deduction, manual profit logging, and 3-day WhatsApp payment alerts.
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
+                  <span>Enter Sales Ledger</span>
+                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                href="/cash-book"
+                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-serif text-sm font-bold text-luxury-onyx">Cash Counter Book (Rojmel)</span>
+                    <Wallet className="h-4 w-4 text-luxury-gold-dark" />
+                  </div>
+                  <p className="mt-1 text-xs text-luxury-muted">
+                    Real-time cash in till balance tally, daily credits (Jama), expense debits (Kharach), and audit trail.
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
+                  <span>Open Rojmel</span>
                   <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </div>
               </Link>
@@ -389,7 +549,9 @@ export default function DashboardPage() {
                     className="flex items-start gap-3 rounded-xl border border-luxury-beige/70 p-3 bg-luxury-gold-subtle/20 hover:bg-luxury-gold-subtle/50 transition"
                   >
                     <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-luxury-gold/15 text-luxury-gold-dark shrink-0">
-                      {act.type === "inventory" ? (
+                      {act.type === "sale" ? (
+                        <ShoppingBag className="h-3.5 w-3.5 text-luxury-gold-dark" />
+                      ) : act.type === "inventory" ? (
                         <Coins className="h-3.5 w-3.5 text-luxury-gold-dark" />
                       ) : act.type === "used_purchase" ? (
                         <RefreshCw className="h-3.5 w-3.5 text-luxury-gold-dark" />

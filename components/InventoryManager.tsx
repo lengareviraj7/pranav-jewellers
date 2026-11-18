@@ -18,6 +18,14 @@ import {
   Sparkles,
   ArrowUpDown,
   Tag,
+  ShoppingBag,
+  Send,
+  MessageCircle,
+  User,
+  Phone,
+  Calendar,
+  DollarSign,
+  Filter,
 } from "lucide-react";
 
 interface Category {
@@ -40,6 +48,7 @@ interface InventoryItem {
   sku: string;
   categoryId: { _id: string; name: string } | string;
   purity: string;
+  size?: string;
   quantity: number;
   grossWeight: number;
   stoneWeight: number;
@@ -76,6 +85,8 @@ export default function InventoryManager({
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedPurity, setSelectedPurity] = useState<string>("all");
+  const [selectedSize, setSelectedSize] = useState<string>("all");
+  const [selectedWeightBracket, setSelectedWeightBracket] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
 
@@ -84,11 +95,34 @@ export default function InventoryManager({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false);
 
-  // Selected item for Adjustment / History
+  // Selected item for Adjustment / History / Sell
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
+  const [sellItem, setSellItem] = useState<InventoryItem | null>(null);
+  const [sellSuccessData, setSellSuccessData] = useState<{
+    saleNumber: string;
+    whatsappUrl: string;
+    whatsappText: string;
+    customerName: string;
+    remainingBalance: number;
+  } | null>(null);
   const [itemHistory, setItemHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Sell Form State
+  const [sellForm, setSellForm] = useState({
+    quantitySold: 1,
+    sellingPriceRupees: "",
+    manualProfitRupees: "",
+    paidAmountRupees: "",
+    customerName: "",
+    customerPhone: "",
+    customerAddress: "",
+    dueDate: "",
+    paymentMode: "cash" as "cash" | "online" | "mixed",
+    notes: "",
+  });
 
   // Add Stock Form State
   const [stockForm, setStockForm] = useState({
@@ -96,6 +130,7 @@ export default function InventoryManager({
     categoryId: "",
     sku: "",
     purity: purityOptions[0] || "22K",
+    size: "",
     quantity: 1,
     grossWeight: "",
     stoneWeight: "0",
@@ -135,7 +170,23 @@ export default function InventoryManager({
       let url = `/api/inventory/items?metalType=${metalType}&sortBy=${sortBy}`;
       if (selectedCategory !== "all") url += `&categoryId=${selectedCategory}`;
       if (selectedPurity !== "all") url += `&purity=${selectedPurity}`;
+      if (selectedSize !== "all") url += `&size=${encodeURIComponent(selectedSize)}`;
       if (searchQuery.trim()) url += `&search=${encodeURIComponent(searchQuery.trim())}`;
+
+      if (selectedWeightBracket !== "all") {
+        if (metalType === "gold") {
+          if (selectedWeightBracket === "under_2") url += "&maxWeight=1.999";
+          else if (selectedWeightBracket === "2_to_5") url += "&minWeight=2&maxWeight=5";
+          else if (selectedWeightBracket === "5_to_10") url += "&minWeight=5&maxWeight=10";
+          else if (selectedWeightBracket === "10_to_20") url += "&minWeight=10&maxWeight=20";
+          else if (selectedWeightBracket === "over_20") url += "&minWeight=20";
+        } else {
+          if (selectedWeightBracket === "under_20") url += "&maxWeight=19.999";
+          else if (selectedWeightBracket === "20_to_50") url += "&minWeight=20&maxWeight=50";
+          else if (selectedWeightBracket === "50_to_100") url += "&minWeight=50&maxWeight=100";
+          else if (selectedWeightBracket === "over_100") url += "&minWeight=100";
+        }
+      }
 
       const itemRes = await fetch(url);
       const itemData = await itemRes.json();
@@ -147,7 +198,7 @@ export default function InventoryManager({
     } finally {
       setLoading(false);
     }
-  }, [metalType, selectedCategory, selectedPurity, searchQuery, sortBy]);
+  }, [metalType, selectedCategory, selectedPurity, selectedSize, selectedWeightBracket, searchQuery, sortBy]);
 
   useEffect(() => {
     fetchData();
@@ -186,6 +237,7 @@ export default function InventoryManager({
         categoryId: "",
         sku: "",
         purity: purityOptions[0] || "22K",
+        size: "",
         quantity: 1,
         grossWeight: "",
         stoneWeight: "0",
@@ -306,6 +358,62 @@ export default function InventoryManager({
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    }
+  };
+
+  // 7. Sell Material Handler
+  const openSellModal = (item: InventoryItem) => {
+    setSellItem(item);
+    setSellSuccessData(null);
+    const unitCost = Math.round((item.purchaseCostRupees || 0) / (item.quantity || 1));
+    setSellForm({
+      quantitySold: 1,
+      sellingPriceRupees: "",
+      manualProfitRupees: "",
+      paidAmountRupees: "",
+      customerName: "",
+      customerPhone: "",
+      customerAddress: "",
+      dueDate: "",
+      paymentMode: "cash",
+      notes: "",
+    });
+    setIsSellModalOpen(true);
+  };
+
+  const handleSellSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sellItem) return;
+    try {
+      const res = await fetch("/api/sales", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemId: sellItem.id || sellItem._id,
+          ...sellForm,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to record sale");
+      }
+
+      setSellSuccessData({
+        saleNumber: data.sale.saleNumber,
+        whatsappUrl: data.whatsappUrl,
+        whatsappText: data.whatsappText,
+        customerName: data.sale.customer.name,
+        remainingBalance: data.sale.balanceDuePaise / 100,
+      });
+
+      setSuccessMsg(`Sale recorded! Stock of ${sellItem.name} deducted successfully.`);
+      fetchData();
+      // Notify other tabs / counters
+      window.dispatchEvent(new Event("sj-refresh-data"));
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err: any) {
+      setError(err.message || "Failed to record sale");
     }
   };
 
@@ -467,11 +575,23 @@ export default function InventoryManager({
               </button>
             </div>
           ))}
+
+          {/* Quick Add Dynamic Category Button */}
+          <button
+            onClick={() => {
+              setCategoryForm({ name: "" });
+              setIsCategoryModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 rounded-xl border border-dashed border-luxury-gold/60 bg-luxury-gold-subtle/50 px-3.5 py-2 text-xs font-semibold text-luxury-gold-dark hover:bg-luxury-gold-subtle transition"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>+ New Category</span>
+          </button>
         </div>
       </div>
 
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-luxury-beige bg-white p-4 shadow-luxury md:flex-row md:items-center md:justify-between">
+      {/* Search & Segregation / Filter Bar */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-luxury-beige bg-white p-4 shadow-luxury lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-luxury-muted" />
           <input
@@ -484,6 +604,45 @@ export default function InventoryManager({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Weight Segregation Filter */}
+          <select
+            value={selectedWeightBracket}
+            onChange={(e) => setSelectedWeightBracket(e.target.value)}
+            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+          >
+            <option value="all">⚖️ All Weights</option>
+            {metalType === "gold" ? (
+              <>
+                <option value="under_2">&lt; 2g (Light / Rings)</option>
+                <option value="2_to_5">2g – 5g (Standard Rings)</option>
+                <option value="5_to_10">5g – 10g (Heavy Rings / Chains)</option>
+                <option value="10_to_20">10g – 20g (Chains / Bangles)</option>
+                <option value="over_20">&gt; 20g (Heavy Sets / Kadas)</option>
+              </>
+            ) : (
+              <>
+                <option value="under_20">&lt; 20g (Light Silver)</option>
+                <option value="20_to_50">20g – 50g (Light Anklets)</option>
+                <option value="50_to_100">50g – 100g (Heavy Payal)</option>
+                <option value="over_100">&gt; 100g (Utensils / Articles)</option>
+              </>
+            )}
+          </select>
+
+          {/* Size Segregation Filter */}
+          <select
+            value={selectedSize}
+            onChange={(e) => setSelectedSize(e.target.value)}
+            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+          >
+            <option value="all">📏 All Sizes</option>
+            {Array.from(new Set(items.map((i) => i.size).filter(Boolean))).map((sz) => (
+              <option key={sz} value={sz}>
+                Size: {sz}
+              </option>
+            ))}
+          </select>
+
           {/* Purity Filter */}
           <select
             value={selectedPurity}
@@ -520,6 +679,7 @@ export default function InventoryManager({
               <tr>
                 <th className="px-4 py-3.5">SKU / Item</th>
                 <th className="px-4 py-3.5">Category</th>
+                <th className="px-4 py-3.5">Size / Dim</th>
                 <th className="px-4 py-3.5">Purity</th>
                 <th className="px-4 py-3.5 text-right">Qty</th>
                 <th className="px-4 py-3.5 text-right">Gross Wt</th>
@@ -533,14 +693,14 @@ export default function InventoryManager({
             <tbody className="divide-y divide-luxury-beige/60">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={11} className="py-12 text-center text-luxury-muted">
                     <div className="inline-block h-6 w-6 rounded-full border-2 border-luxury-gold border-t-transparent animate-spin mb-2"></div>
                     <p>Loading inventory...</p>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={11} className="py-12 text-center text-luxury-muted">
                     <p className="font-serif text-sm font-semibold text-luxury-charcoal">No items match your query</p>
                     <p className="text-[11px] mt-1">Try resetting filters or click &apos;Add Stock&apos; above to record a new entry.</p>
                   </td>
@@ -558,6 +718,15 @@ export default function InventoryManager({
                         <span className="rounded-md bg-luxury-ivory px-2 py-0.5 border border-luxury-beige text-[11px]">
                           {catName}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-luxury-charcoal">
+                        {item.size ? (
+                          <span className="rounded bg-luxury-gold-subtle/80 px-2 py-0.5 font-medium text-[11px] text-luxury-gold-dark border border-luxury-gold/30">
+                            {item.size}
+                          </span>
+                        ) : (
+                          <span className="text-luxury-muted text-[11px]">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 font-semibold text-luxury-gold">{item.purity}</td>
                       <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">{item.quantity}</td>
@@ -579,25 +748,35 @@ export default function InventoryManager({
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {/* Main Sell Button */}
+                          <button
+                            onClick={() => openSellModal(item)}
+                            title="Sell Material (Deduct stock, record customer udhari & profit)"
+                            className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-2.5 py-1 text-[11px] font-bold text-white shadow-xs hover:brightness-105 active:scale-95 transition"
+                          >
+                            <ShoppingBag className="h-3 w-3" />
+                            <span>Sell</span>
+                          </button>
+
                           <button
                             onClick={() => openAdjustModal(item)}
                             title="Adjust Stock (Non-destructive)"
-                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
+                            className="rounded-lg p-1 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
                           >
                             <Scale className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openHistoryModal(item)}
                             title="View Stock Movement Audit Trail"
-                            className="rounded-lg p-1.5 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
+                            className="rounded-lg p-1 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
                           >
                             <History className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleArchiveItem(item)}
                             title="Archive / Remove"
-                            className="rounded-lg p-1.5 text-luxury-muted hover:bg-red-50 hover:text-red-700 transition"
+                            className="rounded-lg p-1 text-luxury-muted hover:bg-red-50 hover:text-red-700 transition"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -643,7 +822,19 @@ export default function InventoryManager({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Category *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-luxury-charcoal">Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryForm({ name: "" });
+                        setIsCategoryModalOpen(true);
+                      }}
+                      className="text-[10px] font-bold text-luxury-gold-dark hover:underline flex items-center gap-0.5"
+                    >
+                      <Plus className="h-3 w-3" /> + New Category
+                    </button>
+                  </div>
                   <select
                     required
                     value={stockForm.categoryId}
@@ -657,6 +848,19 @@ export default function InventoryManager({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                    Size / Dimensions (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ring Size 14, 10.5 in, Bangle 2.4"
+                    value={stockForm.size}
+                    onChange={(e) => setStockForm({ ...stockForm, size: e.target.value })}
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
                 </div>
 
                 <div>
@@ -1009,6 +1213,310 @@ export default function InventoryManager({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 5: Sell Material & Customer Udhari Khata */}
+      {isSellModalOpen && sellItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
+          <div className="relative w-full max-w-xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8">
+            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-luxury-onyx flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-luxury-gold-dark" />
+                  <span>Sell Material — Counter Billing</span>
+                </h3>
+                <p className="text-xs text-luxury-muted">
+                  Deducts showroom inventory, records manual profit, and tracks customer udhari
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsSellModalOpen(false);
+                  setSellSuccessData(null);
+                }}
+              >
+                <X className="h-5 w-5 text-luxury-muted" />
+              </button>
+            </div>
+
+            {sellSuccessData ? (
+              <div className="my-6 space-y-5 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-luxury-gold-subtle border border-luxury-gold/50 shadow-gold-glow text-luxury-gold-dark">
+                  <Sparkles className="h-8 w-8 text-luxury-gold-dark" />
+                </div>
+
+                <div>
+                  <h4 className="font-serif text-xl font-bold text-luxury-onyx">Sale Recorded Successfully!</h4>
+                  <p className="text-xs font-mono text-luxury-muted mt-1">{sellSuccessData.saleNumber}</p>
+                  <p className="text-xs text-luxury-charcoal mt-2">
+                    Item stock deducted. Cash counter credited automatically.
+                  </p>
+                  {sellSuccessData.remainingBalance > 0 ? (
+                    <div className="mt-3 inline-block rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-xs text-amber-900">
+                      Remaining Udhari Due: <strong>₹{sellSuccessData.remainingBalance.toLocaleString("en-IN")}</strong>
+                    </div>
+                  ) : (
+                    <div className="mt-3 inline-block rounded-xl bg-luxury-gold-subtle border border-luxury-gold/40 px-4 py-2 text-xs text-luxury-gold-dark font-semibold">
+                      Full Payment Received (₹0 Balance)
+                    </div>
+                  )}
+                </div>
+
+                {/* WhatsApp Greeting & Receipt Button */}
+                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-4 text-left">
+                  <p className="text-xs font-semibold text-luxury-charcoal mb-2 flex items-center gap-1.5">
+                    <MessageCircle className="h-4 w-4 text-emerald-600" />
+                    <span>Send Customer WhatsApp Greeting & Payment Summary</span>
+                  </p>
+                  <p className="text-[11px] text-luxury-muted mb-3">
+                    Click below to open WhatsApp with a personalized greeting, purchase breakdown, remaining due, and promised due date.
+                  </p>
+                  <a
+                    href={sellSuccessData.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:brightness-105 active:scale-95 transition"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Open WhatsApp for {sellSuccessData.customerName}</span>
+                  </a>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    onClick={() => {
+                      setIsSellModalOpen(false);
+                      setSellSuccessData(null);
+                    }}
+                    className="w-full rounded-xl bg-luxury-onyx px-5 py-2.5 text-xs font-bold text-luxury-gold hover:bg-luxury-onyx-surface transition"
+                  >
+                    Done & Close
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSellSubmit} className="mt-4 space-y-4">
+                {/* Item Details Box */}
+                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-3.5 text-xs space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-luxury-charcoal text-sm">{sellItem.name}</span>
+                    <span className="rounded bg-luxury-gold-subtle px-2 py-0.5 text-[10px] font-bold text-luxury-gold-dark border border-luxury-gold/30">
+                      {sellItem.purity}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-4 text-luxury-muted text-[11px]">
+                    <span>SKU: <strong className="text-luxury-charcoal font-mono">{sellItem.sku}</strong></span>
+                    {sellItem.size && <span>Size: <strong className="text-luxury-gold-dark">{sellItem.size}</strong></span>}
+                    <span>Available Qty: <strong className="text-luxury-charcoal">{sellItem.quantity} pcs</strong></span>
+                    <span>Net Wt: <strong className="text-luxury-charcoal">{sellItem.netWeight.toFixed(3)}g</strong></span>
+                    <span>Unit Cost: <strong className="text-luxury-charcoal">₹{Math.round((sellItem.purchaseCostRupees || 0) / (sellItem.quantity || 1)).toLocaleString("en-IN")}</strong></span>
+                  </div>
+                </div>
+
+                {/* Quantity & Proportional Weight */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Quantity to Sell *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={sellItem.quantity}
+                      required
+                      value={sellForm.quantitySold}
+                      onChange={(e) => {
+                        const q = Math.max(1, Math.min(sellItem.quantity, parseInt(e.target.value) || 1));
+                        setSellForm({ ...sellForm, quantitySold: q });
+                      }}
+                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    />
+                    <span className="text-[10px] text-luxury-muted mt-0.5 block">Max available: {sellItem.quantity}</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Sold Net Weight (Est.)</label>
+                    <div className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/40 px-3 py-2 text-xs font-bold text-luxury-gold-dark">
+                      {((sellItem.netWeight / sellItem.quantity) * sellForm.quantitySold).toFixed(3)} grams
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selling Price & Manual Profit/Loss */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Selling Price (₹) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      placeholder="e.g. 10000"
+                      value={sellForm.sellingPriceRupees}
+                      onChange={(e) => {
+                        const sp = e.target.value;
+                        const approxCost = Math.round(((sellItem.purchaseCostRupees || 0) / sellItem.quantity) * sellForm.quantitySold);
+                        const autoProfit = sp ? String(Math.round(parseFloat(sp) - approxCost)) : "";
+                        setSellForm({
+                          ...sellForm,
+                          sellingPriceRupees: sp,
+                          manualProfitRupees: autoProfit,
+                          paidAmountRupees: sp, // default paid to full
+                        });
+                      }}
+                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-onyx focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-semibold text-luxury-charcoal">
+                        Manual Profit / Loss (₹)
+                      </label>
+                      <span className="text-[10px] text-luxury-muted font-normal">(Owner only)</span>
+                    </div>
+                    <input
+                      type="number"
+                      placeholder="Calculated or manual margin"
+                      value={sellForm.manualProfitRupees}
+                      onChange={(e) => setSellForm({ ...sellForm, manualProfitRupees: e.target.value })}
+                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    />
+                    <span className="text-[10px] text-luxury-muted mt-0.5 block">
+                      Net margin from this piece. Positive for profit, negative for loss.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Payment Amount & Udhari Khata */}
+                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-3.5 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Paid Amount (₹)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Amount received today"
+                        value={sellForm.paidAmountRupees}
+                        onChange={(e) => setSellForm({ ...sellForm, paidAmountRupees: e.target.value })}
+                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Payment Mode</label>
+                      <select
+                        value={sellForm.paymentMode}
+                        onChange={(e) => setSellForm({ ...sellForm, paymentMode: e.target.value as any })}
+                        className="w-full rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      >
+                        <option value="cash">Cash (Counter)</option>
+                        <option value="online">Online / UPI</option>
+                        <option value="mixed">Mixed</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Remaining Balance & Udhari Badge */}
+                  {(() => {
+                    const sp = parseFloat(sellForm.sellingPriceRupees) || 0;
+                    const paid = parseFloat(sellForm.paidAmountRupees) || 0;
+                    const bal = Math.max(0, sp - paid);
+                    return (
+                      <div className="flex items-center justify-between rounded-lg bg-white p-2.5 border border-luxury-beige text-xs">
+                        <span className="font-medium text-luxury-muted">Remaining Balance:</span>
+                        {bal > 0 ? (
+                          <span className="font-serif text-sm font-bold text-amber-800">
+                            ₹{bal.toLocaleString("en-IN")} (Added to Udhari Khata)
+                          </span>
+                        ) : (
+                          <span className="font-serif text-xs font-bold text-luxury-gold-dark">
+                            ₹0 (Fully Paid)
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Customer Details & Due Date */}
+                <div className="space-y-3 pt-1">
+                  <p className="text-xs font-bold text-luxury-onyx uppercase tracking-wider">
+                    Customer Information (For Greeting & Udhari)
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Customer Name *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ramesh Patil"
+                        value={sellForm.customerName}
+                        onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
+                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Mobile Number (WhatsApp) *</label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="10-digit mobile number"
+                        value={sellForm.customerPhone}
+                        onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
+                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Address (Optional)</label>
+                      <input
+                        type="text"
+                        placeholder="Locality / Village / Town"
+                        value={sellForm.customerAddress}
+                        onChange={(e) => setSellForm({ ...sellForm, customerAddress: e.target.value })}
+                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                        Promised Due Date (If Udhari)
+                      </label>
+                      <input
+                        type="date"
+                        value={sellForm.dueDate}
+                        onChange={(e) => setSellForm({ ...sellForm, dueDate: e.target.value })}
+                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                      />
+                      <span className="text-[10px] text-luxury-muted mt-0.5 block">
+                        Alert triggers 3 days before this date
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-luxury-beige">
+                  <button
+                    type="button"
+                    onClick={() => setIsSellModalOpen(false)}
+                    className="rounded-xl border border-luxury-beige px-4 py-2 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    <span>Confirm Sale &amp; Deduct Stock</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

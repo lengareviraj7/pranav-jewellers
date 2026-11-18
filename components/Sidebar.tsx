@@ -12,6 +12,9 @@ import {
   Settings,
   X,
   Sparkles,
+  ShoppingBag,
+  Wallet,
+  TrendingUp,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -26,6 +29,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Gold", href: "/gold", icon: Coins, highlight: "24K / 22K" },
     { name: "Silver", href: "/silver", icon: Gem, highlight: "999 / 925" },
+    { name: "Sales & Udhari", href: "/sales", icon: ShoppingBag, badge: "Billing" },
+    { name: "Cash Book", href: "/cash-book", icon: Wallet, highlight: "Rojmel" },
+    { name: "Profit & Loss", href: "/profit-loss", icon: TrendingUp },
     { name: "Used Gold & Silver", href: "/used-metal", icon: RefreshCw },
     { name: "Gold Finance", href: "/finance", icon: Landmark, badge: "Mortgage" },
     { name: "Settings", href: "/settings", icon: Settings },

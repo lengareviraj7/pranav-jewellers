@@ -15,6 +15,9 @@ export async function GET(req: NextRequest) {
   const metalType = searchParams.get("metalType"); // "gold" | "silver"
   const categoryId = searchParams.get("categoryId");
   const purity = searchParams.get("purity");
+  const size = searchParams.get("size");
+  const minWeight = searchParams.get("minWeight");
+  const maxWeight = searchParams.get("maxWeight");
   const search = searchParams.get("search");
   const sortBy = searchParams.get("sortBy") || "latest";
 
@@ -22,6 +25,13 @@ export async function GET(req: NextRequest) {
   if (metalType) filter.metalType = metalType;
   if (categoryId) filter.categoryId = categoryId;
   if (purity) filter.purity = purity;
+  if (size && size !== "all") filter.size = size;
+
+  if (minWeight || maxWeight) {
+    filter.netWeight = {};
+    if (minWeight) filter.netWeight.$gte = parseFloat(minWeight);
+    if (maxWeight) filter.netWeight.$lte = parseFloat(maxWeight);
+  }
   if (search && search.trim()) {
     const q = search.trim();
     filter.$or = [
@@ -69,6 +79,7 @@ export async function POST(req: NextRequest) {
       name,
       sku,
       purity,
+      size,
       quantity = 1,
       grossWeight,
       stoneWeight = 0,
@@ -142,6 +153,7 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       sku: itemSku,
       purity: purity.trim(),
+      size: size ? String(size).trim() : undefined,
       quantity: numQty,
       grossWeight: Number(numGross.toFixed(3)),
       stoneWeight: Number(numStone.toFixed(3)),
