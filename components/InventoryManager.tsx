@@ -1267,7 +1267,7 @@ export default function InventoryManager({
                 {/* WhatsApp Greeting & Receipt Button */}
                 <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-4 text-left">
                   <p className="text-xs font-semibold text-luxury-charcoal mb-2 flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4 text-emerald-600" />
+                    <MessageCircle className="h-4 w-4 text-luxury-gold-dark" />
                     <span>Send Customer WhatsApp Greeting & Payment Summary</span>
                   </p>
                   <p className="text-[11px] text-luxury-muted mb-3">
