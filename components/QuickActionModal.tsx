@@ -246,24 +246,24 @@ export default function QuickActionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-beige bg-white shadow-2xl overflow-hidden my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto modal-backdrop">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-champagne bg-white shadow-luxury-xl overflow-hidden my-8 modal-content">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-luxury-beige bg-gradient-to-r from-luxury-ivory/60 to-white px-6 py-4">
+        <div className="flex items-center justify-between border-b border-luxury-champagne bg-luxury-gold-subtle/40 px-6 py-4">
           <div>
-            <h3 className="font-serif text-lg font-bold text-luxury-onyx">Quick Action Hub</h3>
-            <p className="text-xs text-luxury-muted">Fast transactional entry directly to MongoDB</p>
+            <h3 className="font-serif text-[15px] font-bold tracking-wide text-luxury-onyx">Quick Action Hub</h3>
+            <p className="text-[11px] text-luxury-muted">Fast transactional entry — select an operation below</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-ivory hover:text-luxury-onyx transition"
+            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-champagne hover:text-luxury-onyx transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-luxury-beige bg-luxury-ivory/40 p-2 gap-1 overflow-x-auto">
+        <div className="flex border-b border-luxury-champagne bg-white px-4 py-2 gap-1 overflow-x-auto scrollbar-thin">
           <button
             onClick={() => setActiveTab("gold_stock")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
@@ -669,7 +669,9 @@ export default function QuickActionModal({
                   value={usedForm.ratePerGramRupees}
                   onChange={(e) => {
                     const r = e.target.value;
-                    const c = (usedNet > 0 ? usedNet : 0) * (Number(r) || 0);
+                    // Use freshly computed net from current usedForm values (fix stale closure)
+                    const freshNet = Number(usedForm.grossWeight || 0) - Number(usedForm.deductionsWeight || 0);
+                    const c = (freshNet > 0 ? freshNet : 0) * (Number(r) || 0);
                     setUsedForm({
                       ...usedForm,
                       ratePerGramRupees: r,

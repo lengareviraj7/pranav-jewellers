@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import AppShell from "@/components/AppShell";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import {
   ShoppingBag,
   Search,
@@ -190,8 +189,7 @@ export default function SalesPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Top Header */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
@@ -445,17 +443,17 @@ export default function SalesPage() {
                         </td>
 
                         <td className="px-4 py-3 text-right">
-                          <span className="font-medium text-luxury-charcoal">{s.quantitySold} pc</span>
-                          <p className="text-[10px] font-mono text-luxury-gold-dark">{s.netWeightSold.toFixed(3)}g net</p>
+                          <span className="font-medium text-luxury-charcoal font-mono tabular-nums">{s.quantitySold} pc</span>
+                          <p className="text-[10px] font-mono tabular-nums text-luxury-gold-dark">{s.netWeightSold.toFixed(3)}g net</p>
                         </td>
 
-                        <td className="px-4 py-3 text-right font-bold text-luxury-charcoal">
+                        <td className="px-4 py-3 text-right font-bold text-luxury-charcoal font-mono tabular-nums">
                           ₹{sp.toLocaleString("en-IN")}
                         </td>
 
                         <td className="px-4 py-3 text-right">
                           <span
-                            className={`font-serif font-bold ${
+                            className={`font-mono tabular-nums font-bold ${
                               profit >= 0 ? "text-luxury-gold-dark" : "text-red-700"
                             }`}
                           >
@@ -463,13 +461,13 @@ export default function SalesPage() {
                           </span>
                         </td>
 
-                        <td className="px-4 py-3 text-right text-luxury-charcoal font-medium">
+                        <td className="px-4 py-3 text-right text-luxury-charcoal font-medium font-mono tabular-nums">
                           ₹{paid.toLocaleString("en-IN")}
                         </td>
 
                         <td className="px-4 py-3 text-right">
                           {balance > 0 ? (
-                            <span className="font-serif font-bold text-amber-800">
+                            <span className="font-mono tabular-nums font-bold text-amber-800">
                               ₹{balance.toLocaleString("en-IN")}
                             </span>
                           ) : (
@@ -671,7 +669,6 @@ export default function SalesPage() {
             </div>
           </div>
         )}
-      </div>
-    </AppShell>
+    </div>
   );
 }

@@ -442,17 +442,6 @@ export default function InventoryManager({
           </a>
 
           <button
-            onClick={() => {
-              setCategoryForm({ name: "" });
-              setIsCategoryModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3.5 py-2 text-xs font-semibold text-luxury-charcoal shadow-xs hover:bg-luxury-ivory transition"
-          >
-            <Tag className="h-3.5 w-3.5 text-luxury-gold" />
-            <span>Manage Categories</span>
-          </button>
-
-          <button
             onClick={() => setIsAddStockOpen(true)}
             className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
           >
@@ -677,10 +666,10 @@ export default function InventoryManager({
           <table className="w-full text-left text-xs">
             <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
               <tr>
-                <th className="px-4 py-3.5">SKU / Item</th>
-                <th className="px-4 py-3.5">Category</th>
-                <th className="px-4 py-3.5">Size / Dim</th>
-                <th className="px-4 py-3.5">Purity</th>
+                <th className="px-4 py-3.5 text-left">SKU / Item</th>
+                <th className="px-4 py-3.5 text-left">Category</th>
+                <th className="px-4 py-3.5 text-center">Size / Dim</th>
+                <th className="px-4 py-3.5 text-center">Purity</th>
                 <th className="px-4 py-3.5 text-right">Qty</th>
                 <th className="px-4 py-3.5 text-right">Gross Wt</th>
                 <th className="px-4 py-3.5 text-right">Stones</th>
@@ -709,38 +698,42 @@ export default function InventoryManager({
                 items.map((item) => {
                   const catName = typeof item.categoryId === "object" ? item.categoryId?.name : "Category";
                   return (
-                    <tr key={item.id || item._id} className="hover:bg-luxury-ivory/40 transition">
-                      <td className="px-4 py-3 font-medium">
+                    <tr key={item.id || item._id} className="hover:bg-luxury-gold-subtle/25 transition-colors">
+                      <td className="px-4 py-3 font-medium text-left">
                         <p className="text-luxury-charcoal font-semibold">{item.name}</p>
-                        <p className="text-[10px] font-mono text-luxury-muted">{item.sku}</p>
+                        <p className="text-[10px] font-mono text-luxury-muted tracking-tight">{item.sku}</p>
                       </td>
-                      <td className="px-4 py-3 text-luxury-charcoal">
+                      <td className="px-4 py-3 text-left text-luxury-charcoal">
                         <span className="rounded-md bg-luxury-ivory px-2 py-0.5 border border-luxury-beige text-[11px]">
                           {catName}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-luxury-charcoal">
+                      <td className="px-4 py-3 text-center">
                         {item.size ? (
-                          <span className="rounded bg-luxury-gold-subtle/80 px-2 py-0.5 font-medium text-[11px] text-luxury-gold-dark border border-luxury-gold/30">
+                          <span className="inline-block rounded bg-luxury-gold-subtle/90 px-2 py-0.5 font-medium text-[11px] text-luxury-gold-dark border border-luxury-gold/30">
                             {item.size}
                           </span>
                         ) : (
                           <span className="text-luxury-muted text-[11px]">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-semibold text-luxury-gold">{item.purity}</td>
-                      <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right text-luxury-charcoal">{item.grossWeight.toFixed(3)}g</td>
-                      <td className="px-4 py-3 text-right text-luxury-muted">{item.stoneWeight.toFixed(3)}g</td>
-                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
+                      <td className="px-4 py-3 text-center">
+                        <span className="inline-block rounded bg-luxury-gold-subtle/60 px-2 py-0.5 font-semibold text-[11px] text-luxury-gold-dark border border-luxury-gold/25">
+                          {item.purity}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-luxury-charcoal font-mono tabular-nums">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right text-luxury-charcoal font-mono tabular-nums">{item.grossWeight.toFixed(3)}g</td>
+                      <td className="px-4 py-3 text-right text-luxury-muted font-mono tabular-nums">{item.stoneWeight.toFixed(3)}g</td>
+                      <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                         {item.netWeight.toFixed(3)}g
                       </td>
-                      <td className="px-4 py-3 text-right text-luxury-charcoal">
+                      <td className="px-4 py-3 text-right text-luxury-charcoal font-mono tabular-nums font-semibold">
                         ₹{(item.purchaseCostRupees || 0).toLocaleString("en-IN")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.hallmarkUid ? (
-                          <span className="rounded bg-luxury-gold-subtle px-1.5 py-0.5 text-[10px] font-mono font-bold text-luxury-gold-dark border border-luxury-gold/30">
+                          <span className="inline-block rounded bg-luxury-gold-subtle px-1.5 py-0.5 text-[10px] font-mono font-bold text-luxury-gold-dark border border-luxury-gold/30">
                             {item.hallmarkUid}
                           </span>
                         ) : (

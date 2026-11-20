@@ -6,6 +6,8 @@ import InventoryTransaction from "@/models/InventoryTransaction";
 import SaleRecord from "@/models/SaleRecord";
 import CashTransaction from "@/models/CashTransaction";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const sessionUser = await authenticateRequest(req);

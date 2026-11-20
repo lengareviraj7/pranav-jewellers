@@ -353,11 +353,11 @@ export default function CashBookPage() {
                           {t.referenceId || "—"}
                         </td>
 
-                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
+                        <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                           {t.transactionType === "credit" ? `+₹${amt.toLocaleString("en-IN")}` : "—"}
                         </td>
 
-                        <td className="px-4 py-3 text-right font-serif font-bold text-amber-800">
+                        <td className="px-4 py-3 text-right font-bold text-amber-800 font-mono tabular-nums">
                           {t.transactionType === "debit" ? `-₹${amt.toLocaleString("en-IN")}` : "—"}
                         </td>
                       </tr>

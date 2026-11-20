@@ -3,6 +3,8 @@ import connectToDatabase from "@/lib/mongodb";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/api-auth";
 import CashTransaction from "@/models/CashTransaction";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const sessionUser = await authenticateRequest(req);

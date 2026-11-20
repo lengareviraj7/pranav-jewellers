@@ -4,6 +4,8 @@ import { authenticateRequest, unauthorizedResponse } from "@/lib/api-auth";
 import SaleRecord from "@/models/SaleRecord";
 import Category from "@/models/Category";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const sessionUser = await authenticateRequest(req);

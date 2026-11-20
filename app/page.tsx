@@ -9,12 +9,12 @@ import {
   Landmark,
   AlertTriangle,
   ArrowUpRight,
-  Clock,
   Sparkles,
-  ChevronRight,
   Wallet,
   ShoppingBag,
   TrendingUp,
+  Clock,
+  Activity,
 } from "lucide-react";
 
 interface DashboardStats {
@@ -62,531 +62,374 @@ interface DashboardStats {
   }>;
 }
 
+// KPI Card component
+function KpiCard({
+  label,
+  value,
+  sub,
+  subRight,
+  link,
+  linkLabel,
+  icon: Icon,
+  iconBg,
+  dark,
+  delay,
+}: {
+  label: string;
+  value: React.ReactNode;
+  sub?: string;
+  subRight?: React.ReactNode;
+  link: string;
+  linkLabel: string;
+  icon: React.ElementType;
+  iconBg?: string;
+  dark?: boolean;
+  delay?: number;
+}) {
+  return (
+    <Link
+      href={link}
+      className={`group relative flex flex-col justify-between rounded-2xl border p-5 transition-all duration-300 cursor-pointer animate-fadeInUp card-hover overflow-hidden ${
+        dark
+          ? "border-luxury-gold/30 bg-luxury-onyx text-white shadow-gold-glow"
+          : "border-luxury-champagne bg-white shadow-luxury hover:border-luxury-gold/35"
+      }`}
+      style={{ animationDelay: `${(delay || 0) * 0.07}s` }}
+    >
+      {/* Top row */}
+      <div className="flex items-start justify-between">
+        <span className={`text-[11px] font-semibold uppercase tracking-widest ${dark ? "text-luxury-gold" : "text-luxury-muted"}`}>
+          {label}
+        </span>
+        <div className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${iconBg || "bg-luxury-gold-subtle border border-luxury-champagne"}`}>
+          <Icon className={`h-4.5 w-4.5 ${dark ? "text-luxury-gold" : "text-luxury-gold-dark"}`} />
+        </div>
+      </div>
+
+      {/* Value */}
+      <div className="mt-3">
+        <p className={`font-serif text-2xl font-bold leading-tight ${dark ? "text-luxury-gold" : "text-luxury-onyx"}`}>
+          {value}
+        </p>
+        {(sub || subRight) && (
+          <div className={`mt-2 flex items-center justify-between gap-2 border-t pt-2 text-[11px] ${dark ? "border-luxury-gold/15 text-white/60" : "border-luxury-champagne text-luxury-muted"}`}>
+            {sub && <span className="truncate">{sub}</span>}
+            {subRight && <span className={`font-semibold shrink-0 ${dark ? "text-white/80" : "text-luxury-charcoal"}`}>{subRight}</span>}
+          </div>
+        )}
+      </div>
+
+      {/* Footer link */}
+      <div className={`mt-4 flex items-center justify-between text-[11px] font-semibold transition-colors ${dark ? "text-luxury-gold group-hover:text-luxury-gold-bright" : "text-luxury-gold-dark group-hover:text-luxury-gold"}`}>
+        <span>{linkLabel}</span>
+        <ArrowUpRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+      </div>
+    </Link>
+  );
+}
+
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (showSync = false) => {
     try {
-      setLoading(true);
+      if (showSync) setSyncing(true);
+      else setLoading(true);
       const res = await fetch("/api/dashboard/stats");
       const data = await res.json();
       if (res.ok && data.success) {
         setStats(data.stats);
+        setError(null);
       } else {
         setError(data.error || "Failed to load dashboard metrics");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to connect to API");
+      setError(err.message || "Network error — check server connection");
     } finally {
       setLoading(false);
+      setSyncing(false);
     }
   }, []);
 
   useEffect(() => {
     fetchStats();
-    const handleRefresh = () => fetchStats();
+    const handleRefresh = () => fetchStats(true);
     window.addEventListener("sj-refresh-data", handleRefresh);
     return () => window.removeEventListener("sj-refresh-data", handleRefresh);
   }, [fetchStats]);
 
   if (loading && !stats) {
     return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-10 w-10 rounded-full border-4 border-luxury-gold border-t-transparent animate-spin"></div>
-          <p className="text-xs font-semibold text-luxury-muted">Reading live figures from MongoDB...</p>
+      <div className="flex h-80 items-center justify-center">
+        <div className="flex flex-col items-center gap-3 animate-fadeInUp">
+          <div className="h-9 w-9 rounded-full border-2 border-luxury-gold/20 border-t-luxury-gold animate-spin" />
+          <p className="text-[11px] text-luxury-muted font-medium">
+            Reading live figures from database…
+          </p>
         </div>
       </div>
     );
   }
 
+  const counter = stats?.counter;
+
   return (
     <div className="space-y-8">
-      {/* Welcome & Overview Header */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end animate-fadeInUp">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold-dark">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-luxury-gold-dark">
             Sarafa Live Operations
           </span>
-          <h1 className="font-serif text-2xl font-bold tracking-wider text-luxury-onyx sm:text-3xl">
+          <h1 className="mt-0.5 font-serif text-2xl font-bold tracking-wide text-luxury-onyx sm:text-3xl">
             Executive Dashboard
           </h1>
-          <p className="mt-1 text-xs text-luxury-muted">
-            Real-time balance of showroom metals, scrap acquisition ledger, and gold finance portfolio.
+          <p className="mt-1 text-[12px] text-luxury-muted max-w-lg">
+            Real-time showroom metals, scrap acquisition ledger &amp; gold finance portfolio.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => fetchStats()}
-            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3.5 py-2 text-xs font-semibold text-luxury-charcoal shadow-xs hover:bg-luxury-gold-subtle hover:border-luxury-gold/50 transition"
-          >
-            <RefreshCw className="h-3.5 w-3.5 text-luxury-gold-dark" />
-            <span>Sync Data</span>
-          </button>
-        </div>
+        <button
+          onClick={() => fetchStats(true)}
+          disabled={syncing}
+          className="flex items-center gap-2 self-start rounded-xl border border-luxury-champagne bg-white px-4 py-2.5 text-[12px] font-semibold text-luxury-charcoal shadow-luxury transition-all hover:border-luxury-gold/40 hover:bg-luxury-gold-subtle hover:shadow-luxury-md disabled:opacity-60 md:self-auto"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 text-luxury-gold-dark ${syncing ? "animate-spin" : ""}`} />
+          {syncing ? "Syncing…" : "Sync Data"}
+        </button>
       </div>
 
+      {/* ── Error Banner ── */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-xs text-red-700">
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-700 animate-slideDown flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
 
-      {/* KPI Section 1: Gold & Silver Showroom Inventory */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-luxury-gold"></div>
-            <h2 className="font-serif text-xs font-bold uppercase tracking-wider text-luxury-onyx">
-              Showroom Metals &amp; Financing Portfolio
-            </h2>
-          </div>
-          <span className="text-[11px] text-luxury-muted">Verified Physical Vaults &amp; Custody</span>
+      {/* ── KPI Row 1: Metals + Finance ── */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-3.5 w-0.5 rounded-full bg-luxury-gold" />
+          <h2 className="font-serif text-[11px] font-bold uppercase tracking-widest text-luxury-onyx">
+            Showroom Metals &amp; Finance Portfolio
+          </h2>
         </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Card 1: Gold Available Stock */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Gold Showroom Stock
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold-subtle border border-luxury-gold/30 text-luxury-gold-dark shadow-xs">
-                <Coins className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-onyx">
-                {stats?.gold.netWeight.toFixed(3) || "0.000"}{" "}
-                <span className="text-sm font-sans font-normal text-luxury-gold-dark font-medium">g Net</span>
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Gross: {stats?.gold.grossWeight.toFixed(3) || "0.000"} g</span>
-                <span className="font-semibold text-luxury-charcoal">{stats?.gold.pieces || 0} pieces</span>
-              </div>
-            </div>
-            <Link
-              href="/gold"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>View {stats?.gold.categoryCount || 0} Gold Categories</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 2: Silver Available Stock */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Silver Showroom Stock
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 border border-slate-200 text-slate-700 shadow-xs">
-                <Gem className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-onyx">
-                {stats?.silver.netWeight.toFixed(3) || "0.000"}{" "}
-                <span className="text-sm font-sans font-normal text-slate-600 font-medium">g Net</span>
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Gross: {stats?.silver.grossWeight.toFixed(3) || "0.000"} g</span>
-                <span className="font-semibold text-luxury-charcoal">{stats?.silver.pieces || 0} pieces</span>
-              </div>
-            </div>
-            <Link
-              href="/silver"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>View {stats?.silver.categoryCount || 0} Silver Categories</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 3: Scrap Metal Purchased */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Used Metal Purchases
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold-subtle border border-luxury-gold/30 text-luxury-gold-dark shadow-xs">
-                <RefreshCw className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-onyx">
-                ₹{(stats?.usedMetal.totalCostRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Gold: {stats?.usedMetal.goldNetWeight.toFixed(3) || "0.000"} g</span>
-                <span>Silver: {stats?.usedMetal.silverNetWeight.toFixed(3) || "0.000"} g</span>
-              </div>
-            </div>
-            <Link
-              href="/used-metal"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>{stats?.usedMetal.totalCount || 0} Scrap Vouchers</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 4: Gold Finance Outstanding */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Finance Outstanding Dues
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
-                <Landmark className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-onyx">
-                ₹{(stats?.finance.totalDueRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </p>
-              <div className="mt-2 flex items-center justify-between text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Principal: ₹{(stats?.finance.outstandingPrincipalRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>
-                <span className="text-amber-800 font-semibold">+₹{(stats?.finance.accruedInterestRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })} int</span>
-              </div>
-            </div>
-            <Link
-              href="/finance"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>{stats?.finance.activeLoansCount || 0} Active Loans</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            delay={0}
+            label="Gold Stock"
+            value={<>{stats?.gold.netWeight.toFixed(3) || "0.000"} <span className="text-sm font-sans font-normal text-luxury-gold-dark">g net</span></>}
+            sub={`Gross: ${stats?.gold.grossWeight.toFixed(3) || "0.000"} g`}
+            subRight={`${stats?.gold.pieces || 0} pcs`}
+            link="/gold"
+            linkLabel={`${stats?.gold.categoryCount || 0} Categories`}
+            icon={Coins}
+            iconBg="bg-luxury-gold-subtle border border-luxury-champagne"
+          />
+          <KpiCard
+            delay={1}
+            label="Silver Stock"
+            value={<>{stats?.silver.netWeight.toFixed(3) || "0.000"} <span className="text-sm font-sans font-normal text-slate-500">g net</span></>}
+            sub={`Gross: ${stats?.silver.grossWeight.toFixed(3) || "0.000"} g`}
+            subRight={`${stats?.silver.pieces || 0} pcs`}
+            link="/silver"
+            linkLabel={`${stats?.silver.categoryCount || 0} Categories`}
+            icon={Gem}
+            iconBg="bg-slate-50 border border-slate-200"
+          />
+          <KpiCard
+            delay={2}
+            label="Used Metal"
+            value={<>₹{(stats?.usedMetal.totalCostRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</>}
+            sub={`Au: ${stats?.usedMetal.goldNetWeight.toFixed(2) || "0.00"}g`}
+            subRight={`Ag: ${stats?.usedMetal.silverNetWeight.toFixed(2) || "0.00"}g`}
+            link="/used-metal"
+            linkLabel={`${stats?.usedMetal.totalCount || 0} Vouchers`}
+            icon={RefreshCw}
+            iconBg="bg-luxury-gold-subtle border border-luxury-champagne"
+          />
+          <KpiCard
+            delay={3}
+            label="Finance Outstanding"
+            value={<>₹{(stats?.finance.totalDueRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</>}
+            sub={`Principal: ₹${(stats?.finance.outstandingPrincipalRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`}
+            subRight={<span className="text-amber-700">+₹{(stats?.finance.accruedInterestRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })} int</span>}
+            link="/finance"
+            linkLabel={`${stats?.finance.activeLoansCount || 0} Active Loans`}
+            icon={Landmark}
+            iconBg="bg-amber-50 border border-amber-200"
+          />
         </div>
-      </div>
+      </section>
 
-      {/* KPI Section 2: Cash Counter & Sales / Profit Performance */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-4 w-1 rounded-full bg-luxury-gold-dark"></div>
-            <h2 className="font-serif text-xs font-bold uppercase tracking-wider text-luxury-onyx">
-              Cash Counter Book &amp; Sales Margins
-            </h2>
-          </div>
-          <span className="text-[11px] text-luxury-muted">Daily Rojmel &amp; Customer Udhari Tracking</span>
+      {/* ── KPI Row 2: Cash + Sales ── */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <div className="h-3.5 w-0.5 rounded-full bg-luxury-gold-dark" />
+          <h2 className="font-serif text-[11px] font-bold uppercase tracking-widest text-luxury-onyx">
+            Cash Counter &amp; Sales Performance
+          </h2>
         </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Card 5: Live Cash in Counter */}
-          <div className="group relative overflow-hidden rounded-2xl border-2 border-luxury-gold/50 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-5 shadow-gold-glow text-white transition hover:border-luxury-gold">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-gold">
-                Live Cash in Counter
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold/20 text-luxury-gold shadow-xs">
-                <Wallet className="h-5 w-5 text-luxury-gold" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-gold">
-                ₹{(stats?.counter?.cashInHandRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </p>
-              <div className="mt-2 text-xs text-white/70 border-t border-luxury-gold/20 pt-2">
-                <span>Rojmel counter till tally</span>
-              </div>
-            </div>
-            <Link
-              href="/cash-book"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold hover:underline transition"
-            >
-              <span>Open Cash Book (Rojmel)</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 6: Realized Sales Profit */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Realized Sales Profit
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-gold-subtle border border-luxury-gold/30 text-luxury-gold-dark shadow-xs">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-gold-dark">
-                +₹{(stats?.counter?.totalProfitRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </p>
-              <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>{stats?.counter?.totalSalesCount || 0} counter sales logged</span>
-              </div>
-            </div>
-            <Link
-              href="/profit-loss"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>View Profit &amp; Loss Margins</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 7: Customer Udhari Khata */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Pending Udhari Dues
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
-                <ShoppingBag className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-amber-800">
-                ₹{(stats?.counter?.outstandingUdhariRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
-              </p>
-              <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Customer balance to collect</span>
-              </div>
-            </div>
-            <Link
-              href="/sales?tab=pending_udhari"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>Open Udhari Khata</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
-
-          {/* Card 8: Due Date Reminders */}
-          <div className="group relative overflow-hidden rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury transition hover:shadow-luxury-lg hover:border-luxury-gold/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-luxury-muted">
-                Udhari Alerts (3 Days)
-              </span>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-800 shadow-xs">
-                <Clock className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="font-serif text-2xl font-bold text-luxury-onyx">
-                {stats?.counter?.dueAlertCount || 0}{" "}
-                <span className="text-sm font-sans font-normal text-luxury-muted">due soon</span>
-              </p>
-              <div className="mt-2 text-xs text-luxury-muted border-t border-luxury-beige/60 pt-2">
-                <span>Automated WhatsApp reminders</span>
-              </div>
-            </div>
-            <Link
-              href="/sales?tab=3_days"
-              className="mt-4 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold transition"
-            >
-              <span>Send Due Alerts</span>
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            delay={4}
+            dark
+            label="Live Cash in Counter"
+            value={<>₹{(counter?.cashInHandRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</>}
+            sub="Rojmel counter balance"
+            link="/cash-book"
+            linkLabel="Open Cash Book"
+            icon={Wallet}
+          />
+          <KpiCard
+            delay={5}
+            label="Realized Profit"
+            value={<span className="text-luxury-gold-dark">+₹{(counter?.totalProfitRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>}
+            sub={`${counter?.totalSalesCount || 0} sales logged`}
+            link="/profit-loss"
+            linkLabel="Profit & Loss Report"
+            icon={TrendingUp}
+            iconBg="bg-luxury-gold-subtle border border-luxury-champagne"
+          />
+          <KpiCard
+            delay={6}
+            label="Pending Udhari"
+            value={<span className="text-amber-700">₹{(counter?.outstandingUdhariRupees || 0).toLocaleString("en-IN", { maximumFractionDigits: 0 })}</span>}
+            sub="Customer balance to collect"
+            link="/sales?tab=pending_udhari"
+            linkLabel="Open Udhari Khata"
+            icon={ShoppingBag}
+            iconBg="bg-amber-50 border border-amber-200"
+          />
+          <KpiCard
+            delay={7}
+            label="Due Alerts (3 Days)"
+            value={<>{counter?.dueAlertCount || 0} <span className="text-sm font-sans font-normal text-luxury-muted">due soon</span></>}
+            sub="WhatsApp reminder queue"
+            link="/sales?tab=3_days"
+            linkLabel="Send Due Alerts"
+            icon={Clock}
+            iconBg="bg-amber-50 border border-amber-200"
+          />
         </div>
-      </div>
+      </section>
 
-      {/* Finance Overdue Warning Banner */}
+      {/* ── Overdue Alert Banner ── */}
       {(stats?.finance.overdueCount || 0) > 0 && (
-        <div className="flex items-center justify-between rounded-2xl border border-amber-300 bg-amber-50/90 p-4 shadow-xs">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white shadow-xs">
-              <AlertTriangle className="h-5 w-5" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 shadow-luxury animate-slideDown">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-luxury">
+              <AlertTriangle className="h-4.5 w-4.5" />
             </div>
             <div>
-              <p className="text-xs font-bold text-amber-900">
-                Action Required: {stats?.finance.overdueCount} Finance Accounts are Past Maturity Due Date!
+              <p className="text-[13px] font-bold text-amber-900">
+                Action Required — {stats?.finance.overdueCount} Finance Accounts Past Maturity
               </p>
-              <p className="text-[11px] text-amber-700">
-                Review overdue client pledges and calculate updated compound dues in the Gold Finance module.
+              <p className="mt-0.5 text-[11px] text-amber-700">
+                Review overdue client pledges and calculate updated compound dues.
               </p>
             </div>
           </div>
           <Link
             href="/finance?status=overdue"
-            className="rounded-xl bg-amber-700 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-amber-800 shadow-xs transition"
+            className="shrink-0 rounded-xl bg-amber-600 px-4 py-2 text-[12px] font-semibold text-white shadow-luxury hover:bg-amber-700 transition-colors"
           >
-            View Overdue Accounts
+            View Overdue
           </Link>
         </div>
       )}
 
-      {/* Grid: Primary Operations Hub & Recent Activities */}
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Left 2 Cols: Primary Operations Hub */}
-        <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-4">
+      {/* ── Bottom: Quick Links + Live Activity ── */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+        {/* Quick Links (2 col span) */}
+        <div className="lg:col-span-2 rounded-2xl border border-luxury-champagne bg-white shadow-luxury overflow-hidden">
+          <div className="border-b border-luxury-champagne px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-luxury-gold" />
               <div>
-                <h3 className="font-serif text-base font-bold text-luxury-onyx">Primary Modules</h3>
-                <p className="text-xs text-luxury-muted">Direct access to core jewellery business ledgers</p>
+                <h3 className="font-serif text-[13px] font-bold text-luxury-onyx">Quick Module Access</h3>
+                <p className="text-[11px] text-luxury-muted">Jump to any core business ledger</p>
               </div>
             </div>
-
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <Link
-                href="/gold"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
+          </div>
+          <div className="p-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              { href: "/gold", icon: Coins, label: "Gold Inventory", desc: "Stock by category, HUID, purity" },
+              { href: "/silver", icon: Gem, label: "Silver Inventory", desc: "Anklets, coins, utensils" },
+              { href: "/sales", icon: ShoppingBag, label: "Sales & Udhari", desc: "Counter billing, Udhari khata" },
+              { href: "/cash-book", icon: Wallet, label: "Cash Book", desc: "Daily Jama & Kharach" },
+              { href: "/used-metal", icon: RefreshCw, label: "Used Metal", desc: "Exchange & scrap purchases" },
+              { href: "/finance", icon: Landmark, label: "Gold Finance", desc: "Mortgage engine v2" },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group flex flex-col gap-2 rounded-xl border border-luxury-champagne bg-luxury-gold-subtle/30 p-3.5 hover:border-luxury-gold/50 hover:bg-white transition-all duration-200 card-hover animate-fadeInUp"
+                  style={{ animationDelay: `${i * 0.06}s` }}
+                >
                   <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Gold Inventory</span>
-                    <Coins className="h-4 w-4 text-luxury-gold-dark" />
+                    <Icon className="h-4 w-4 text-luxury-gold-dark" />
+                    <ArrowUpRight className="h-3.5 w-3.5 text-luxury-muted group-hover:text-luxury-gold-dark group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Dynamic category-wise pieces, gross/net milligram weights, stone deductions, and HUID registry.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Enter Gold Module</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                href="/silver"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Silver Inventory</span>
-                    <Gem className="h-4 w-4 text-slate-600" />
+                  <div>
+                    <p className="font-serif text-[12px] font-bold text-luxury-onyx leading-snug">{item.label}</p>
+                    <p className="text-[10px] text-luxury-muted mt-0.5 leading-relaxed">{item.desc}</p>
                   </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Anklets, utensils, pooja items, 999 coins, and standard ornaments with category aggregates.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Enter Silver Module</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                href="/used-metal"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Used Gold & Silver</span>
-                    <RefreshCw className="h-4 w-4 text-luxury-gold-dark" />
-                  </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Customer exchange & scrap purchases, tested purity, deduction tracking, and explicit showroom conversion.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Enter Scrap Ledger</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                href="/finance"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Gold Finance &amp; Mortgage</span>
-                    <Landmark className="h-4 w-4 text-luxury-gold-dark" />
-                  </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Native mortgage engine v2, 12-month compound rests, pledged ornament segregation, payment vouchers.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Enter Finance Engine</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                href="/sales"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Sales &amp; Customer Udhari</span>
-                    <ShoppingBag className="h-4 w-4 text-luxury-gold-dark" />
-                  </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Direct counter billing, stock deduction, manual profit logging, and 3-day WhatsApp payment alerts.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Enter Sales Ledger</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-
-              <Link
-                href="/cash-book"
-                className="group flex flex-col justify-between rounded-xl border border-luxury-beige bg-luxury-gold-subtle/30 p-4 hover:border-luxury-gold hover:bg-white transition"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-sm font-bold text-luxury-onyx">Cash Counter Book (Rojmel)</span>
-                    <Wallet className="h-4 w-4 text-luxury-gold-dark" />
-                  </div>
-                  <p className="mt-1 text-xs text-luxury-muted">
-                    Real-time cash in till balance tally, daily credits (Jama), expense debits (Kharach), and audit trail.
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs font-semibold text-luxury-gold-dark group-hover:text-luxury-gold">
-                  <span>Open Rojmel</span>
-                  <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </div>
-              </Link>
-            </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
-        {/* Right Col: Recent Activity Stream */}
-        <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-          <div className="flex items-center justify-between border-b border-luxury-beige pb-4">
+        {/* Live Activity Feed */}
+        <div className="rounded-2xl border border-luxury-champagne bg-white shadow-luxury overflow-hidden">
+          <div className="border-b border-luxury-champagne px-5 py-4 flex items-center justify-between">
             <div>
-              <h3 className="font-serif text-base font-bold text-luxury-onyx">Live Activity Feed</h3>
-              <p className="text-xs text-luxury-muted">Latest operations across all ledgers</p>
+              <h3 className="font-serif text-[13px] font-bold text-luxury-onyx">Live Activity</h3>
+              <p className="text-[11px] text-luxury-muted">Latest operations</p>
             </div>
-            <Clock className="h-4 w-4 text-luxury-gold-dark" />
+            <Activity className="h-4 w-4 text-luxury-gold-dark" />
           </div>
-
-          <div className="mt-4 space-y-3">
+          <div className="p-4 space-y-2.5 max-h-[320px] overflow-y-auto">
             {!stats?.recentActivities || stats.recentActivities.length === 0 ? (
-              <p className="text-xs text-luxury-muted py-8 text-center">
-                No recent transactions recorded yet.
-              </p>
+              <div className="py-10 text-center">
+                <p className="text-[12px] text-luxury-muted">No recent transactions yet.</p>
+              </div>
             ) : (
-              stats.recentActivities.map((act) => {
+              stats.recentActivities.map((act, i) => {
                 const dateStr = new Date(act.date).toLocaleDateString("en-IN", {
                   day: "2-digit",
                   month: "short",
                   hour: "2-digit",
                   minute: "2-digit",
                 });
-
+                const icons: Record<string, React.ElementType> = {
+                  sale: ShoppingBag,
+                  inventory: Coins,
+                  used_purchase: RefreshCw,
+                  finance_payment: Landmark,
+                };
+                const ActIcon = icons[act.type] || Coins;
                 return (
                   <div
                     key={act.id}
-                    className="flex items-start gap-3 rounded-xl border border-luxury-beige/70 p-3 bg-luxury-gold-subtle/20 hover:bg-luxury-gold-subtle/50 transition"
+                    className="flex items-start gap-3 rounded-xl border border-luxury-champagne/70 p-3 hover:bg-luxury-gold-subtle/30 transition-colors animate-fadeInUp"
+                    style={{ animationDelay: `${i * 0.05}s` }}
                   >
-                    <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-lg bg-luxury-gold/15 text-luxury-gold-dark shrink-0">
-                      {act.type === "sale" ? (
-                        <ShoppingBag className="h-3.5 w-3.5 text-luxury-gold-dark" />
-                      ) : act.type === "inventory" ? (
-                        <Coins className="h-3.5 w-3.5 text-luxury-gold-dark" />
-                      ) : act.type === "used_purchase" ? (
-                        <RefreshCw className="h-3.5 w-3.5 text-luxury-gold-dark" />
-                      ) : (
-                        <Landmark className="h-3.5 w-3.5 text-amber-800" />
-                      )}
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-luxury-gold/10">
+                      <ActIcon className="h-3.5 w-3.5 text-luxury-gold-dark" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-luxury-charcoal truncate">{act.title}</p>
-                      <p className="text-[11px] text-luxury-muted mt-0.5 truncate">{act.subtitle}</p>
-                      <p className="text-[10px] text-luxury-gold-dark font-medium mt-1">{dateStr}</p>
+                      <p className="text-[11px] font-semibold text-luxury-charcoal truncate">{act.title}</p>
+                      <p className="text-[10px] text-luxury-muted mt-0.5 truncate">{act.subtitle}</p>
+                      <p className="text-[9px] text-luxury-gold-dark font-medium mt-1">{dateStr}</p>
                     </div>
                   </div>
                 );

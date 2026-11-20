@@ -22,20 +22,20 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const navigation = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard, group: "overview" },
+  { name: "Gold Stock", href: "/gold", icon: Coins, tag: "24K / 22K", group: "stock" },
+  { name: "Silver Stock", href: "/silver", icon: Gem, tag: "999 / 925", group: "stock" },
+  { name: "Sales & Udhari", href: "/sales", icon: ShoppingBag, badge: "Billing", group: "sales" },
+  { name: "Cash Book", href: "/cash-book", icon: Wallet, tag: "Rojmel", group: "sales" },
+  { name: "Profit & Loss", href: "/profit-loss", icon: TrendingUp, group: "sales" },
+  { name: "Used Metal", href: "/used-metal", icon: RefreshCw, group: "operations" },
+  { name: "Gold Finance", href: "/finance", icon: Landmark, badge: "Mortgage", group: "operations" },
+  { name: "Settings", href: "/settings", icon: Settings, group: "system" },
+];
+
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
-
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Gold", href: "/gold", icon: Coins, highlight: "24K / 22K" },
-    { name: "Silver", href: "/silver", icon: Gem, highlight: "999 / 925" },
-    { name: "Sales & Udhari", href: "/sales", icon: ShoppingBag, badge: "Billing" },
-    { name: "Cash Book", href: "/cash-book", icon: Wallet, highlight: "Rojmel" },
-    { name: "Profit & Loss", href: "/profit-loss", icon: TrendingUp },
-    { name: "Used Gold & Silver", href: "/used-metal", icon: RefreshCw },
-    { name: "Gold Finance", href: "/finance", icon: Landmark, badge: "Mortgage" },
-    { name: "Settings", href: "/settings", icon: Settings },
-  ];
 
   return (
     <>
@@ -43,109 +43,118 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden animate-fadeIn"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col justify-between border-r border-luxury-beige bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col border-r border-luxury-champagne bg-white transition-transform duration-300 ease-out lg:static lg:translate-x-0 ${
+          isOpen ? "translate-x-0 shadow-luxury-xl" : "-translate-x-full"
         }`}
       >
-        <div>
-          {/* Brand Identity / Crest */}
-          <div className="flex h-24 items-center justify-between border-b border-luxury-beige px-6 bg-gradient-to-b from-luxury-ivory/80 via-white to-white">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx border border-luxury-gold/50 shadow-gold-glow text-luxury-gold">
-                <Sparkles className="h-6 w-6 text-luxury-gold" />
-              </div>
-              <div>
-                <h1 className="font-serif text-base font-bold tracking-wider text-luxury-onyx">
-                  SIDHESHWAR
-                </h1>
-                <p className="text-[10px] font-semibold tracking-widest text-luxury-gold-dark uppercase">
-                  Jewellers • Estd 1994
-                </p>
-              </div>
-            </Link>
+        {/* ── Brand Crest ── */}
+        <div className="flex h-[72px] items-center justify-between border-b border-luxury-champagne px-5 shrink-0">
+          <Link
+            href="/"
+            className="flex items-center gap-3 group"
+            onClick={onClose}
+          >
+            {/* Gold medallion */}
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-luxury-onyx border border-luxury-gold/40 shadow-gold-glow group-hover:shadow-gold-glow-lg transition-shadow duration-300">
+              <Sparkles className="h-5 w-5 text-luxury-gold" />
+            </div>
+            <div>
+              <h1 className="font-serif text-sm font-bold tracking-[0.12em] text-luxury-onyx leading-none">
+                SIDHESHWAR
+              </h1>
+              <p className="text-[9px] font-semibold tracking-[0.18em] text-luxury-gold-dark uppercase mt-0.5">
+                Jewellers • Est. 1994
+              </p>
+            </div>
+          </Link>
 
-            <button
-              onClick={onClose}
-              className="rounded-lg p-2 text-luxury-muted hover:bg-luxury-ivory lg:hidden"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-ivory hover:text-luxury-onyx transition-colors lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          {/* Navigation Links */}
-          <div className="px-4 py-6">
-            <p className="px-3 pb-3 text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
-              Main Modules
-            </p>
-            <nav className="space-y-1.5">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        {/* ── Navigation ── */}
+        <div className="flex-1 overflow-y-auto px-3 py-5">
+          <nav className="space-y-1">
+            {navigation.map((item, i) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={onClose}
-                    className={`group flex items-center justify-between rounded-xl px-3.5 py-3 text-sm transition-all ${
-                      isActive
-                        ? "bg-gradient-to-r from-luxury-onyx to-luxury-onyx-surface text-luxury-gold font-bold shadow-luxury border-l-4 border-luxury-gold"
-                        : "text-luxury-charcoal hover:bg-luxury-gold-subtle hover:text-luxury-gold-dark font-medium"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon
-                        className={`h-5 w-5 transition-colors ${
-                          isActive
-                            ? "text-luxury-gold"
-                            : "text-luxury-muted group-hover:text-luxury-gold-dark"
-                        }`}
-                      />
-                      <span>{item.name}</span>
-                    </div>
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`relative flex items-center justify-between rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200 group overflow-hidden ${
+                    isActive
+                      ? "bg-luxury-onyx text-white"
+                      : "text-luxury-charcoal hover:bg-luxury-cream hover:text-luxury-onyx"
+                  }`}
+                  style={{ animationDelay: `${i * 0.03}s` }}
+                >
+                  {/* Active left indicator — no layout shift */}
+                  {isActive && (
+                    <span className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-full bg-luxury-gold" />
+                  )}
 
+                  <div className="flex items-center gap-2.5 pl-1">
+                    <Icon
+                      className={`h-4 w-4 shrink-0 transition-colors ${
+                        isActive
+                          ? "text-luxury-gold"
+                          : "text-luxury-muted group-hover:text-luxury-gold-dark"
+                      }`}
+                    />
+                    <span className="truncate">{item.name}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {item.badge && (
                       <span
-                        className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        className={`rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-widest ${
                           isActive
-                            ? "bg-luxury-gold/20 text-luxury-gold-light border border-luxury-gold/40"
-                            : "bg-luxury-gold-subtle border border-luxury-beige text-luxury-gold-dark"
+                            ? "bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/30"
+                            : "bg-luxury-gold-subtle text-luxury-gold-dark border border-luxury-champagne"
                         }`}
                       >
                         {item.badge}
                       </span>
                     )}
-
-                    {item.highlight && !isActive && (
-                      <span className="text-[11px] text-luxury-muted font-normal">
-                        {item.highlight}
+                    {item.tag && !isActive && (
+                      <span className="text-[10px] text-luxury-muted/80 font-normal">
+                        {item.tag}
                       </span>
                     )}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Footer info in sidebar */}
-        <div className="border-t border-luxury-beige p-5 bg-luxury-ivory/50">
-          <div className="rounded-xl border border-luxury-gold/30 bg-white p-3.5 shadow-xs">
+        {/* ── Footer Status ── */}
+        <div className="border-t border-luxury-champagne px-4 py-4 shrink-0">
+          <div className="rounded-xl border border-luxury-gold/25 bg-luxury-gold-subtle px-3.5 py-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-luxury-onyx font-serif">Sarafa Edition</span>
+              <span className="font-serif text-[11px] font-bold text-luxury-onyx tracking-wide">
+                Sarafa ERP
+              </span>
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-luxury-gold opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-luxury-gold"></span>
+                <span className="absolute inline-flex h-full w-full rounded-full bg-luxury-gold opacity-75 animate-ping" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-luxury-gold" />
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-luxury-muted leading-relaxed font-medium">
-              Live Jewellery Database Connected
+            <p className="mt-1 text-[10px] text-luxury-muted leading-relaxed">
+              MongoDB Live • Secure Session
             </p>
           </div>
         </div>

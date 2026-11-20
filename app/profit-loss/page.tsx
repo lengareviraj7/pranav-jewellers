@@ -278,14 +278,14 @@ export default function ProfitLossPage() {
                           {cat.metal}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">{cat.count} pcs</td>
-                      <td className="px-4 py-3 text-right font-bold text-luxury-charcoal">
+                      <td className="px-4 py-3 text-right font-medium text-luxury-charcoal font-mono tabular-nums">{cat.count} pcs</td>
+                      <td className="px-4 py-3 text-right font-bold text-luxury-charcoal font-mono tabular-nums">
                         ₹{cat.revenueRupees.toLocaleString("en-IN")}
                       </td>
-                      <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
+                      <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                         +₹{cat.profitRupees.toLocaleString("en-IN")}
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold text-luxury-onyx">{cat.marginPercent}%</td>
+                      <td className="px-4 py-3 text-right font-semibold text-luxury-onyx font-mono tabular-nums">{cat.marginPercent}%</td>
                     </tr>
                   ))
                 )}

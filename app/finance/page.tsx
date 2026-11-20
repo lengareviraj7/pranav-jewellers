@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Landmark,
@@ -78,7 +78,7 @@ interface Loan {
   calcEngineDetails?: any;
 }
 
-export default function GoldFinancePage() {
+function GoldFinancePageInner() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "all";
 
@@ -571,22 +571,22 @@ export default function GoldFinancePage() {
                             {loan.interestMode === "yearly_compound" ? "Yearly Compound" : "Simple"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">
+                        <td className="px-4 py-3 text-right font-medium text-luxury-charcoal font-mono tabular-nums">
                           ₹{loan.currentOutstandingPrincipalRupees.toLocaleString("en-IN")}
                           {loan.currentOutstandingPrincipalRupees < loan.originalPrincipalRupees && (
-                            <span className="block text-[9px] text-luxury-muted line-through">
+                            <span className="block text-[9px] text-luxury-muted line-through font-mono tabular-nums">
                               ₹{loan.originalPrincipalRupees.toLocaleString("en-IN")}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-amber-800">
+                        <td className="px-4 py-3 text-right font-medium text-amber-800 font-mono tabular-nums">
                           +₹{(loan.accruedInterestRupees || 0).toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
+                        <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                           ₹{(loan.totalDueRupees || 0).toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="rounded bg-luxury-ivory px-2 py-0.5 text-[11px] font-medium border border-luxury-beige">
+                          <span className="rounded bg-luxury-ivory px-2 py-0.5 text-[11px] font-medium border border-luxury-beige font-mono tabular-nums">
                             {loan.totalPledgedNetWeight.toFixed(3)}g ({loan.pledgedItems.length} items)
                           </span>
                         </td>
@@ -731,16 +731,16 @@ export default function GoldFinancePage() {
                         <td className="px-4 py-3 text-luxury-muted">
                           {d.elapsedDescription || "0 days"} ({d.chargeableMonths} mo charged)
                         </td>
-                        <td className="px-4 py-3 text-right font-medium text-luxury-charcoal">
+                        <td className="px-4 py-3 text-right font-medium text-luxury-charcoal font-mono tabular-nums">
                           ₹{d.outstandingPrincipalRupees.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right text-amber-800 font-medium">
+                        <td className="px-4 py-3 text-right text-amber-800 font-medium font-mono tabular-nums">
                           +₹{d.accruedInterestRupees.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right font-serif font-bold text-luxury-gold-dark">
+                        <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                           ₹{d.totalDueRupees.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-3 text-right text-luxury-charcoal font-medium">
+                        <td className="px-4 py-3 text-right text-luxury-charcoal font-medium font-mono tabular-nums">
                           ₹{d.totalPaidRupees.toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
@@ -1139,13 +1139,13 @@ export default function GoldFinancePage() {
                             <tr key={item.year}>
                               <td className="px-3 py-2 font-semibold text-luxury-charcoal">Year {item.year}</td>
                               <td className="px-3 py-2 text-right text-luxury-muted">{item.months} mo</td>
-                              <td className="px-3 py-2 text-right font-medium">
+                              <td className="px-3 py-2 text-right font-medium font-mono tabular-nums">
                                 ₹{item.startingPrincipalRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </td>
-                              <td className="px-3 py-2 text-right font-medium text-amber-800">
+                              <td className="px-3 py-2 text-right font-medium text-amber-800 font-mono tabular-nums">
                                 ₹{item.interestRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </td>
-                              <td className="px-3 py-2 text-right font-serif font-bold text-luxury-gold-dark">
+                              <td className="px-3 py-2 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
                                 ₹{item.endingAmountRupees.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                               </td>
                             </tr>
@@ -1624,5 +1624,17 @@ export default function GoldFinancePage() {
         data={receiptData}
       />
     </div>
+  );
+}
+
+export default function GoldFinancePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex h-80 items-center justify-center">
+        <div className="h-9 w-9 rounded-full border-2 border-luxury-gold/20 border-t-luxury-gold animate-spin" />
+      </div>
+    }>
+      <GoldFinancePageInner />
+    </Suspense>
   );
 }

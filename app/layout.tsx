@@ -4,9 +4,9 @@ import { AuthProvider } from "@/components/AuthContext";
 import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "SIDHESHWAR JEWELLERS — Enterprise Jewellery & Finance ERP",
+  title: "SIDHESHWAR JEWELLERS — Sarafa ERP",
   description:
-    "Production-ready Jewellery Shop ERP for Gold Stock, Silver Stock, Used Metal Purchases, and Gold Mortgage Finance.",
+    "Gold Stock, Silver Stock, Used Metal Purchases, Sales Ledger, Cash Book & Gold Mortgage Finance — Complete Jewellery Shop ERP.",
   icons: {
     icon: "/favicon.ico",
   },
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-luxury-ivory text-luxury-charcoal antialiased selection:bg-luxury-gold/30 selection:text-luxury-onyx">
+      <body className="bg-luxury-ivory text-luxury-charcoal antialiased">
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>

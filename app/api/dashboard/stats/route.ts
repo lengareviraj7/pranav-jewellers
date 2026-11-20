@@ -12,6 +12,8 @@ import SaleRecord from "@/models/SaleRecord";
 import CashTransaction from "@/models/CashTransaction";
 import { calculateMortgageInterest, getTodayIST } from "@/lib/mortgage-engine";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const sessionUser = await authenticateRequest(req);
   if (!sessionUser) return unauthorizedResponse();
