@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import AppShell from "@/components/AppShell";
 import {
   TrendingUp,
   TrendingDown,
@@ -81,8 +80,7 @@ export default function ProfitLossPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
@@ -123,7 +121,7 @@ export default function ProfitLossPage() {
 
         {/* KPI Summary Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
               Total Showroom Revenue
             </span>
@@ -133,7 +131,7 @@ export default function ProfitLossPage() {
             <span className="text-[11px] text-luxury-muted">{metrics.totalItemsSold} pieces sold</span>
           </div>
 
-          <div className="rounded-2xl border-2 border-luxury-gold/60 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-5 shadow-gold-glow text-white">
+          <div className="rounded-2xl border-2 border-luxury-gold/60 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-5 shadow-gold-glow text-white card-3d-gold">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-gold">
               Realized Net Profit
             </span>
@@ -143,7 +141,7 @@ export default function ProfitLossPage() {
             <span className="text-[11px] text-white/70 mt-1 block">Owner profit earned</span>
           </div>
 
-          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
               Average Profit Margin
             </span>
@@ -153,7 +151,7 @@ export default function ProfitLossPage() {
             <span className="text-[11px] text-luxury-muted">Net realized return on sales</span>
           </div>
 
-          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+          <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
               Pending Customer Udhari
             </span>
@@ -294,6 +292,5 @@ export default function ProfitLossPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   );
 }

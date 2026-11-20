@@ -89,10 +89,10 @@ function KpiCard({
   return (
     <Link
       href={link}
-      className={`group relative flex flex-col justify-between rounded-2xl border p-5 transition-all duration-300 cursor-pointer animate-fadeInUp card-hover overflow-hidden ${
+      className={`group relative flex flex-col justify-between rounded-2xl border p-5 cursor-pointer animate-fadeInUp overflow-hidden ${
         dark
-          ? "border-luxury-gold/30 bg-luxury-onyx text-white shadow-gold-glow"
-          : "border-luxury-champagne bg-white shadow-luxury hover:border-luxury-gold/35"
+          ? "border-luxury-gold/40 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx text-white shadow-gold-glow card-3d-gold"
+          : "border-luxury-champagne bg-white shadow-luxury hover:border-luxury-gold/35 card-3d"
       }`}
       style={{ animationDelay: `${(delay || 0) * 0.07}s` }}
     >

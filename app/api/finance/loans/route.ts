@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest, unauthorizedResponse } from "@/lib/api-auth";
 import connectToDatabase from "@/lib/mongodb";
 import FinanceLoan from "@/models/FinanceLoan";
+import FinancePayment from "@/models/FinancePayment";
 import Customer from "@/models/Customer";
 import AuditLog from "@/models/AuditLog";
 import { calculateMortgageInterest, getTodayIST } from "@/lib/mortgage-engine";
@@ -23,6 +24,11 @@ export async function GET(req: NextRequest) {
   try {
     let query = FinanceLoan.find(filter).populate("customerId", "fullName mobileNumber customerId address");
     const rawLoans = await query.sort({ createdAt: -1 }).lean();
+
+    const loanIds = rawLoans.map((l: any) => l._id);
+    const rawPayments = await FinancePayment.find({ loanId: { $in: loanIds } })
+      .sort({ paymentDate: -1, createdAt: -1 })
+      .lean();
 
     const todayIST = getTodayIST();
 
@@ -50,6 +56,18 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      const loanPayments = rawPayments
+        .filter((p: any) => p.loanId.toString() === loan._id.toString())
+        .map((p: any) => ({
+          ...p,
+          id: p._id.toString(),
+          totalAmountRupees: p.totalAmountPaise / 100,
+          principalAppliedRupees: p.principalAppliedPaise / 100,
+          interestAppliedRupees: p.interestAppliedPaise / 100,
+          previousOutstandingPrincipalRupees: p.previousOutstandingPrincipalPaise / 100,
+          newOutstandingPrincipalRupees: p.newOutstandingPrincipalPaise / 100,
+        }));
+
       return {
         ...loan,
         id: loan._id.toString(),
@@ -60,6 +78,7 @@ export async function GET(req: NextRequest) {
         totalInterestPaidRupees: (loan.totalInterestPaidPaise || 0) / 100,
         totalPrincipalPaidRupees: (loan.totalPrincipalPaidPaise || 0) / 100,
         calcEngineDetails,
+        paymentHistory: loanPayments,
       };
     });
 

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import AppShell from "@/components/AppShell";
 import {
   Wallet,
   ArrowDownLeft,
@@ -138,8 +137,7 @@ export default function CashBookPage() {
   };
 
   return (
-    <AppShell>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
@@ -513,6 +511,5 @@ export default function CashBookPage() {
           </div>
         )}
       </div>
-    </AppShell>
   );
 }

@@ -21,6 +21,13 @@ import {
   Calendar,
   AlertTriangle,
   History,
+  BookOpen,
+  ArrowDownLeft,
+  ArrowUpRight,
+  MessageCircle,
+  Phone,
+  Coins,
+  Lock,
 } from "lucide-react";
 import {
   calculateMortgageInterest,
@@ -76,13 +83,17 @@ interface Loan {
   totalPledgedGrossWeight: number;
   totalPledgedNetWeight: number;
   calcEngineDetails?: any;
+  paymentHistory?: any[];
 }
 
 function GoldFinancePageInner() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "all";
 
-  const [activeTab, setActiveTab] = useState<"loans" | "dues" | "customers" | "calculator">("loans");
+  const [activeTab, setActiveTab] = useState<"khatabook" | "loans" | "dues" | "customers" | "calculator">("khatabook");
+  const [selectedKhataCustomerId, setSelectedKhataCustomerId] = useState<string | null>(null);
+  const [khataFilter, setKhataFilter] = useState<"all" | "pending" | "overdue">("all");
+  const [khataSearch, setKhataSearch] = useState("");
   const [loans, setLoans] = useState<Loan[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [duesSummary, setDuesSummary] = useState<any>(null);
@@ -179,6 +190,9 @@ function GoldFinancePageInner() {
       const custData = await custRes.json();
       if (custData.success) {
         setCustomers(custData.customers);
+        setSelectedKhataCustomerId((prev) =>
+          prev || (custData.customers.length > 0 ? (custData.customers[0].id || custData.customers[0]._id) : null)
+        );
       }
 
       // 3. Fetch Dues
@@ -434,7 +448,19 @@ function GoldFinancePageInner() {
       )}
 
       {/* Finance Navigation Tabs */}
-      <div className="flex rounded-2xl border border-luxury-beige bg-white p-1.5 shadow-sm max-w-2xl overflow-x-auto">
+      <div className="flex rounded-2xl border border-luxury-beige bg-white p-1.5 shadow-sm max-w-3xl overflow-x-auto">
+        <button
+          onClick={() => setActiveTab("khatabook")}
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+            activeTab === "khatabook"
+              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
+              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+          }`}
+        >
+          <BookOpen className="h-4 w-4 text-luxury-gold" />
+          <span>Grahak Khata Book (खाते पुस्तक)</span>
+        </button>
+
         <button
           onClick={() => setActiveTab("loans")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
@@ -483,6 +509,550 @@ function GoldFinancePageInner() {
           <span>Mortgage Calculator</span>
         </button>
       </div>
+
+      {/* TAB 0: AUTHENTIC KHATABOOK GIRVI LEDGER */}
+      {activeTab === "khatabook" && (() => {
+        // Compute master Khatabook figures
+        const totalYouWillGet = loans.reduce((acc, l) => acc + (l.totalDueRupees || 0), 0);
+        const totalPledgedGoldGrams = loans.reduce((acc, l) => acc + (l.totalPledgedNetWeight || 0), 0);
+        const totalOrnamentsCount = loans.reduce((acc, l) => acc + (l.pledgedItems?.length || 0), 0);
+
+        // Filter customers
+        const filteredCustomers = customers.filter((c) => {
+          const matchSearch =
+            !khataSearch.trim() ||
+            c.fullName.toLowerCase().includes(khataSearch.toLowerCase()) ||
+            c.mobileNumber.includes(khataSearch);
+
+          if (!matchSearch) return false;
+          if (khataFilter === "pending") return (c.totalDueRupees || 0) > 0;
+          if (khataFilter === "overdue") {
+            const hasOverdue = loans.some(
+              (l) => (l.customerId?._id || l.customerId) === (c.id || c._id) && l.status === "overdue"
+            );
+            return hasOverdue;
+          }
+          return true;
+        });
+
+        const activeCustomer =
+          customers.find((c) => (c.id || c._id) === selectedKhataCustomerId) ||
+          customers[0] ||
+          null;
+
+        const custLoans = activeCustomer
+          ? loans.filter(
+              (l) => (l.customerId?._id || l.customerId) === (activeCustomer.id || activeCustomer._id)
+            )
+          : [];
+
+        const custTotalDue = custLoans.reduce((sum, l) => sum + (l.totalDueRupees || 0), 0);
+        const custOutstandingPrincipal = custLoans.reduce(
+          (sum, l) => sum + (l.currentOutstandingPrincipalRupees || 0),
+          0
+        );
+        const custAccruedInterest = custLoans.reduce((sum, l) => sum + (l.accruedInterestRupees || 0), 0);
+        const custPledgedNetWeight = custLoans.reduce((sum, l) => sum + (l.totalPledgedNetWeight || 0), 0);
+        const custPledgedItems = custLoans.flatMap((l) => l.pledgedItems || []);
+
+        // Passbook entries flattened & sorted
+        type KhataEntry = {
+          id: string;
+          date: string;
+          type: "gave" | "got";
+          title: string;
+          subtitle: string;
+          amount: number;
+          loanId: string;
+          loanNumber: string;
+          loanObj: Loan;
+        };
+
+        const entries: KhataEntry[] = [];
+        custLoans.forEach((l) => {
+          // Loan Disbursed / "You Gave"
+          entries.push({
+            id: `loan-${l.id || l._id}`,
+            date: l.mortgageDate,
+            type: "gave",
+            title: `Gold Girvi Advance (${l.loanNumber})`,
+            subtitle: `${l.pledgedItems?.map((p) => p.description).join(", ") || "Pledged Items"} • ${l.totalPledgedNetWeight.toFixed(3)}g @ ${l.monthlyRate}%/mo`,
+            amount: l.originalPrincipalRupees,
+            loanId: l.id || l._id,
+            loanNumber: l.loanNumber,
+            loanObj: l,
+          });
+
+          // Payments / "You Got"
+          if (l.paymentHistory && l.paymentHistory.length > 0) {
+            l.paymentHistory.forEach((p, pIdx) => {
+              entries.push({
+                id: `pay-${p._id || pIdx}`,
+                date: p.paymentDate,
+                type: "got",
+                title: `Rakam Jama (${p.receiptNumber || "RCPT"})`,
+                subtitle: `Principal: ₹${p.principalAppliedRupees.toLocaleString("en-IN")} • Interest: ₹${p.interestAppliedRupees.toLocaleString("en-IN")} • ${p.paymentMethod.toUpperCase()}`,
+                amount: p.totalAmountRupees,
+                loanId: l.id || l._id,
+                loanNumber: l.loanNumber,
+                loanObj: l,
+              });
+            });
+          }
+        });
+
+        // Sort chronologically
+        entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        // WhatsApp message generator
+        const sendKhataWhatsApp = () => {
+          if (!activeCustomer || !activeCustomer.mobileNumber) return;
+          const cleanPhone = activeCustomer.mobileNumber.replace(/\D/g, "");
+          const msg = `नमस्कार ${activeCustomer.fullName} जी,\n\nसिद्धेश्वर ज्वेलर्स (सोने-चांदी व गहाण पेढी) कडून सस्नेह नमस्कार.\n\nआपल्या गहाण खात्याचा तपशील खालीलप्रमाणे:\n• एकूण बाकी रक्कम: ₹${custTotalDue.toLocaleString("en-IN")}\n• मुद्दल बाकी: ₹${custOutstandingPrincipal.toLocaleString("en-IN")}\n• व्याज बाकी: ₹${custAccruedInterest.toLocaleString("en-IN")}\n• गहाण दागिने: ${custPledgedItems.length} दागिने (${custPledgedNetWeight.toFixed(3)} ग्रॅम)\n\nकृपया रक्कम वेळेवर भरून पावती घ्यावी.\n\nधन्यवाद!\nसिद्धेश्वर ज्वेलर्स, मुख्य चौक.`;
+          window.open(`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(msg)}`, "_blank");
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Master Khatabook Banner */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {/* You'll Get Card */}
+              <div className="rounded-2xl border-2 border-luxury-gold/50 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-5 shadow-gold-glow text-white card-3d-gold">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-gold">
+                    You&apos;ll Get (घेणे बाकी)
+                  </span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/40">
+                    <ArrowDownLeft className="h-4 w-4" />
+                  </div>
+                </div>
+                <p className="mt-2 font-mono text-3xl font-bold text-luxury-gold tabular-nums">
+                  ₹{totalYouWillGet.toLocaleString("en-IN")}
+                </p>
+                <span className="text-[11px] text-white/70 mt-1 block">
+                  Total outstanding from {customers.length} grahaks
+                </span>
+              </div>
+
+              {/* Collateral Held Card */}
+              <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-muted">
+                    Vault Gold Collateral (गहाण सोने)
+                  </span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold-subtle text-luxury-gold-dark border border-luxury-champagne">
+                    <Lock className="h-4 w-4" />
+                  </div>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold text-luxury-onyx tabular-nums">
+                  {totalPledgedGoldGrams.toFixed(3)}g
+                </p>
+                <span className="text-[11px] text-luxury-muted mt-1 block">
+                  {totalOrnamentsCount} ornaments secured in shop safe
+                </span>
+              </div>
+
+              {/* You'll Give Card */}
+              <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-muted">
+                    You&apos;ll Give (देणे बाकी)
+                  </span>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+                    <ArrowUpRight className="h-4 w-4" />
+                  </div>
+                </div>
+                <p className="mt-2 font-mono text-2xl font-bold text-luxury-charcoal tabular-nums">
+                  ₹0
+                </p>
+                <span className="text-[11px] text-luxury-muted mt-1 block">
+                  Zero client credit advance balances
+                </span>
+              </div>
+            </div>
+
+            {/* Khatabook Split Screen */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+              {/* LEFT: Customer Directory (4 Cols) */}
+              <div className="lg:col-span-4 rounded-2xl border border-luxury-beige bg-white shadow-luxury overflow-hidden">
+                {/* Search & Filter Header */}
+                <div className="p-4 border-b border-luxury-beige bg-luxury-ivory/50 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-serif text-sm font-bold text-luxury-onyx flex items-center gap-2">
+                      <Users className="h-4 w-4 text-luxury-gold" />
+                      <span>Grahak Directory ({filteredCustomers.length})</span>
+                    </h3>
+                    <button
+                      onClick={() => setIsCustomerModalOpen(true)}
+                      className="rounded-lg bg-luxury-gold-subtle border border-luxury-gold/40 px-2.5 py-1 text-[11px] font-bold text-luxury-gold-dark hover:bg-luxury-gold hover:text-white transition"
+                    >
+                      + New Grahak
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-luxury-muted" />
+                    <input
+                      type="text"
+                      placeholder="Search name or mobile..."
+                      value={khataSearch}
+                      onChange={(e) => setKhataSearch(e.target.value)}
+                      className="w-full rounded-xl border border-luxury-beige bg-white py-1.5 pl-8 pr-3 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {[
+                      { id: "all", label: "All" },
+                      { id: "pending", label: "Dues Pending" },
+                      { id: "overdue", label: "Overdue" },
+                    ].map((f) => (
+                      <button
+                        key={f.id}
+                        onClick={() => setKhataFilter(f.id as any)}
+                        className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold transition ${
+                          khataFilter === f.id
+                            ? "bg-luxury-onyx text-luxury-gold"
+                            : "bg-white text-luxury-muted border border-luxury-beige hover:bg-luxury-ivory"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Customer List */}
+                <div className="divide-y divide-luxury-beige/50 max-h-[600px] overflow-y-auto">
+                  {filteredCustomers.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-luxury-muted">
+                      No matching customers found.
+                    </div>
+                  ) : (
+                    filteredCustomers.map((cust) => {
+                      const isSelected =
+                        (cust.id || cust._id) === (activeCustomer?.id || activeCustomer?._id);
+                      const cLoans = loans.filter(
+                        (l) => (l.customerId?._id || l.customerId) === (cust.id || cust._id)
+                      );
+                      const cDue = cLoans.reduce((sum, l) => sum + (l.totalDueRupees || 0), 0);
+                      const cWt = cLoans.reduce((sum, l) => sum + (l.totalPledgedNetWeight || 0), 0);
+
+                      const initials = cust.fullName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .slice(0, 2)
+                        .join("")
+                        .toUpperCase();
+
+                      return (
+                        <div
+                          key={cust.id || cust._id}
+                          onClick={() => setSelectedKhataCustomerId(cust.id || cust._id)}
+                          className={`p-3.5 transition cursor-pointer flex items-center justify-between gap-3 ${
+                            isSelected
+                              ? "bg-luxury-gold-subtle/80 border-l-4 border-l-luxury-gold"
+                              : "hover:bg-luxury-ivory/60"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className={`flex h-10 w-10 items-center justify-center rounded-xl font-serif text-xs font-bold shrink-0 ${
+                                isSelected
+                                  ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/50"
+                                  : "bg-luxury-ivory text-luxury-charcoal border border-luxury-beige"
+                              }`}
+                            >
+                              {initials}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-xs text-luxury-onyx truncate">
+                                {cust.fullName}
+                              </p>
+                              <p className="text-[10px] text-luxury-muted truncate">
+                                {cust.mobileNumber} {cust.address ? `• ${cust.address}` : ""}
+                              </p>
+                              {cWt > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-luxury-gold-dark mt-0.5">
+                                  <Lock className="h-2.5 w-2.5" />
+                                  {cWt.toFixed(2)}g Pledged
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <p
+                              className={`font-mono text-xs font-bold tabular-nums ${
+                                cDue > 0 ? "text-amber-800" : "text-luxury-muted"
+                              }`}
+                            >
+                              {cDue > 0 ? `₹${cDue.toLocaleString("en-IN")}` : "Settled"}
+                            </p>
+                            <span className="text-[9px] uppercase tracking-wider text-luxury-muted font-medium">
+                              {cDue > 0 ? "You'll Get" : "No Due"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT: Selected Customer Khata Ledger (8 Cols) */}
+              <div className="lg:col-span-8 space-y-4">
+                {!activeCustomer ? (
+                  <div className="rounded-2xl border border-luxury-beige bg-white p-12 text-center text-luxury-muted shadow-luxury">
+                    <BookOpen className="h-10 w-10 mx-auto text-luxury-gold/60 mb-2" />
+                    <p className="font-serif text-sm font-bold text-luxury-onyx">
+                      No Grahak Selected
+                    </p>
+                    <p className="text-xs mt-1">
+                      Choose a customer from the left directory to view their complete Khatabook ledger.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Customer Header Card */}
+                    <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-luxury-beige">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-luxury-onyx text-luxury-gold border border-luxury-gold/50 font-serif text-base font-bold shadow-xs">
+                            {activeCustomer.fullName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </div>
+                          <div>
+                            <h2 className="font-serif text-lg font-bold text-luxury-onyx flex items-center gap-2">
+                              {activeCustomer.fullName}
+                              <span className="rounded bg-luxury-gold-subtle px-2 py-0.5 font-mono text-[10px] font-bold text-luxury-gold-dark border border-luxury-gold/30">
+                                {activeCustomer.customerId}
+                              </span>
+                            </h2>
+                            <p className="text-xs text-luxury-muted flex items-center gap-2 mt-0.5">
+                              <span>📱 {activeCustomer.mobileNumber}</span>
+                              {activeCustomer.address && <span>• 📍 {activeCustomer.address}</span>}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Direct Communication & Statement Actions */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={sendKhataWhatsApp}
+                            className="flex items-center gap-1.5 rounded-xl bg-luxury-onyx border border-luxury-gold/40 px-3 py-1.5 text-xs font-semibold text-luxury-gold shadow-xs hover:bg-luxury-gold hover:text-white transition"
+                            title="Send Khatabook WhatsApp Reminder"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span>WhatsApp Statement</span>
+                          </button>
+
+                          <a
+                            href={`tel:${activeCustomer.mobileNumber}`}
+                            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3 py-1.5 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory transition"
+                          >
+                            <Phone className="h-3.5 w-3.5 text-luxury-gold" />
+                            <span>Call</span>
+                          </a>
+
+                          <button
+                            onClick={() => window.print()}
+                            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3 py-1.5 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory transition"
+                          >
+                            <Printer className="h-3.5 w-3.5 text-luxury-gold" />
+                            <span>Print</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Grahak Financial Snapshot */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
+                            Total You&apos;ll Get
+                          </span>
+                          <p className="font-mono text-base font-bold text-amber-800 tabular-nums mt-0.5">
+                            ₹{custTotalDue.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
+                            Principal Due
+                          </span>
+                          <p className="font-mono text-base font-bold text-luxury-onyx tabular-nums mt-0.5">
+                            ₹{custOutstandingPrincipal.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
+                            Accrued Interest
+                          </span>
+                          <p className="font-mono text-base font-bold text-luxury-gold-dark tabular-nums mt-0.5">
+                            +₹{custAccruedInterest.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
+                            Pledged Ornaments
+                          </span>
+                          <p className="font-mono text-base font-bold text-luxury-onyx tabular-nums mt-0.5">
+                            {custPledgedNetWeight.toFixed(3)}g ({custPledgedItems.length} pcs)
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Pledged Ornaments Detail Strip */}
+                      {custPledgedItems.length > 0 && (
+                        <div className="rounded-xl bg-luxury-gold-subtle/50 p-3 border border-luxury-gold/25 flex flex-wrap items-center gap-2">
+                          <span className="text-[11px] font-bold text-luxury-gold-dark flex items-center gap-1.5">
+                            <Lock className="h-3.5 w-3.5" />
+                            Vault Collateral:
+                          </span>
+                          {custPledgedItems.map((item, idx) => (
+                            <span
+                              key={idx}
+                              className="rounded-lg bg-white px-2 py-0.5 text-[10px] font-semibold text-luxury-charcoal border border-luxury-champagne shadow-2xs"
+                            >
+                              {item.description} ({item.purity} • {Number(item.netWeight).toFixed(3)}g)
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Khatabook Passbook Ledger Table */}
+                    <div className="rounded-2xl border border-luxury-beige bg-white shadow-luxury overflow-hidden">
+                      <div className="p-3.5 border-b border-luxury-beige bg-luxury-ivory/50 flex items-center justify-between">
+                        <h3 className="font-serif text-xs font-bold uppercase tracking-wider text-luxury-onyx">
+                          Transaction Ledger (खाते वही / पासबुक)
+                        </h3>
+                        <span className="text-[11px] text-luxury-muted">
+                          {entries.length} entries recorded
+                        </span>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
+                            <tr>
+                              <th className="px-4 py-3">Date &amp; Voucher</th>
+                              <th className="px-4 py-3">Particulars &amp; Collateral</th>
+                              <th className="px-4 py-3 text-right text-red-700">
+                                You Gave (दिले / Udhaar)
+                              </th>
+                              <th className="px-4 py-3 text-right text-luxury-gold-dark">
+                                You Got (मिळाले / Jama)
+                              </th>
+                              <th className="px-4 py-3 text-center">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-luxury-beige/60">
+                            {entries.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="py-8 text-center text-luxury-muted">
+                                  No loans or payments recorded for this customer yet.
+                                </td>
+                              </tr>
+                            ) : (
+                              entries.map((entry) => (
+                                <tr key={entry.id} className="hover:bg-luxury-ivory/40 transition">
+                                  <td className="px-4 py-3">
+                                    <p className="font-semibold text-luxury-charcoal">{entry.date}</p>
+                                    <p className="font-mono text-[10px] text-luxury-gold-dark font-bold">
+                                      {entry.loanNumber}
+                                    </p>
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <p className="font-semibold text-luxury-onyx">{entry.title}</p>
+                                    <p className="text-[10px] text-luxury-muted">{entry.subtitle}</p>
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-mono font-bold text-red-700 tabular-nums">
+                                    {entry.type === "gave"
+                                      ? `₹${entry.amount.toLocaleString("en-IN")}`
+                                      : "-"}
+                                  </td>
+                                  <td className="px-4 py-3 text-right font-mono font-bold text-luxury-gold-dark tabular-nums">
+                                    {entry.type === "got"
+                                      ? `₹${entry.amount.toLocaleString("en-IN")}`
+                                      : "-"}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    {entry.type === "gave" && (
+                                      <button
+                                        onClick={() => handleOpenPaymentModal(entry.loanObj)}
+                                        className="rounded-lg bg-gradient-to-r from-luxury-gold-dark to-luxury-gold px-2.5 py-1 text-[10px] font-semibold text-white hover:brightness-105 transition shadow-xs"
+                                      >
+                                        Receive Payment
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Sticky Bottom Khatabook Action Bar */}
+                      <div className="p-3 bg-luxury-ivory/80 border-t border-luxury-beige flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setNewLoanForm((prev) => ({
+                                ...prev,
+                                customerId: activeCustomer.id || activeCustomer._id,
+                              }));
+                              setIsNewLoanOpen(true);
+                            }}
+                            className="flex items-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-95 btn-3d"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>+ You Gave (नवीन गहाण / कर्ज द्या)</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              const activeLoan =
+                                custLoans.find(
+                                  (l) =>
+                                    l.status === "active" ||
+                                    l.status === "partially_paid" ||
+                                    l.status === "overdue"
+                                ) || custLoans[0];
+                              if (activeLoan) handleOpenPaymentModal(activeLoan);
+                            }}
+                            disabled={custLoans.length === 0}
+                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2.5 text-xs font-bold text-white shadow-luxury hover:brightness-105 transition active:scale-95 disabled:opacity-50 btn-3d"
+                          >
+                            <ArrowDownLeft className="h-4 w-4" />
+                            <span>+ You Got (रक्कम जमा करा)</span>
+                          </button>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[10px] text-luxury-muted uppercase font-bold tracking-wider">
+                            Net Balance
+                          </span>
+                          <p className="font-mono text-sm font-bold text-luxury-onyx tabular-nums">
+                            ₹{custTotalDue.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* TAB 1: ACTIVE LOANS TABLE */}
       {activeTab === "loans" && (
