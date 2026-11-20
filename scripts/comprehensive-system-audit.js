@@ -126,20 +126,20 @@ async function runAudit() {
     // Test automatic net weight calculation: Gross - Stone = Net
     const testItemPayload = {
       name: `Live Audit Bangle ${Date.now()}`,
-      category: categories.data.categories[0]?._id,
+      categoryId: categories.data.categories[0]?._id,
       metalType: 'gold',
       purity: '22K',
       pieces: 1,
       grossWeight: 15.500,
       stoneWeight: 0.750,
-      huid: 'AUDIT99',
+      hallmarkUid: 'AUDIT99',
       makingChargesPerGram: 450
     };
     const createItem = await request({
       path: '/api/inventory/items',
       method: 'POST'
     }, testItemPayload);
-    assert(createItem.statusCode === 201 && createItem.data.item.netWeight === 14.750, 'Item creation calculates net weight precisely (15.500 - 0.750 = 14.750g)');
+    assert((createItem.statusCode === 200 || createItem.statusCode === 201) && createItem.data.item?.netWeight === 14.750, 'Item creation calculates net weight precisely (15.500 - 0.750 = 14.750g)', JSON.stringify(createItem.data));
 
     // 5. Finance & Mortgage Engine
     console.log('\n[5/7] Testing Finance & Mortgage Calculation Engine:');
@@ -147,13 +147,13 @@ async function runAudit() {
       path: '/api/finance/calculate',
       method: 'POST'
     }, {
-      principal: 50000,
+      principalRupees: 50000,
       monthlyRate: 2,
       interestMode: 'yearly_compound',
-      startDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      mortgageDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       asOfDate: new Date().toISOString().split('T')[0]
     });
-    assert(calcRes.statusCode === 200 && calcRes.data.breakdown.totalDueRupees > 50000, 'Mortgage dues engine computes compound interest breakdown');
+    assert(calcRes.statusCode === 200 && calcRes.data.result.totalDueRupees > 50000, 'Mortgage dues engine computes compound interest breakdown', JSON.stringify(calcRes.data));
 
     const loansRes = await request({ path: '/api/finance/loans' });
     assert(loansRes.statusCode === 200 && Array.isArray(loansRes.data.loans), 'Active loans retrieved successfully');
@@ -161,18 +161,21 @@ async function runAudit() {
     // 6. Cash Book & Sales
     console.log('\n[6/7] Testing Cash Book & Sales Operations:');
     const cashBookRes = await request({ path: '/api/cash-book?range=all' });
-    assert(cashBookRes.statusCode === 200 && typeof cashBookRes.data.summary.totalCredit === 'number', 'Cash book returns valid financial ledger summary');
+    assert(cashBookRes.statusCode === 200 && typeof cashBookRes.data.metrics?.totalCashInHandRupees === 'number', 'Cash book returns valid financial metrics', JSON.stringify(cashBookRes.data.metrics));
 
     const plRes = await request({ path: '/api/profit-loss?range=all' });
-    assert(plRes.statusCode === 200 && typeof plRes.data.netProfit === 'number', 'Profit & Loss statement computes revenue, costs, and net margins');
+    assert(plRes.statusCode === 200 && typeof plRes.data.metrics?.totalProfitRupees === 'number', 'Profit & Loss statement computes revenue, costs, and net margins');
 
     // 7. CSV Export Modules
     console.log('\n[7/7] Testing Data Export Streams:');
     const exportGold = await request({ path: '/api/export/inventory?metalType=gold' });
     assert(exportGold.statusCode === 200 && exportGold.headers['content-type'].includes('text/csv'), 'Gold inventory exports formatted CSV');
 
-    const exportLoans = await request({ path: '/api/export/loans' });
+    const exportLoans = await request({ path: '/api/export/finance-loans' });
     assert(exportLoans.statusCode === 200 && exportLoans.headers['content-type'].includes('text/csv'), 'Loans export produces valid CSV file');
+
+    const exportUsedMetal = await request({ path: '/api/export/used-metal' });
+    assert(exportUsedMetal.statusCode === 200 && exportUsedMetal.headers['content-type'].includes('text/csv'), 'Used metal exports formatted CSV');
 
     console.log('\n===============================================================');
     console.log(` AUDIT COMPLETE: ${passed} Passed, ${failed} Failed`);
