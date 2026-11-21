@@ -14,6 +14,7 @@ import {
   Sparkles,
   FileSpreadsheet,
 } from "lucide-react";
+import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -116,7 +117,7 @@ export default function SettingsPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Failed to update shop settings");
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to update settings");
 
       setSuccessMsg("Shop profile & finance defaults saved!");
       setTimeout(() => setSuccessMsg(null), 3000);
@@ -138,12 +139,12 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
+      <div className="animate-fadeInUp">
+        <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold-champagne">
           System Administration
         </span>
-        <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
-          Settings & Configurations
+        <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          Settings &amp; Configurations
         </h1>
         <p className="mt-1 text-xs text-luxury-muted">
           Benchmark daily market rates, shop profile details, CSV export utilities, and system audit trail.
@@ -151,28 +152,28 @@ export default function SettingsPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-          <AlertCircle className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl bg-red-950/40 p-3 text-xs text-red-300 border border-red-500/40 backdrop-blur-md animate-slideDown">
+          <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
           <span>{error}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
-          <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
+        <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle/50 p-3 text-xs text-luxury-gold-bright border border-luxury-gold/40 backdrop-blur-md font-medium animate-slideDown">
+          <Check className="h-4 w-4 shrink-0 text-luxury-gold" />
           <span>{successMsg}</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Card 1: Benchmark Daily Metal Rates */}
-        <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-          <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-6 shadow-luxury card-3d">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
             <div>
-              <h3 className="font-serif text-base font-bold text-luxury-onyx">Daily Benchmark Rates</h3>
+              <h3 className="font-serif text-base font-bold text-white">Daily Benchmark Rates</h3>
               <p className="text-xs text-luxury-muted">Sarafa Bazaar market reference per gram (₹/g)</p>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-luxury-gold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold/15 text-luxury-gold border border-luxury-gold/30">
               <Coins className="h-4 w-4" />
             </div>
           </div>
@@ -180,7 +181,7 @@ export default function SettingsPage() {
           <form onSubmit={handleUpdateRates} className="mt-4 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">
                   Gold 24K Rate (₹/g)
                 </label>
                 <input
@@ -188,12 +189,12 @@ export default function SettingsPage() {
                   required
                   value={rates.gold24k}
                   onChange={(e) => setRates({ ...rates, gold24k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-luxury-gold-bright focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">
                   Gold 22K Rate (₹/g)
                 </label>
                 <input
@@ -201,12 +202,12 @@ export default function SettingsPage() {
                   required
                   value={rates.gold22k}
                   onChange={(e) => setRates({ ...rates, gold22k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-luxury-gold-bright focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">
                   Gold 18K Rate (₹/g)
                 </label>
                 <input
@@ -214,12 +215,12 @@ export default function SettingsPage() {
                   required
                   value={rates.gold18k}
                   onChange={(e) => setRates({ ...rates, gold18k: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-luxury-gold-bright focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">
                   Silver Fine 999 (₹/g)
                 </label>
                 <input
@@ -227,7 +228,7 @@ export default function SettingsPage() {
                   required
                   value={rates.silverFine}
                   onChange={(e) => setRates({ ...rates, silverFine: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-slate-200 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
@@ -236,7 +237,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={savingRates}
-                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition disabled:opacity-50 btn-3d"
               >
                 {savingRates ? "Saving..." : "Update Daily Rates"}
               </button>
@@ -245,64 +246,64 @@ export default function SettingsPage() {
         </div>
 
         {/* Card 2: Shop Profile & Defaults */}
-        <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-          <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-6 shadow-luxury card-3d">
+          <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
             <div>
-              <h3 className="font-serif text-base font-bold text-luxury-onyx">Shop Profile & Settings</h3>
+              <h3 className="font-serif text-base font-bold text-white">Shop Profile &amp; Settings</h3>
               <p className="text-xs text-luxury-muted">Receipt letterhead and mortgage default rates</p>
             </div>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-luxury-gold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-luxury-gold border border-white/[0.1]">
               <Building className="h-4 w-4" />
             </div>
           </div>
 
           <form onSubmit={handleUpdateShopSettings} className="mt-4 space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Shop Name</label>
+              <label className="block text-xs font-semibold text-luxury-muted mb-1">Shop Name</label>
               <input
                 type="text"
                 required
                 value={shopSettings.shopName}
                 onChange={(e) => setShopSettings({ ...shopSettings, shopName: e.target.value })}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Phone</label>
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">Phone</label>
                 <input
                   type="text"
                   value={shopSettings.phone}
                   onChange={(e) => setShopSettings({ ...shopSettings, phone: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Email</label>
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">Email</label>
                 <input
                   type="email"
                   value={shopSettings.email}
                   onChange={(e) => setShopSettings({ ...shopSettings, email: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Shop Address</label>
+              <label className="block text-xs font-semibold text-luxury-muted mb-1">Shop Address</label>
               <input
                 type="text"
                 value={shopSettings.address}
                 onChange={(e) => setShopSettings({ ...shopSettings, address: e.target.value })}
-                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">
                   Default Finance Rate (%/mo)
                 </label>
                 <input
@@ -315,17 +316,17 @@ export default function SettingsPage() {
                       defaultMonthlyInterestRate: Number(e.target.value),
                     })
                   }
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Timezone</label>
+                <label className="block text-xs font-semibold text-luxury-muted mb-1">Timezone</label>
                 <input
                   type="text"
                   disabled
                   value={shopSettings.timezone}
-                  className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/50 px-3 py-2 text-xs text-luxury-muted"
+                  className="w-full rounded-xl border border-white/[0.08] bg-luxury-obsidian/40 px-3 py-2 text-xs text-luxury-muted"
                 />
               </div>
             </div>
@@ -334,7 +335,7 @@ export default function SettingsPage() {
               <button
                 type="submit"
                 disabled={savingShop}
-                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition disabled:opacity-50 btn-3d"
               >
                 {savingShop ? "Saving..." : "Save Shop Settings"}
               </button>
@@ -344,10 +345,10 @@ export default function SettingsPage() {
       </div>
 
       {/* CSV Export Center */}
-      <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-        <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+      <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-6 shadow-luxury card-3d">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
-            <h3 className="font-serif text-base font-bold text-luxury-onyx">Data Export Center</h3>
+            <h3 className="font-serif text-base font-bold text-white">Data Export Center</h3>
             <p className="text-xs text-luxury-muted">
               Download clean CSV spreadsheets for accounting, audit, and offline backup
             </p>
@@ -359,10 +360,10 @@ export default function SettingsPage() {
           <a
             href="/api/export/inventory?metalType=gold"
             download
-            className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-luxury-gold/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-onyx">Gold Inventory CSV</p>
+              <p className="font-bold text-xs text-white">Gold Inventory CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active gold stock</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -371,22 +372,22 @@ export default function SettingsPage() {
           <a
             href="/api/export/inventory?metalType=silver"
             download
-            className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-slate-400/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-onyx">Silver Inventory CSV</p>
+              <p className="font-bold text-xs text-white">Silver Inventory CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active silver stock</p>
             </div>
-            <Download className="h-4 w-4 text-luxury-gold" />
+            <Download className="h-4 w-4 text-slate-300" />
           </a>
 
           <a
             href="/api/export/used-metal"
             download
-            className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-luxury-gold/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-onyx">Used Metal Scrap CSV</p>
+              <p className="font-bold text-xs text-white">Used Metal Scrap CSV</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">Customer exchange vouchers</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -395,48 +396,48 @@ export default function SettingsPage() {
           <a
             href="/api/export/finance-loans"
             download
-            className="flex items-center justify-between rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-4 hover:border-luxury-gold hover:bg-white transition"
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-amber-500/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-luxury-onyx">Finance Portfolio CSV</p>
-              <p className="text-[11px] text-luxury-muted mt-0.5">Loans, dues & pledged items</p>
+              <p className="font-bold text-xs text-white">Finance Portfolio CSV</p>
+              <p className="text-[11px] text-luxury-muted mt-0.5">Loans, dues &amp; pledged items</p>
             </div>
-            <Download className="h-4 w-4 text-luxury-gold" />
+            <Download className="h-4 w-4 text-amber-400" />
           </a>
         </div>
       </div>
 
       {/* System Audit Trail */}
-      <div className="rounded-2xl border border-luxury-beige bg-white p-6 shadow-luxury">
-        <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+      <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-6 shadow-luxury card-3d">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
-            <h3 className="font-serif text-base font-bold text-luxury-onyx">System Audit Trail</h3>
+            <h3 className="font-serif text-base font-bold text-white">System Audit Trail</h3>
             <p className="text-xs text-luxury-muted">Immutable log of critical operations across all modules</p>
           </div>
           <Shield className="h-5 w-5 text-luxury-gold" />
         </div>
 
-        <div className="mt-4 space-y-2.5 max-h-96 overflow-y-auto pr-1">
+        <div className="mt-4 space-y-2.5 max-h-96 overflow-y-auto pr-1 scrollbar-thin">
           {auditLogs.length === 0 ? (
             <p className="py-8 text-center text-xs text-luxury-muted">No audit events recorded yet.</p>
           ) : (
             auditLogs.map((log) => (
               <div
                 key={log._id}
-                className="flex items-start justify-between rounded-xl border border-luxury-beige/70 bg-luxury-ivory/30 p-3 text-xs"
+                className="flex items-start justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-xs"
               >
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-luxury-gold-dark font-mono uppercase text-[11px]">
+                    <span className="font-bold text-luxury-gold font-mono uppercase text-[11px]">
                       {log.action}
                     </span>
-                    <span className="rounded bg-luxury-gold-subtle border border-luxury-gold/30 px-1.5 py-0.5 text-[9px] font-semibold text-luxury-gold-dark uppercase">
+                    <span className="rounded bg-luxury-gold/15 border border-luxury-gold/30 px-1.5 py-0.5 text-[9px] font-semibold text-luxury-gold-bright uppercase">
                       {log.module}
                     </span>
                   </div>
-                  <p className="text-luxury-charcoal">{log.description}</p>
+                  <p className="text-white/80">{log.description}</p>
                 </div>
-                <div className="text-right text-[10px] text-luxury-muted shrink-0 ml-4">
+                <div className="text-right text-[10px] text-luxury-muted shrink-0 ml-4 font-mono">
                   <p>{new Date(log.timestamp).toLocaleDateString("en-IN")}</p>
                   <p>{new Date(log.timestamp).toLocaleTimeString("en-IN")}</p>
                 </div>

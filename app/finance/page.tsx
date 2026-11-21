@@ -27,6 +27,8 @@ import {
   MessageCircle,
   Phone,
   Coins,
+  Gem,
+  Trash2,
   Lock,
 } from "lucide-react";
 import {
@@ -36,6 +38,7 @@ import {
   formatINR,
 } from "@/lib/mortgage-engine";
 import ReceiptModal from "@/components/ReceiptModal";
+import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
 interface Customer {
   id: string;
@@ -419,9 +422,9 @@ function GoldFinancePageInner() {
 
           <button
             onClick={() => setIsNewLoanOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition btn-3d"
           >
-            <Plus className="h-4 w-4 text-white" />
+            <Plus className="h-4 w-4 text-black" />
             <span>Issue New Gold Loan</span>
           </button>
         </div>
@@ -429,18 +432,18 @@ function GoldFinancePageInner() {
 
       {/* Notifications */}
       {error && (
-        <div className="flex items-center justify-between rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+        <div className="flex items-center justify-between rounded-xl bg-red-950/40 p-3 text-xs text-red-300 border border-red-500/40 backdrop-blur-md animate-slideDown">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
             <span>{error}</span>
           </div>
           <button onClick={() => setError(null)}><X className="h-4 w-4" /></button>
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle/50 p-3 text-xs text-luxury-gold-bright border border-luxury-gold/40 backdrop-blur-md font-medium animate-slideDown">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
+            <Check className="h-4 w-4 shrink-0 text-luxury-gold" />
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}><X className="h-4 w-4" /></button>
@@ -448,64 +451,64 @@ function GoldFinancePageInner() {
       )}
 
       {/* Finance Navigation Tabs */}
-      <div className="flex rounded-2xl border border-luxury-beige bg-white p-1.5 shadow-sm max-w-3xl overflow-x-auto">
+      <div className="flex rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 p-1.5 shadow-sm max-w-3xl overflow-x-auto backdrop-blur-md">
         <button
           onClick={() => setActiveTab("khatabook")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 shrink-0 ${
             activeTab === "khatabook"
-              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
           }`}
         >
-          <BookOpen className="h-4 w-4 text-luxury-gold" />
+          <BookOpen className="h-4 w-4" />
           <span>Grahak Khata Book (खाते पुस्तक)</span>
         </button>
 
         <button
           onClick={() => setActiveTab("loans")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 shrink-0 ${
             activeTab === "loans"
-              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
           }`}
         >
-          <Landmark className="h-4 w-4 text-luxury-gold" />
+          <Landmark className="h-4 w-4" />
           <span>Active Loans ({loans.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("dues")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 shrink-0 ${
             activeTab === "dues"
-              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
           }`}
         >
-          <AlertTriangle className="h-4 w-4 text-luxury-gold" />
+          <AlertTriangle className="h-4 w-4" />
           <span>Outstanding Dues</span>
         </button>
 
         <button
           onClick={() => setActiveTab("customers")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 shrink-0 ${
             activeTab === "customers"
-              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
           }`}
         >
-          <Users className="h-4 w-4 text-luxury-gold" />
+          <Users className="h-4 w-4" />
           <span>Customer Profiles ({customers.length})</span>
         </button>
 
         <button
           onClick={() => setActiveTab("calculator")}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition shrink-0 ${
+          className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all duration-200 shrink-0 ${
             activeTab === "calculator"
-              ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-              : "text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
           }`}
         >
-          <Calculator className="h-4 w-4 text-luxury-gold" />
+          <Calculator className="h-4 w-4" />
           <span>Mortgage Calculator</span>
         </button>
       </div>
@@ -617,74 +620,86 @@ function GoldFinancePageInner() {
             {/* Master Khatabook Banner */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {/* You'll Get Card */}
-              <div className="rounded-2xl border-2 border-luxury-gold/50 bg-gradient-to-br from-luxury-onyx via-luxury-onyx-surface to-luxury-onyx p-5 shadow-gold-glow text-white card-3d-gold">
+              <TiltCard
+                maxTilt={8}
+                glare={true}
+                className="rounded-2xl border-2 border-luxury-gold/50 bg-gradient-to-br from-luxury-onyx via-luxury-graphite to-luxury-onyx p-5 shadow-gold-glow text-white card-3d-gold"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-gold">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-gold-champagne">
                     You&apos;ll Get (घेणे बाकी)
                   </span>
                   <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/40">
                     <ArrowDownLeft className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="mt-2 font-mono text-3xl font-bold text-luxury-gold tabular-nums">
-                  ₹{totalYouWillGet.toLocaleString("en-IN")}
+                <p className="mt-2 font-mono text-3xl font-bold text-luxury-gold-bright tabular-nums">
+                  <AnimatedNumber value={totalYouWillGet} prefix="₹" />
                 </p>
                 <span className="text-[11px] text-white/70 mt-1 block">
                   Total outstanding from {customers.length} grahaks
                 </span>
-              </div>
+              </TiltCard>
 
               {/* Collateral Held Card */}
-              <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
+              <TiltCard
+                maxTilt={8}
+                glare={true}
+                className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-muted">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-gold-champagne">
                     Vault Gold Collateral (गहाण सोने)
                   </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold-subtle text-luxury-gold-dark border border-luxury-champagne">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-luxury-gold/15 text-luxury-gold border border-luxury-gold/30">
                     <Lock className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="mt-2 font-mono text-2xl font-bold text-luxury-onyx tabular-nums">
-                  {totalPledgedGoldGrams.toFixed(3)}g
+                <p className="mt-2 font-mono text-2xl font-bold text-white tabular-nums">
+                  <AnimatedNumber value={totalPledgedGoldGrams} decimals={3} suffix="g" />
                 </p>
-                <span className="text-[11px] text-luxury-muted mt-1 block">
+                <span className="text-[11px] text-luxury-muted/80 mt-1 block">
                   {totalOrnamentsCount} ornaments secured in shop safe
                 </span>
-              </div>
+              </TiltCard>
 
               {/* You'll Give Card */}
-              <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury card-3d">
+              <TiltCard
+                maxTilt={8}
+                glare={true}
+                className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-widest text-luxury-muted">
                     You&apos;ll Give (देणे बाकी)
                   </span>
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-luxury-muted border border-white/[0.1]">
                     <ArrowUpRight className="h-4 w-4" />
                   </div>
                 </div>
-                <p className="mt-2 font-mono text-2xl font-bold text-luxury-charcoal tabular-nums">
+                <p className="mt-2 font-mono text-2xl font-bold text-white/90 tabular-nums">
                   ₹0
                 </p>
-                <span className="text-[11px] text-luxury-muted mt-1 block">
+                <span className="text-[11px] text-luxury-muted/80 mt-1 block">
                   Zero client credit advance balances
                 </span>
-              </div>
+              </TiltCard>
             </div>
 
             {/* Khatabook Split Screen */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
               {/* LEFT: Customer Directory (4 Cols) */}
-              <div className="lg:col-span-4 rounded-2xl border border-luxury-beige bg-white shadow-luxury overflow-hidden">
+              <div className="lg:col-span-4 rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl shadow-luxury overflow-hidden">
                 {/* Search & Filter Header */}
-                <div className="p-4 border-b border-luxury-beige bg-luxury-ivory/50 space-y-3">
+                <div className="p-4 border-b border-white/[0.08] bg-white/[0.02] space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-serif text-sm font-bold text-luxury-onyx flex items-center gap-2">
+                    <h3 className="font-serif text-sm font-bold text-white flex items-center gap-2">
                       <Users className="h-4 w-4 text-luxury-gold" />
                       <span>Grahak Directory ({filteredCustomers.length})</span>
                     </h3>
                     <button
                       onClick={() => setIsCustomerModalOpen(true)}
-                      className="rounded-lg bg-luxury-gold-subtle border border-luxury-gold/40 px-2.5 py-1 text-[11px] font-bold text-luxury-gold-dark hover:bg-luxury-gold hover:text-white transition"
+                      className="rounded-lg bg-luxury-gold/15 border border-luxury-gold/30 px-2.5 py-1 text-[11px] font-bold text-luxury-gold hover:bg-luxury-gold hover:text-black transition"
                     >
                       + New Grahak
                     </button>
@@ -697,7 +712,7 @@ function GoldFinancePageInner() {
                       placeholder="Search name or mobile..."
                       value={khataSearch}
                       onChange={(e) => setKhataSearch(e.target.value)}
-                      className="w-full rounded-xl border border-luxury-beige bg-white py-1.5 pl-8 pr-3 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none"
+                      className="w-full rounded-xl border border-white/[0.1] bg-luxury-obsidian/60 py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-luxury-muted focus:border-luxury-gold focus:outline-none"
                     />
                   </div>
 
@@ -712,8 +727,8 @@ function GoldFinancePageInner() {
                         onClick={() => setKhataFilter(f.id as any)}
                         className={`rounded-lg px-2.5 py-1 text-[10px] font-semibold transition ${
                           khataFilter === f.id
-                            ? "bg-luxury-onyx text-luxury-gold"
-                            : "bg-white text-luxury-muted border border-luxury-beige hover:bg-luxury-ivory"
+                            ? "bg-luxury-gold text-black font-bold shadow-gold-glow"
+                            : "bg-white/[0.04] text-luxury-muted border border-white/[0.08] hover:bg-white/[0.08] hover:text-white"
                         }`}
                       >
                         {f.label}
@@ -723,7 +738,7 @@ function GoldFinancePageInner() {
                 </div>
 
                 {/* Customer List */}
-                <div className="divide-y divide-luxury-beige/50 max-h-[600px] overflow-y-auto">
+                <div className="divide-y divide-white/[0.06] max-h-[600px] overflow-y-auto scrollbar-thin">
                   {filteredCustomers.length === 0 ? (
                     <div className="p-8 text-center text-xs text-luxury-muted">
                       No matching customers found.
@@ -749,31 +764,31 @@ function GoldFinancePageInner() {
                         <div
                           key={cust.id || cust._id}
                           onClick={() => setSelectedKhataCustomerId(cust.id || cust._id)}
-                          className={`p-3.5 transition cursor-pointer flex items-center justify-between gap-3 ${
+                          className={`p-3.5 transition-all duration-200 cursor-pointer flex items-center justify-between gap-3 ${
                             isSelected
-                              ? "bg-luxury-gold-subtle/80 border-l-4 border-l-luxury-gold"
-                              : "hover:bg-luxury-ivory/60"
+                              ? "bg-luxury-gold/15 border-l-4 border-l-luxury-gold"
+                              : "hover:bg-white/[0.04]"
                           }`}
                         >
                           <div className="flex items-center gap-3 min-w-0">
                             <div
                               className={`flex h-10 w-10 items-center justify-center rounded-xl font-serif text-xs font-bold shrink-0 ${
                                 isSelected
-                                  ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/50"
-                                  : "bg-luxury-ivory text-luxury-charcoal border border-luxury-beige"
+                                  ? "bg-luxury-gold text-black font-bold shadow-gold-glow"
+                                  : "bg-white/[0.06] text-luxury-gold-champagne border border-white/[0.1]"
                               }`}
                             >
                               {initials}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-xs text-luxury-onyx truncate">
+                              <p className="font-semibold text-xs text-white truncate">
                                 {cust.fullName}
                               </p>
-                              <p className="text-[10px] text-luxury-muted truncate">
+                              <p className="text-[10px] text-luxury-muted truncate font-mono">
                                 {cust.mobileNumber} {cust.address ? `• ${cust.address}` : ""}
                               </p>
                               {cWt > 0 && (
-                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-luxury-gold-dark mt-0.5">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-luxury-gold mt-0.5">
                                   <Lock className="h-2.5 w-2.5" />
                                   {cWt.toFixed(2)}g Pledged
                                 </span>
@@ -784,7 +799,7 @@ function GoldFinancePageInner() {
                           <div className="text-right shrink-0">
                             <p
                               className={`font-mono text-xs font-bold tabular-nums ${
-                                cDue > 0 ? "text-amber-800" : "text-luxury-muted"
+                                cDue > 0 ? "text-amber-400" : "text-luxury-muted"
                               }`}
                             >
                               {cDue > 0 ? `₹${cDue.toLocaleString("en-IN")}` : "Settled"}
@@ -803,22 +818,22 @@ function GoldFinancePageInner() {
               {/* RIGHT: Selected Customer Khata Ledger (8 Cols) */}
               <div className="lg:col-span-8 space-y-4">
                 {!activeCustomer ? (
-                  <div className="rounded-2xl border border-luxury-beige bg-white p-12 text-center text-luxury-muted shadow-luxury">
+                  <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl p-12 text-center text-luxury-muted shadow-luxury">
                     <BookOpen className="h-10 w-10 mx-auto text-luxury-gold/60 mb-2" />
-                    <p className="font-serif text-sm font-bold text-luxury-onyx">
+                    <p className="font-serif text-sm font-bold text-white">
                       No Grahak Selected
                     </p>
-                    <p className="text-xs mt-1">
+                    <p className="text-xs mt-1 text-luxury-muted">
                       Choose a customer from the left directory to view their complete Khatabook ledger.
                     </p>
                   </div>
                 ) : (
                   <>
                     {/* Customer Header Card */}
-                    <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-luxury-beige">
+                    <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-white/[0.08]">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-luxury-onyx text-luxury-gold border border-luxury-gold/50 font-serif text-base font-bold shadow-xs">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-luxury-gold/20 text-luxury-gold border border-luxury-gold/40 font-serif text-base font-bold shadow-xs">
                             {activeCustomer.fullName
                               .split(" ")
                               .map((n) => n[0])
@@ -827,9 +842,9 @@ function GoldFinancePageInner() {
                               .toUpperCase()}
                           </div>
                           <div>
-                            <h2 className="font-serif text-lg font-bold text-luxury-onyx flex items-center gap-2">
+                            <h2 className="font-serif text-lg font-bold text-white flex items-center gap-2">
                               {activeCustomer.fullName}
-                              <span className="rounded bg-luxury-gold-subtle px-2 py-0.5 font-mono text-[10px] font-bold text-luxury-gold-dark border border-luxury-gold/30">
+                              <span className="rounded bg-luxury-gold/15 px-2 py-0.5 font-mono text-[10px] font-bold text-luxury-gold-bright border border-luxury-gold/30">
                                 {activeCustomer.customerId}
                               </span>
                             </h2>
@@ -844,16 +859,16 @@ function GoldFinancePageInner() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={sendKhataWhatsApp}
-                            className="flex items-center gap-1.5 rounded-xl bg-luxury-onyx border border-luxury-gold/40 px-3 py-1.5 text-xs font-semibold text-luxury-gold shadow-xs hover:bg-luxury-gold hover:text-white transition"
+                            className="flex items-center gap-1.5 rounded-xl bg-luxury-gold px-3 py-1.5 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d"
                             title="Send Khatabook WhatsApp Reminder"
                           >
-                            <MessageCircle className="h-3.5 w-3.5" />
+                            <MessageCircle className="h-3.5 w-3.5 text-black" />
                             <span>WhatsApp Statement</span>
                           </button>
 
                           <a
                             href={`tel:${activeCustomer.mobileNumber}`}
-                            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3 py-1.5 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory transition"
+                            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/[0.08] transition"
                           >
                             <Phone className="h-3.5 w-3.5 text-luxury-gold" />
                             <span>Call</span>
@@ -861,7 +876,7 @@ function GoldFinancePageInner() {
 
                           <button
                             onClick={() => window.print()}
-                            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3 py-1.5 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory transition"
+                            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/[0.08] transition"
                           >
                             <Printer className="h-3.5 w-3.5 text-luxury-gold" />
                             <span>Print</span>
@@ -871,38 +886,38 @@ function GoldFinancePageInner() {
 
                       {/* Grahak Financial Snapshot */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                        <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
                             Total You&apos;ll Get
                           </span>
-                          <p className="font-mono text-base font-bold text-amber-800 tabular-nums mt-0.5">
+                          <p className="font-mono text-base font-bold text-amber-400 tabular-nums mt-0.5">
                             ₹{custTotalDue.toLocaleString("en-IN")}
                           </p>
                         </div>
 
-                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                        <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
                             Principal Due
                           </span>
-                          <p className="font-mono text-base font-bold text-luxury-onyx tabular-nums mt-0.5">
+                          <p className="font-mono text-base font-bold text-white tabular-nums mt-0.5">
                             ₹{custOutstandingPrincipal.toLocaleString("en-IN")}
                           </p>
                         </div>
 
-                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                        <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
                             Accrued Interest
                           </span>
-                          <p className="font-mono text-base font-bold text-luxury-gold-dark tabular-nums mt-0.5">
+                          <p className="font-mono text-base font-bold text-luxury-gold-bright tabular-nums mt-0.5">
                             +₹{custAccruedInterest.toLocaleString("en-IN")}
                           </p>
                         </div>
 
-                        <div className="rounded-xl bg-luxury-ivory/60 p-3 border border-luxury-beige">
+                        <div className="rounded-xl bg-white/[0.03] p-3 border border-white/[0.08]">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-muted">
                             Pledged Ornaments
                           </span>
-                          <p className="font-mono text-base font-bold text-luxury-onyx tabular-nums mt-0.5">
+                          <p className="font-mono text-base font-bold text-white tabular-nums mt-0.5">
                             {custPledgedNetWeight.toFixed(3)}g ({custPledgedItems.length} pcs)
                           </p>
                         </div>
@@ -910,15 +925,15 @@ function GoldFinancePageInner() {
 
                       {/* Pledged Ornaments Detail Strip */}
                       {custPledgedItems.length > 0 && (
-                        <div className="rounded-xl bg-luxury-gold-subtle/50 p-3 border border-luxury-gold/25 flex flex-wrap items-center gap-2">
-                          <span className="text-[11px] font-bold text-luxury-gold-dark flex items-center gap-1.5">
+                        <div className="rounded-xl bg-luxury-gold/10 p-3 border border-luxury-gold/25 flex flex-wrap items-center gap-2">
+                          <span className="text-[11px] font-bold text-luxury-gold flex items-center gap-1.5">
                             <Lock className="h-3.5 w-3.5" />
                             Vault Collateral:
                           </span>
                           {custPledgedItems.map((item, idx) => (
                             <span
                               key={idx}
-                              className="rounded-lg bg-white px-2 py-0.5 text-[10px] font-semibold text-luxury-charcoal border border-luxury-champagne shadow-2xs"
+                              className="rounded-lg bg-white/[0.06] px-2 py-0.5 text-[10px] font-semibold text-white border border-white/[0.1] shadow-2xs"
                             >
                               {item.description} ({item.purity} • {Number(item.netWeight).toFixed(3)}g)
                             </span>
@@ -928,9 +943,9 @@ function GoldFinancePageInner() {
                     </div>
 
                     {/* Khatabook Passbook Ledger Table */}
-                    <div className="rounded-2xl border border-luxury-beige bg-white shadow-luxury overflow-hidden">
-                      <div className="p-3.5 border-b border-luxury-beige bg-luxury-ivory/50 flex items-center justify-between">
-                        <h3 className="font-serif text-xs font-bold uppercase tracking-wider text-luxury-onyx">
+                    <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl shadow-luxury overflow-hidden">
+                      <div className="p-3.5 border-b border-white/[0.08] bg-white/[0.02] flex items-center justify-between">
+                        <h3 className="font-serif text-xs font-bold uppercase tracking-wider text-white">
                           Transaction Ledger (खाते वही / पासबुक)
                         </h3>
                         <span className="text-[11px] text-luxury-muted">
@@ -940,20 +955,20 @@ function GoldFinancePageInner() {
 
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs">
-                          <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
+                          <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
                             <tr>
                               <th className="px-4 py-3">Date &amp; Voucher</th>
                               <th className="px-4 py-3">Particulars &amp; Collateral</th>
-                              <th className="px-4 py-3 text-right text-red-700">
+                              <th className="px-4 py-3 text-right text-red-400">
                                 You Gave (दिले / Udhaar)
                               </th>
-                              <th className="px-4 py-3 text-right text-luxury-gold-dark">
+                              <th className="px-4 py-3 text-right text-emerald-400">
                                 You Got (मिळाले / Jama)
                               </th>
                               <th className="px-4 py-3 text-center">Action</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-luxury-beige/60">
+                          <tbody className="divide-y divide-white/[0.06]">
                             {entries.length === 0 ? (
                               <tr>
                                 <td colSpan={5} className="py-8 text-center text-luxury-muted">
@@ -962,23 +977,23 @@ function GoldFinancePageInner() {
                               </tr>
                             ) : (
                               entries.map((entry) => (
-                                <tr key={entry.id} className="hover:bg-luxury-ivory/40 transition">
+                                <tr key={entry.id} className="hover:bg-white/[0.04] transition-colors">
                                   <td className="px-4 py-3">
-                                    <p className="font-semibold text-luxury-charcoal">{entry.date}</p>
-                                    <p className="font-mono text-[10px] text-luxury-gold-dark font-bold">
+                                    <p className="font-semibold text-white">{entry.date}</p>
+                                    <p className="font-mono text-[10px] text-luxury-gold font-bold">
                                       {entry.loanNumber}
                                     </p>
                                   </td>
                                   <td className="px-4 py-3">
-                                    <p className="font-semibold text-luxury-onyx">{entry.title}</p>
+                                    <p className="font-semibold text-white/90">{entry.title}</p>
                                     <p className="text-[10px] text-luxury-muted">{entry.subtitle}</p>
                                   </td>
-                                  <td className="px-4 py-3 text-right font-mono font-bold text-red-700 tabular-nums">
+                                  <td className="px-4 py-3 text-right font-mono font-bold text-red-400 tabular-nums">
                                     {entry.type === "gave"
                                       ? `₹${entry.amount.toLocaleString("en-IN")}`
                                       : "-"}
                                   </td>
-                                  <td className="px-4 py-3 text-right font-mono font-bold text-luxury-gold-dark tabular-nums">
+                                  <td className="px-4 py-3 text-right font-mono font-bold text-emerald-400 tabular-nums">
                                     {entry.type === "got"
                                       ? `₹${entry.amount.toLocaleString("en-IN")}`
                                       : "-"}
@@ -987,7 +1002,7 @@ function GoldFinancePageInner() {
                                     {entry.type === "gave" && (
                                       <button
                                         onClick={() => handleOpenPaymentModal(entry.loanObj)}
-                                        className="rounded-lg bg-gradient-to-r from-luxury-gold-dark to-luxury-gold px-2.5 py-1 text-[10px] font-semibold text-white hover:brightness-105 transition shadow-xs"
+                                        className="rounded-lg bg-emerald-500 hover:bg-emerald-400 px-2.5 py-1 text-[10px] font-bold text-black transition shadow-xs btn-3d"
                                       >
                                         Receive Payment
                                       </button>
@@ -1001,7 +1016,7 @@ function GoldFinancePageInner() {
                       </div>
 
                       {/* Sticky Bottom Khatabook Action Bar */}
-                      <div className="p-3 bg-luxury-ivory/80 border-t border-luxury-beige flex flex-wrap items-center justify-between gap-3">
+                      <div className="p-3 bg-luxury-obsidian/90 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
@@ -1011,7 +1026,7 @@ function GoldFinancePageInner() {
                               }));
                               setIsNewLoanOpen(true);
                             }}
-                            className="flex items-center gap-2 rounded-xl bg-red-700 hover:bg-red-800 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-95 btn-3d"
+                            className="flex items-center gap-2 rounded-xl bg-red-600 hover:bg-red-500 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition active:scale-95 btn-3d"
                           >
                             <Plus className="h-4 w-4" />
                             <span>+ You Gave (नवीन गहाण / कर्ज द्या)</span>
@@ -1029,7 +1044,7 @@ function GoldFinancePageInner() {
                               if (activeLoan) handleOpenPaymentModal(activeLoan);
                             }}
                             disabled={custLoans.length === 0}
-                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2.5 text-xs font-bold text-white shadow-luxury hover:brightness-105 transition active:scale-95 disabled:opacity-50 btn-3d"
+                            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition active:scale-95 disabled:opacity-50 btn-3d"
                           >
                             <ArrowDownLeft className="h-4 w-4" />
                             <span>+ You Got (रक्कम जमा करा)</span>
@@ -1040,7 +1055,7 @@ function GoldFinancePageInner() {
                           <span className="text-[10px] text-luxury-muted uppercase font-bold tracking-wider">
                             Net Balance
                           </span>
-                          <p className="font-mono text-sm font-bold text-luxury-onyx tabular-nums">
+                          <p className="font-mono text-sm font-bold text-white tabular-nums">
                             ₹{custTotalDue.toLocaleString("en-IN")}
                           </p>
                         </div>
@@ -1156,9 +1171,23 @@ function GoldFinancePageInner() {
                           ₹{(loan.totalDueRupees || 0).toLocaleString("en-IN")}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="rounded bg-luxury-ivory px-2 py-0.5 text-[11px] font-medium border border-luxury-beige font-mono tabular-nums">
-                            {loan.totalPledgedNetWeight.toFixed(3)}g ({loan.pledgedItems.length} items)
-                          </span>
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="rounded bg-luxury-ivory px-2 py-0.5 text-[11px] font-medium border border-luxury-beige font-mono tabular-nums">
+                              {loan.totalPledgedNetWeight.toFixed(3)}g ({loan.pledgedItems.length} items)
+                            </span>
+                            <div className="flex items-center gap-1 text-[9px]">
+                              {loan.pledgedItems?.some((p) => (p.metalType || "gold") === "gold") && (
+                                <span className="rounded bg-amber-100 px-1 text-amber-900 font-bold border border-amber-300">
+                                  Gold
+                                </span>
+                              )}
+                              {loan.pledgedItems?.some((p) => p.metalType === "silver") && (
+                                <span className="rounded bg-slate-200 px-1 text-slate-800 font-bold border border-slate-300">
+                                  Silver
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span
@@ -1733,15 +1762,15 @@ function GoldFinancePageInner() {
 
       {/* MODAL: ISSUE NEW GOLD LOAN */}
       {isNewLoanOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8 max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Issue New Gold Loan</h3>
+                <h3 className="font-serif text-lg font-bold text-white">Issue New Gold Loan</h3>
                 <p className="text-xs text-luxury-muted">Pledge ornaments securely and configure mortgage agreement</p>
               </div>
               <button onClick={() => setIsNewLoanOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+                <X className="h-5 w-5 text-luxury-muted hover:text-white" />
               </button>
             </div>
 
@@ -1848,8 +1877,32 @@ function GoldFinancePageInner() {
                 </div>
 
                 {newLoanForm.pledgedItems.map((item, idx) => (
-                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-6 gap-2 bg-white p-3 rounded-lg border border-amber-200 text-xs">
+                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-white p-3 rounded-lg border border-amber-200 text-xs items-end">
+                    {/* Metal Type: Gold or Silver */}
                     <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Metal Type *</label>
+                      <select
+                        value={item.metalType}
+                        onChange={(e) => {
+                          const m = e.target.value as "gold" | "silver";
+                          const updated = [...newLoanForm.pledgedItems];
+                          updated[idx].metalType = m;
+                          updated[idx].purity = m === "gold" ? "22K" : "925";
+                          updated[idx].description = m === "gold" ? "Gold Ornaments" : "Silver Ornaments / Payal";
+                          setNewLoanForm({ ...newLoanForm, pledgedItems: updated });
+                        }}
+                        className={`w-full rounded border px-2 py-1 text-xs font-bold ${
+                          item.metalType === "gold"
+                            ? "bg-amber-50 text-amber-900 border-amber-300"
+                            : "bg-slate-50 text-slate-900 border-slate-300"
+                        }`}
+                      >
+                        <option value="gold">Gold (सोने)</option>
+                        <option value="silver">Silver (चांदी)</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-3">
                       <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Description *</label>
                       <input
                         type="text"
@@ -1864,7 +1917,7 @@ function GoldFinancePageInner() {
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Purity</label>
                       <input
                         type="text"
@@ -1878,7 +1931,7 @@ function GoldFinancePageInner() {
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Gross Wt (g) *</label>
                       <input
                         type="number"
@@ -1891,11 +1944,11 @@ function GoldFinancePageInner() {
                           if (!updated[idx].netWeight) updated[idx].netWeight = e.target.value;
                           setNewLoanForm({ ...newLoanForm, pledgedItems: updated });
                         }}
-                        className="w-full rounded border border-luxury-beige px-2 py-1 text-xs"
+                        className="w-full rounded border border-luxury-beige px-2 py-1 text-xs font-mono"
                       />
                     </div>
 
-                    <div>
+                    <div className="sm:col-span-2">
                       <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Net Wt (g) *</label>
                       <input
                         type="number"
@@ -1907,26 +1960,68 @@ function GoldFinancePageInner() {
                           updated[idx].netWeight = e.target.value;
                           setNewLoanForm({ ...newLoanForm, pledgedItems: updated });
                         }}
-                        className="w-full rounded border border-luxury-beige px-2 py-1 text-xs"
+                        className="w-full rounded border border-luxury-beige px-2 py-1 text-xs font-mono font-bold text-amber-900"
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-[10px] font-semibold text-luxury-muted mb-0.5">Box / Packet #</label>
-                      <input
-                        type="text"
-                        placeholder="Tag"
-                        value={item.identificationMark}
-                        onChange={(e) => {
-                          const updated = [...newLoanForm.pledgedItems];
-                          updated[idx].identificationMark = e.target.value;
-                          setNewLoanForm({ ...newLoanForm, pledgedItems: updated });
-                        }}
-                        className="w-full rounded border border-luxury-beige px-2 py-1 text-xs"
-                      />
+                    <div className="sm:col-span-1 flex justify-center pb-1">
+                      {newLoanForm.pledgedItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = newLoanForm.pledgedItems.filter((_, i) => i !== idx);
+                            setNewLoanForm({ ...newLoanForm, pledgedItems: updated });
+                          }}
+                          className="text-rose-500 hover:text-rose-700"
+                          title="Remove item"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
+
+                {/* Dynamic Gold vs Silver Weight Totals */}
+                {(() => {
+                  let goldGross = 0,
+                    goldNet = 0,
+                    goldCount = 0;
+                  let silverGross = 0,
+                    silverNet = 0,
+                    silverCount = 0;
+                  newLoanForm.pledgedItems.forEach((pi) => {
+                    const g = parseFloat(pi.grossWeight) || 0;
+                    const n = parseFloat(pi.netWeight) || 0;
+                    if (pi.metalType === "silver") {
+                      silverGross += g;
+                      silverNet += n;
+                      silverCount++;
+                    } else {
+                      goldGross += g;
+                      goldNet += n;
+                      goldCount++;
+                    }
+                  });
+
+                  return (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-2.5 text-xs flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-4">
+                        <span className="flex items-center gap-1 font-semibold text-amber-900">
+                          <Coins className="h-3.5 w-3.5 text-amber-700" />
+                          Gold: <strong>{goldNet.toFixed(3)}g net</strong> ({goldCount} pc{goldCount === 1 ? "" : "s"})
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-slate-800">
+                          <Gem className="h-3.5 w-3.5 text-slate-600" />
+                          Silver: <strong>{silverNet.toFixed(3)}g net</strong> ({silverCount} pc{silverCount === 1 ? "" : "s"})
+                        </span>
+                      </div>
+                      <div className="font-bold text-amber-950">
+                        Combined Net: {(goldNet + silverNet).toFixed(3)}g
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>
@@ -1961,17 +2056,17 @@ function GoldFinancePageInner() {
 
       {/* MODAL: RECORD LOAN PAYMENT */}
       {isPaymentOpen && selectedLoanForPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl p-6">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Record Loan Payment</h3>
+                <h3 className="font-serif text-lg font-bold text-white">Record Loan Payment</h3>
                 <p className="text-xs text-luxury-muted">
                   Loan {selectedLoanForPayment.loanNumber} • {selectedLoanForPayment.customerId?.fullName}
                 </p>
               </div>
               <button onClick={() => setIsPaymentOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+                <X className="h-5 w-5 text-luxury-muted hover:text-white" />
               </button>
             </div>
 
@@ -2084,11 +2179,11 @@ function GoldFinancePageInner() {
 
       {/* MODAL: CUSTOMER PROFILE & LEDGER DRAWER */}
       {isCustomerModalOpen && selectedCustomerForView && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-3xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-3xl rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
+                <h3 className="font-serif text-lg font-bold text-white">
                   {selectedCustomerForView.customer.fullName}
                 </h3>
                 <p className="text-xs text-luxury-muted">
@@ -2096,7 +2191,7 @@ function GoldFinancePageInner() {
                 </p>
               </div>
               <button onClick={() => setIsCustomerModalOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+                <X className="h-5 w-5 text-luxury-muted hover:text-white" />
               </button>
             </div>
 

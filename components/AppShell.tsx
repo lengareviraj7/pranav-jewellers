@@ -24,21 +24,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-screen items-center justify-center bg-luxury-ivory">
         <div className="flex flex-col items-center gap-5 animate-fadeInUp">
           {/* Logo crest */}
-          <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-luxury-onyx border-2 border-luxury-gold/40 shadow-gold-glow-lg">
-            <Sparkles className="h-8 w-8 text-luxury-gold" />
-            <span className="absolute -bottom-1 -right-1 flex h-3 w-3">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-luxury-gold opacity-75 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-luxury-gold" />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-luxury-gold/60 shadow-gold-glow-lg overflow-hidden bg-white p-1">
+            <img
+              src="/logo.png"
+              alt="Siddheshwar Jewellers & Finance"
+              className="h-full w-full object-cover rounded-full"
+            />
+            <span className="absolute bottom-0 right-1 flex h-3.5 w-3.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500" />
             </span>
           </div>
           {/* Spinner */}
-          <div className="h-8 w-8 rounded-full border-2 border-luxury-gold/20 border-t-luxury-gold animate-spin" />
+          <div className="h-6 w-6 rounded-full border-2 border-luxury-gold/20 border-t-luxury-gold animate-spin" />
           <div className="text-center">
-            <p className="font-serif text-sm font-bold tracking-[0.12em] text-luxury-onyx">
-              SIDHESHWAR JEWELLERS
+            <p className="font-serif text-sm font-bold tracking-[0.14em] text-white">
+              SIDDESHWAR JEWELLERS &amp; FINANCE
             </p>
-            <p className="mt-1 text-[11px] text-luxury-muted">
-              Initializing secure ERP environment…
+            <p className="mt-1 text-[11px] text-luxury-gold-champagne tracking-wider uppercase font-semibold">
+              Since 2009 • Initializing secure ERP environment…
             </p>
           </div>
         </div>
@@ -51,10 +55,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-luxury-ivory text-luxury-charcoal">
+    <div className="flex h-screen overflow-hidden bg-luxury-ivory text-luxury-charcoal">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
         <Header
           onOpenQuickAction={() => {
             setQuickActionInitialTab("gold_stock");

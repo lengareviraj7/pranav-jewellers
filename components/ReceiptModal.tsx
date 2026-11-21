@@ -60,12 +60,19 @@ export default function ReceiptModal({ isOpen, onClose, data }: ReceiptModalProp
         {/* Printable Area */}
         <div id="printable-receipt" className="p-8 text-luxury-charcoal space-y-6">
           {/* Header */}
-          <div className="text-center border-b border-luxury-beige pb-4">
+          <div className="text-center border-b border-luxury-beige pb-4 flex flex-col items-center">
+            <div className="h-16 w-16 rounded-full border-2 border-luxury-gold/60 p-0.5 mb-2 bg-white shadow-xs overflow-hidden">
+              <img
+                src="/logo.png"
+                alt="Siddheshwar Jewellers & Finance"
+                className="h-full w-full object-cover rounded-full"
+              />
+            </div>
             <h2 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx">
-              SIDHESHWAR JEWELLERS
+              SIDDESHWAR JEWELLERS &amp; FINANCE
             </h2>
             <p className="text-xs font-medium text-luxury-gold uppercase tracking-widest mt-0.5">
-              Gold Ornaments, Bullion & Gold Finance
+              Since 2009 • Gold Ornaments, Silver, Bullion &amp; Mortgage Finance
             </p>
             <p className="text-[11px] text-luxury-muted mt-1">
               Shop No. 12, Sarafa Bazaar, Main Road • Phone: +91 98765 43210

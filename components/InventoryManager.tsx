@@ -27,6 +27,7 @@ import {
   DollarSign,
   Filter,
 } from "lucide-react";
+import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
 interface Category {
   id: string;
@@ -87,6 +88,8 @@ export default function InventoryManager({
   const [selectedPurity, setSelectedPurity] = useState<string>("all");
   const [selectedSize, setSelectedSize] = useState<string>("all");
   const [selectedWeightBracket, setSelectedWeightBracket] = useState<string>("all");
+  const [targetWeightSearch, setTargetWeightSearch] = useState<string>("");
+  const [weightTolerance, setWeightTolerance] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
 
@@ -106,19 +109,54 @@ export default function InventoryManager({
     whatsappText: string;
     customerName: string;
     remainingBalance: number;
+    totalNewPurchase?: number;
+    totalExchangeCredit?: number;
+    amountPaid?: number;
   } | null>(null);
   const [itemHistory, setItemHistory] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Old Metal Exchange items within Sell Modal (Direct format from handwritten diagram)
+  const [goldExGrossWeight, setGoldExGrossWeight] = useState("");
+  const [goldExNetWeight, setGoldExNetWeight] = useState("");
+  const [goldExRate, setGoldExRate] = useState("6500");
+  const [silverExGrossWeight, setSilverExGrossWeight] = useState("");
+  const [silverExNetWeight, setSilverExNetWeight] = useState("");
+  const [silverExRate, setSilverExRate] = useState("75");
+  const [cashAmountRupees, setCashAmountRupees] = useState("");
+  const [onlineAmountRupees, setOnlineAmountRupees] = useState("");
+
+  // Legacy exchange array state for compatibility
+  const [sellExchangeItems, setSellExchangeItems] = useState<Array<{
+    id: string;
+    metalType: "gold" | "silver";
+    grossWeight: number;
+    netWeight: number;
+    purity: string;
+    rateRupeesPerGram: number;
+    deductionRupees: number;
+    exchangeValueRupees: number;
+    notes?: string;
+  }>>([]);
+  const [exForm, setExForm] = useState({
+    metalType: "gold" as "gold" | "silver",
+    grossWeight: "",
+    netWeight: "",
+    purity: "22K Scrap",
+    rateRupeesPerGram: "6500",
+    deductionRupees: "0",
+  });
+
   // Sell Form State
   const [sellForm, setSellForm] = useState({
     quantitySold: 1,
-    sellingPriceRupees: "",
+    netWeightSold: "",
+    udhariRupees: "",
     manualProfitRupees: "",
     paidAmountRupees: "",
     customerName: "",
     customerPhone: "",
-    customerAddress: "",
+    customerAddress: "Visapur",
     dueDate: "",
     paymentMode: "cash" as "cash" | "online" | "mixed",
     notes: "",
@@ -134,7 +172,7 @@ export default function InventoryManager({
     quantity: 1,
     grossWeight: "",
     stoneWeight: "0",
-    purchaseCostRupees: "",
+    netWeight: "",
     hallmarkUid: "",
     supplierName: "",
     purchaseDate: new Date().toISOString().split("T")[0],
@@ -212,18 +250,59 @@ export default function InventoryManager({
   const totalGrossWeight = items.reduce((acc, it) => acc + (it.grossWeight || 0), 0);
   const totalNetWeight = items.reduce((acc, it) => acc + (it.netWeight || 0), 0);
 
+  // Weight Search Proximity Calculation
+  const targetWeightNum = parseFloat(targetWeightSearch);
+  const isWeightSearchActive = !isNaN(targetWeightNum) && targetWeightNum > 0;
+
+  const displayedItems = React.useMemo(() => {
+    let list = [...items];
+
+    if (isWeightSearchActive) {
+      const tol = weightTolerance !== "all" ? parseFloat(weightTolerance) : null;
+      list = list
+        .map((it: any) => {
+          const diff = Number(((it.netWeight || 0) - targetWeightNum).toFixed(3));
+          const absDiff = Math.abs(diff);
+          const diffMg = Math.round(diff * 1000);
+          return {
+            ...it,
+            diffGrams: diff,
+            absDiffGrams: absDiff,
+            diffMg,
+          };
+        })
+        .filter((it: any) => {
+          if (tol !== null && !isNaN(tol)) {
+            return it.absDiffGrams <= tol + 0.0001;
+          }
+          return true;
+        })
+        .sort((a: any, b: any) => a.absDiffGrams - b.absDiffGrams);
+    }
+
+    return list;
+  }, [items, targetWeightSearch, weightTolerance, isWeightSearchActive, targetWeightNum]);
+
   // Form Net Weight Helper
-  const formNetWeight = Number(stockForm.grossWeight || 0) - Number(stockForm.stoneWeight || 0);
+  const formNetWeight = stockForm.netWeight !== ""
+    ? Number(stockForm.netWeight)
+    : Number(stockForm.grossWeight || 0) - Number(stockForm.stoneWeight || 0);
 
   // 1. Submit Add Stock
   const handleAddStock = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const computedNet = stockForm.netWeight !== ""
+        ? Number(stockForm.netWeight)
+        : Number(stockForm.grossWeight || 0) - Number(stockForm.stoneWeight || 0);
+
       const res = await fetch("/api/inventory/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...stockForm,
+          netWeight: computedNet,
+          purchaseCostRupees: 0,
           metalType,
         }),
       });
@@ -241,7 +320,7 @@ export default function InventoryManager({
         quantity: 1,
         grossWeight: "",
         stoneWeight: "0",
-        purchaseCostRupees: "",
+        netWeight: "",
         hallmarkUid: "",
         supplierName: "",
         purchaseDate: new Date().toISOString().split("T")[0],
@@ -365,15 +444,37 @@ export default function InventoryManager({
   const openSellModal = (item: InventoryItem) => {
     setSellItem(item);
     setSellSuccessData(null);
-    const unitCost = Math.round((item.purchaseCostRupees || 0) / (item.quantity || 1));
+    setSellExchangeItems([]);
+    setGoldExGrossWeight("");
+    setGoldExNetWeight("");
+    setGoldExRate("0");
+    setSilverExGrossWeight("");
+    setSilverExNetWeight("");
+    setSilverExRate("0");
+    setCashAmountRupees("");
+    setOnlineAmountRupees("");
+    setExForm({
+      metalType: "gold",
+      grossWeight: "",
+      netWeight: "",
+      purity: "22K Scrap",
+      rateRupeesPerGram: "0",
+      deductionRupees: "0",
+    });
+
+    const defaultSoldNet = item.quantity > 0
+      ? (item.netWeight / item.quantity).toFixed(3)
+      : item.netWeight.toFixed(3);
+
     setSellForm({
       quantitySold: 1,
-      sellingPriceRupees: "",
+      netWeightSold: defaultSoldNet,
+      udhariRupees: "",
       manualProfitRupees: "",
       paidAmountRupees: "",
       customerName: "",
       customerPhone: "",
-      customerAddress: "",
+      customerAddress: "Visapur", // Required default: Visapur
       dueDate: "",
       paymentMode: "cash",
       notes: "",
@@ -381,16 +482,136 @@ export default function InventoryManager({
     setIsSellModalOpen(true);
   };
 
+  const handleAddSellExchange = () => {
+    const gw = parseFloat(exForm.grossWeight) || 0;
+    const nw = parseFloat(exForm.netWeight) || 0;
+    const rate = parseFloat(exForm.rateRupeesPerGram) || 0;
+    const ded = parseFloat(exForm.deductionRupees) || 0;
+
+    if (gw <= 0 && nw <= 0) {
+      alert("Please enter valid gross or net weight for old metal.");
+      return;
+    }
+
+    const val = Math.max(0, nw * rate - ded);
+    setSellExchangeItems((prev) => [
+      ...prev,
+      {
+        id: `ex-${Date.now()}-${Math.random()}`,
+        metalType: exForm.metalType,
+        grossWeight: gw > 0 ? gw : nw,
+        netWeight: nw > 0 ? nw : gw,
+        purity: exForm.purity,
+        rateRupeesPerGram: rate,
+        deductionRupees: ded,
+        exchangeValueRupees: val,
+      },
+    ]);
+
+    setExForm({
+      metalType: exForm.metalType,
+      grossWeight: "",
+      netWeight: "",
+      purity: exForm.metalType === "gold" ? "22K Scrap" : "925 Scrap",
+      rateRupeesPerGram: "0",
+      deductionRupees: "0",
+    });
+  };
+
+  const handleRemoveSellExchange = (id: string) => {
+    setSellExchangeItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
   const handleSellSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!sellItem) return;
+
+    const cashVal = parseFloat(cashAmountRupees) || 0;
+    const onlineVal = parseFloat(onlineAmountRupees) || 0;
+    const udhariVal = parseFloat(sellForm.udhariRupees) || 0;
+    const totalTransactionAmount = cashVal + onlineVal + udhariVal;
+
+    if (totalTransactionAmount <= 0) {
+      alert("Please enter at least Cash Received, Online payment, or an Udhari amount.");
+      return;
+    }
+
+    if (udhariVal > 0 && !sellForm.dueDate) {
+      alert("Promised payment due date is mandatory when Udhari is entered.");
+      return;
+    }
+
+    // Direct exchange items from Gold & Silver inputs (weights only, rate option removed)
+    const goldNW = parseFloat(goldExNetWeight) || 0;
+    const goldGW = parseFloat(goldExGrossWeight) || goldNW;
+    const silverNW = parseFloat(silverExNetWeight) || 0;
+    const silverGW = parseFloat(silverExGrossWeight) || silverNW;
+
+    if (goldNW > 0 && goldGW > 0 && goldNW > goldGW + 0.001) {
+      alert("Gold net weight cannot exceed gross weight.");
+      return;
+    }
+    if (silverNW > 0 && silverGW > 0 && silverNW > silverGW + 0.001) {
+      alert("Silver net weight cannot exceed gross weight.");
+      return;
+    }
+
+    const compiledExchange: any[] = [];
+    if (goldNW > 0 || goldGW > 0) {
+      compiledExchange.push({
+        metalType: "gold",
+        grossWeight: goldGW > 0 ? goldGW : goldNW,
+        netWeight: goldNW > 0 ? goldNW : goldGW,
+        purity: "22K Scrap",
+        rateRupeesPerGram: 0,
+        deductionRupees: 0,
+        exchangeValueRupees: 0,
+      });
+    }
+    if (silverNW > 0 || silverGW > 0) {
+      compiledExchange.push({
+        metalType: "silver",
+        grossWeight: silverGW > 0 ? silverGW : silverNW,
+        netWeight: silverNW > 0 ? silverNW : silverGW,
+        purity: "925 Scrap",
+        rateRupeesPerGram: 0,
+        deductionRupees: 0,
+        exchangeValueRupees: 0,
+      });
+    }
+
+    // Also include any items from legacy list if present
+    for (const ex of sellExchangeItems) {
+      compiledExchange.push(ex);
+    }
+
     try {
       const res = await fetch("/api/sales", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           itemId: sellItem.id || sellItem._id,
-          ...sellForm,
+          quantitySold: sellForm.quantitySold,
+          netWeightSold: sellForm.netWeightSold ? parseFloat(sellForm.netWeightSold) : undefined,
+          sellingPriceRupees: totalTransactionAmount,
+          udhariAmountRupees: udhariVal,
+          manualProfitRupees: sellForm.manualProfitRupees ? parseFloat(sellForm.manualProfitRupees) : undefined,
+          exchangeMetals: compiledExchange.map((ex) => ({
+            metalType: ex.metalType,
+            grossWeight: ex.grossWeight,
+            netWeight: ex.netWeight,
+            purity: ex.purity,
+            rateRupeesPerGram: ex.rateRupeesPerGram || 0,
+            deductionRupees: ex.deductionRupees || 0,
+            notes: ex.notes,
+          })),
+          cashAmountRupees: cashVal,
+          onlineAmountRupees: onlineVal,
+          customerName: sellForm.customerName.trim(),
+          customerPhone: sellForm.customerPhone.trim(),
+          customerAddress: sellForm.customerAddress.trim() || undefined,
+          dueDate: udhariVal > 0 ? sellForm.dueDate : undefined,
+          notes: sellForm.notes,
         }),
       });
 
@@ -405,6 +626,9 @@ export default function InventoryManager({
         whatsappText: data.whatsappText,
         customerName: data.sale.customer.name,
         remainingBalance: data.sale.balanceDuePaise / 100,
+        totalNewPurchase: data.sale.sellingPricePaise / 100,
+        totalExchangeCredit: (data.sale.totalExchangeCreditPaise || 0) / 100,
+        amountPaid: data.sale.paidAmountPaise / 100,
       });
 
       setSuccessMsg(`Sale recorded! Stock of ${sellItem.name} deducted successfully.`);
@@ -420,12 +644,12 @@ export default function InventoryManager({
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center animate-fadeInUp">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-widest text-luxury-gold">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold-champagne">
             Showroom Stock Management
           </span>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-luxury-onyx sm:text-3xl">
+          <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
             {title}
           </h1>
           <p className="mt-1 text-xs text-luxury-muted">{subtitle}</p>
@@ -435,7 +659,7 @@ export default function InventoryManager({
           <a
             href={`/api/export/inventory?metalType=${metalType}`}
             download
-            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3.5 py-2 text-xs font-semibold text-luxury-charcoal shadow-xs hover:bg-luxury-ivory transition"
+            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-luxury-graphite/80 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-white/[0.08] hover:border-luxury-gold/40 transition-all"
           >
             <Download className="h-3.5 w-3.5 text-luxury-gold" />
             <span>Export CSV</span>
@@ -443,9 +667,9 @@ export default function InventoryManager({
 
           <button
             onClick={() => setIsAddStockOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition-all btn-3d"
           >
-            <Plus className="h-4 w-4 text-white" />
+            <Plus className="h-4 w-4 text-black" />
             <span>Add {metalType === "gold" ? "Gold" : "Silver"} Stock</span>
           </button>
         </div>
@@ -453,18 +677,18 @@ export default function InventoryManager({
 
       {/* Notifications */}
       {error && (
-        <div className="flex items-center justify-between rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+        <div className="flex items-center justify-between rounded-xl bg-red-950/40 p-3 text-xs text-red-300 border border-red-500/40 backdrop-blur-md animate-slideDown">
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 shrink-0" />
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
             <span>{error}</span>
           </div>
           <button onClick={() => setError(null)}><X className="h-4 w-4" /></button>
         </div>
       )}
       {successMsg && (
-        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold-subtle/50 p-3 text-xs text-luxury-gold-bright border border-luxury-gold/40 backdrop-blur-md font-medium animate-slideDown">
           <div className="flex items-center gap-2">
-            <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
+            <Check className="h-4 w-4 shrink-0 text-luxury-gold" />
             <span>{successMsg}</span>
           </div>
           <button onClick={() => setSuccessMsg(null)}><X className="h-4 w-4" /></button>
@@ -473,49 +697,77 @@ export default function InventoryManager({
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+        <TiltCard
+          maxTilt={8}
+          glare={true}
+          className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+        >
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Pieces in Stock
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">{totalPieces}</p>
-          <span className="text-[11px] text-luxury-muted">Verified showroom items</span>
-        </div>
+          <p className="mt-2 font-serif text-2xl font-bold text-white">
+            <AnimatedNumber value={totalPieces} />
+          </p>
+          <span className="text-[11px] text-luxury-muted/80 mt-1 block">Verified showroom items</span>
+        </TiltCard>
 
-        <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+        <TiltCard
+          maxTilt={8}
+          glare={true}
+          className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+        >
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Total Gross Weight
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">
-            {totalGrossWeight.toFixed(3)}{" "}
+          <p className="mt-2 font-serif text-2xl font-bold text-white">
+            <AnimatedNumber value={totalGrossWeight} decimals={3} />{" "}
             <span className="text-xs font-sans font-normal text-luxury-muted">g</span>
           </p>
-          <span className="text-[11px] text-luxury-muted">Including stones & attachments</span>
-        </div>
+          <span className="text-[11px] text-luxury-muted/80 mt-1 block">Including stones & attachments</span>
+        </TiltCard>
 
-        <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
+        <TiltCard
+          maxTilt={8}
+          glare={true}
+          className={`rounded-2xl border ${
+            metalType === "gold" ? "border-luxury-gold/40" : "border-slate-400/40"
+          } bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury`}
+        >
+          <span className={`text-[11px] font-semibold uppercase tracking-wider ${
+            metalType === "gold" ? "text-luxury-gold-champagne" : "text-slate-300"
+          }`}>
             Total Net Metal Weight
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-gold-dark">
-            {totalNetWeight.toFixed(3)}{" "}
-            <span className="text-xs font-sans font-normal text-luxury-gold">g pure</span>
+          <p className={`mt-2 font-serif text-2xl font-bold ${
+            metalType === "gold" ? "text-luxury-gold-bright" : "text-slate-200"
+          }`}>
+            <AnimatedNumber value={totalNetWeight} decimals={3} />{" "}
+            <span className={`text-xs font-sans font-normal ${
+              metalType === "gold" ? "text-luxury-gold" : "text-slate-400"
+            }`}>g pure</span>
           </p>
-          <span className="text-[11px] text-luxury-muted">Auto-computed (Gross - Stones)</span>
-        </div>
+          <span className="text-[11px] text-luxury-muted/80 mt-1 block">Auto-computed (Gross - Stones)</span>
+        </TiltCard>
 
-        <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
+        <TiltCard
+          maxTilt={8}
+          glare={true}
+          className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+        >
           <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
             Active Categories
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-luxury-onyx">{categories.length}</p>
-          <span className="text-[11px] text-luxury-muted">Dynamic & customizable</span>
-        </div>
+          <p className="mt-2 font-serif text-2xl font-bold text-white">
+            <AnimatedNumber value={categories.length} />
+          </p>
+          <span className="text-[11px] text-luxury-muted/80 mt-1 block">Dynamic &amp; customizable</span>
+        </TiltCard>
       </div>
 
       {/* Dynamic Category Summary Carousel / Pills */}
-      <div className="rounded-2xl border border-luxury-beige bg-white p-5 shadow-luxury">
-        <div className="flex items-center justify-between pb-3 border-b border-luxury-beige">
-          <span className="text-xs font-bold uppercase tracking-wider text-luxury-onyx">
+      <div className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl p-5 shadow-luxury">
+        <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+          <span className="text-xs font-bold uppercase tracking-wider text-white">
             Category-wise Stock Breakdown
           </span>
           <span className="text-[11px] text-luxury-muted">Click any category to filter inventory</span>
@@ -524,10 +776,10 @@ export default function InventoryManager({
         <div className="mt-4 flex flex-wrap gap-2.5">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition ${
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
               selectedCategory === "all"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-xs"
-                : "border border-luxury-beige bg-luxury-ivory/50 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+                : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
             }`}
           >
             All Categories ({items.length})
@@ -536,10 +788,10 @@ export default function InventoryManager({
           {categories.map((cat) => (
             <div
               key={cat.id || cat._id}
-              className={`flex items-center rounded-xl border transition overflow-hidden ${
+              className={`flex items-center rounded-xl border transition-all duration-200 overflow-hidden ${
                 selectedCategory === (cat.id || cat._id)
-                  ? "border-luxury-gold bg-luxury-onyx text-luxury-gold shadow-xs"
-                  : "border-luxury-beige bg-luxury-ivory/40 text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                  ? "border-luxury-gold bg-luxury-gold/15 text-luxury-gold-bright shadow-xs"
+                  : "border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
               }`}
             >
               <button
@@ -558,7 +810,7 @@ export default function InventoryManager({
                   setIsCategoryModalOpen(true);
                 }}
                 title="Rename Category"
-                className="p-1.5 opacity-60 hover:opacity-100 transition"
+                className="p-1.5 opacity-60 hover:opacity-100 transition-opacity"
               >
                 <Edit2 className="h-3 w-3" />
               </button>
@@ -571,7 +823,7 @@ export default function InventoryManager({
               setCategoryForm({ name: "" });
               setIsCategoryModalOpen(true);
             }}
-            className="flex items-center gap-1.5 rounded-xl border border-dashed border-luxury-gold/60 bg-luxury-gold-subtle/50 px-3.5 py-2 text-xs font-semibold text-luxury-gold-dark hover:bg-luxury-gold-subtle transition"
+            className="flex items-center gap-1.5 rounded-xl border border-dashed border-luxury-gold/50 bg-luxury-gold/10 px-3.5 py-2 text-xs font-semibold text-luxury-gold hover:bg-luxury-gold/20 hover:border-luxury-gold transition-all"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>+ New Category</span>
@@ -580,7 +832,7 @@ export default function InventoryManager({
       </div>
 
       {/* Search & Segregation / Filter Bar */}
-      <div className="flex flex-col gap-3 rounded-2xl border border-luxury-beige bg-white p-4 shadow-luxury lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl p-4 shadow-luxury lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-luxury-muted" />
           <input
@@ -588,32 +840,73 @@ export default function InventoryManager({
             placeholder="Search by Item name, SKU, HUID, or Supplier..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/30 py-2 pl-9 pr-4 text-xs text-luxury-charcoal placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:bg-white focus:outline-none transition"
+            className="w-full rounded-xl border border-white/[0.1] bg-luxury-obsidian/60 py-2 pl-9 pr-4 text-xs text-white placeholder:text-luxury-muted focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none transition-all"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Direct Search by Weight (Integrated into Gold & Silver stock) */}
+          <div className="flex items-center gap-1.5 rounded-xl border border-luxury-gold/50 bg-black/60 px-2.5 py-1.5 shadow-sm">
+            <Scale className="h-4 w-4 text-luxury-gold shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-gold-champagne whitespace-nowrap">
+              Weight:
+            </span>
+            <input
+              type="number"
+              step="0.001"
+              placeholder="e.g. 8.5g"
+              value={targetWeightSearch}
+              onChange={(e) => setTargetWeightSearch(e.target.value)}
+              title="Search by target net weight (e.g. 8.5g)"
+              className="w-20 bg-transparent text-xs font-mono font-bold text-luxury-gold-bright placeholder:text-neutral-500 focus:outline-none"
+            />
+            <span className="text-[10px] font-mono text-luxury-muted">g</span>
+
+            {targetWeightSearch && (
+              <div className="flex items-center gap-1 pl-1.5 border-l border-white/10">
+                <select
+                  value={weightTolerance}
+                  onChange={(e) => setWeightTolerance(e.target.value)}
+                  className="rounded bg-black/80 px-1.5 py-0.5 text-[10px] text-white border border-white/10 focus:outline-none"
+                >
+                  <option value="all">Nearest</option>
+                  <option value="0.2">±0.2g</option>
+                  <option value="0.5">±0.5g</option>
+                  <option value="1.0">±1.0g</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setTargetWeightSearch("")}
+                  title="Clear weight search"
+                  className="rounded p-0.5 text-neutral-400 hover:text-white transition"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Weight Segregation Filter */}
           <select
             value={selectedWeightBracket}
             onChange={(e) => setSelectedWeightBracket(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+            className="rounded-xl border border-white/[0.1] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
-            <option value="all">⚖️ All Weights</option>
+            <option value="all" className="bg-luxury-obsidian text-white">⚖️ All Weights</option>
             {metalType === "gold" ? (
               <>
-                <option value="under_2">&lt; 2g (Light / Rings)</option>
-                <option value="2_to_5">2g – 5g (Standard Rings)</option>
-                <option value="5_to_10">5g – 10g (Heavy Rings / Chains)</option>
-                <option value="10_to_20">10g – 20g (Chains / Bangles)</option>
-                <option value="over_20">&gt; 20g (Heavy Sets / Kadas)</option>
+                <option value="under_2" className="bg-luxury-obsidian text-white">&lt; 2g (Light / Rings)</option>
+                <option value="2_to_5" className="bg-luxury-obsidian text-white">2g – 5g (Standard Rings)</option>
+                <option value="5_to_10" className="bg-luxury-obsidian text-white">5g – 10g (Heavy Rings / Chains)</option>
+                <option value="10_to_20" className="bg-luxury-obsidian text-white">10g – 20g (Chains / Bangles)</option>
+                <option value="over_20" className="bg-luxury-obsidian text-white">&gt; 20g (Heavy Sets / Kadas)</option>
               </>
             ) : (
               <>
-                <option value="under_20">&lt; 20g (Light Silver)</option>
-                <option value="20_to_50">20g – 50g (Light Anklets)</option>
-                <option value="50_to_100">50g – 100g (Heavy Payal)</option>
-                <option value="over_100">&gt; 100g (Utensils / Articles)</option>
+                <option value="under_20" className="bg-luxury-obsidian text-white">&lt; 20g (Light Silver)</option>
+                <option value="20_to_50" className="bg-luxury-obsidian text-white">20g – 50g (Light Anklets)</option>
+                <option value="50_to_100" className="bg-luxury-obsidian text-white">50g – 100g (Heavy Payal)</option>
+                <option value="over_100" className="bg-luxury-obsidian text-white">&gt; 100g (Utensils / Articles)</option>
               </>
             )}
           </select>
@@ -622,11 +915,11 @@ export default function InventoryManager({
           <select
             value={selectedSize}
             onChange={(e) => setSelectedSize(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+            className="rounded-xl border border-white/[0.1] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
-            <option value="all">📏 All Sizes</option>
+            <option value="all" className="bg-luxury-obsidian text-white">📏 All Sizes</option>
             {Array.from(new Set(items.map((i) => i.size).filter(Boolean))).map((sz) => (
-              <option key={sz} value={sz}>
+              <option key={sz} value={sz} className="bg-luxury-obsidian text-white">
                 Size: {sz}
               </option>
             ))}
@@ -636,11 +929,11 @@ export default function InventoryManager({
           <select
             value={selectedPurity}
             onChange={(e) => setSelectedPurity(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+            className="rounded-xl border border-white/[0.1] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
-            <option value="all">All Purities</option>
+            <option value="all" className="bg-luxury-obsidian text-white">All Purities</option>
             {purityOptions.map((p) => (
-              <option key={p} value={p}>
+              <option key={p} value={p} className="bg-luxury-obsidian text-white">
                 {p}
               </option>
             ))}
@@ -650,21 +943,47 @@ export default function InventoryManager({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs text-luxury-charcoal focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+            className="rounded-xl border border-white/[0.1] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
-            <option value="latest">Sort: Latest Added</option>
-            <option value="weight_desc">Sort: Highest Net Weight</option>
-            <option value="weight_asc">Sort: Lowest Net Weight</option>
-            <option value="name">Sort: Alphabetical Name</option>
+            <option value="latest" className="bg-luxury-obsidian text-white">Sort: Latest Added</option>
+            <option value="weight_desc" className="bg-luxury-obsidian text-white">Sort: Highest Net Weight</option>
+            <option value="weight_asc" className="bg-luxury-obsidian text-white">Sort: Lowest Net Weight</option>
+            <option value="name" className="bg-luxury-obsidian text-white">Sort: Alphabetical Name</option>
           </select>
         </div>
       </div>
 
+      {/* Active Weight Search Banner */}
+      {isWeightSearchActive && (
+        <div className="flex items-center justify-between rounded-xl bg-luxury-gold/15 border border-luxury-gold/40 px-4 py-2.5 text-xs animate-slideDown">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 text-luxury-gold shrink-0" />
+            <span className="text-white font-medium">
+              Showing pieces sorted nearest to <strong className="text-luxury-gold-bright font-mono">{targetWeightNum.toFixed(3)}g</strong>
+              {weightTolerance !== "all" && (
+                <span className="text-luxury-gold-champagne ml-1">
+                  (Tolerance: ±{weightTolerance}g)
+                </span>
+              )}
+            </span>
+            <span className="rounded-full bg-luxury-gold/25 px-2.5 py-0.5 text-[10px] font-bold text-luxury-gold-bright border border-luxury-gold/40">
+              {displayedItems.length} match{displayedItems.length === 1 ? "" : "es"}
+            </span>
+          </div>
+          <button
+            onClick={() => setTargetWeightSearch("")}
+            className="text-[11px] font-bold text-luxury-gold-champagne hover:text-white hover:underline flex items-center gap-1"
+          >
+            <X className="h-3.5 w-3.5" /> Reset Weight Filter
+          </button>
+        </div>
+      )}
+
       {/* Inventory Table */}
-      <div className="overflow-hidden rounded-2xl border border-luxury-beige bg-white shadow-luxury">
+      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl shadow-luxury">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="border-b border-luxury-beige bg-luxury-ivory/80 text-luxury-onyx uppercase font-semibold">
+            <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
               <tr>
                 <th className="px-4 py-3.5 text-left">SKU / Item</th>
                 <th className="px-4 py-3.5 text-left">Category</th>
@@ -679,7 +998,7 @@ export default function InventoryManager({
                 <th className="px-4 py-3.5 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-luxury-beige/60">
+            <tbody className="divide-y divide-white/[0.06]">
               {loading ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-luxury-muted">
@@ -687,30 +1006,34 @@ export default function InventoryManager({
                     <p>Loading inventory...</p>
                   </td>
                 </tr>
-              ) : items.length === 0 ? (
+              ) : displayedItems.length === 0 ? (
                 <tr>
                   <td colSpan={11} className="py-12 text-center text-luxury-muted">
-                    <p className="font-serif text-sm font-semibold text-luxury-charcoal">No items match your query</p>
-                    <p className="text-[11px] mt-1">Try resetting filters or click &apos;Add Stock&apos; above to record a new entry.</p>
+                    <p className="font-serif text-sm font-semibold text-white">
+                      {isWeightSearchActive ? `No pieces found within ±${weightTolerance}g of ${targetWeightNum.toFixed(3)}g` : "No items match your query"}
+                    </p>
+                    <p className="text-[11px] mt-1 text-luxury-muted">
+                      {isWeightSearchActive ? "Try selecting 'Nearest' or a wider tolerance in the weight filter." : "Try resetting filters or click 'Add Stock' above to record a new entry."}
+                    </p>
                   </td>
                 </tr>
               ) : (
-                items.map((item) => {
+                displayedItems.map((item) => {
                   const catName = typeof item.categoryId === "object" ? item.categoryId?.name : "Category";
                   return (
-                    <tr key={item.id || item._id} className="hover:bg-luxury-gold-subtle/25 transition-colors">
+                    <tr key={item.id || item._id} className="hover:bg-white/[0.04] transition-colors">
                       <td className="px-4 py-3 font-medium text-left">
-                        <p className="text-luxury-charcoal font-semibold">{item.name}</p>
-                        <p className="text-[10px] font-mono text-luxury-muted tracking-tight">{item.sku}</p>
+                        <p className="text-white font-semibold">{item.name}</p>
+                        <p className="text-[10px] font-mono text-luxury-gold-champagne tracking-tight">{item.sku}</p>
                       </td>
-                      <td className="px-4 py-3 text-left text-luxury-charcoal">
-                        <span className="rounded-md bg-luxury-ivory px-2 py-0.5 border border-luxury-beige text-[11px]">
+                      <td className="px-4 py-3 text-left text-white/90">
+                        <span className="rounded-md bg-white/[0.05] px-2 py-0.5 border border-white/[0.08] text-[11px] text-luxury-gold-champagne">
                           {catName}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.size ? (
-                          <span className="inline-block rounded bg-luxury-gold-subtle/90 px-2 py-0.5 font-medium text-[11px] text-luxury-gold-dark border border-luxury-gold/30">
+                          <span className="inline-block rounded bg-luxury-gold/15 px-2 py-0.5 font-medium text-[11px] text-luxury-gold-bright border border-luxury-gold/30">
                             {item.size}
                           </span>
                         ) : (
@@ -718,22 +1041,39 @@ export default function InventoryManager({
                         )}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-block rounded bg-luxury-gold-subtle/60 px-2 py-0.5 font-semibold text-[11px] text-luxury-gold-dark border border-luxury-gold/25">
+                        <span className="inline-block rounded bg-luxury-gold/15 px-2 py-0.5 font-semibold text-[11px] text-luxury-gold-bright border border-luxury-gold/30">
                           {item.purity}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-luxury-charcoal font-mono tabular-nums">{item.quantity}</td>
-                      <td className="px-4 py-3 text-right text-luxury-charcoal font-mono tabular-nums">{item.grossWeight.toFixed(3)}g</td>
+                      <td className="px-4 py-3 text-right font-medium text-white/90 font-mono tabular-nums">{item.quantity}</td>
+                      <td className="px-4 py-3 text-right text-white/90 font-mono tabular-nums">{item.grossWeight.toFixed(3)}g</td>
                       <td className="px-4 py-3 text-right text-luxury-muted font-mono tabular-nums">{item.stoneWeight.toFixed(3)}g</td>
-                      <td className="px-4 py-3 text-right font-bold text-luxury-gold-dark font-mono tabular-nums">
-                        {item.netWeight.toFixed(3)}g
+                      <td className="px-4 py-3 text-right font-bold text-luxury-gold-bright font-mono tabular-nums">
+                        <div>{item.netWeight.toFixed(3)}g</div>
+                        {isWeightSearchActive && (item as any).diffMg !== undefined && (
+                          <span
+                            className={`inline-block text-[9px] px-1.5 py-0.5 rounded font-mono font-bold mt-0.5 ${
+                              (item as any).diffMg === 0
+                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                                : (item as any).diffMg > 0
+                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+                            }`}
+                          >
+                            {(item as any).diffMg === 0
+                              ? "🎯 Exact match"
+                              : (item as any).diffMg > 0
+                              ? `+${(item as any).diffMg}mg`
+                              : `${(item as any).diffMg}mg`}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-4 py-3 text-right text-luxury-charcoal font-mono tabular-nums font-semibold">
+                      <td className="px-4 py-3 text-right text-white font-mono tabular-nums font-semibold">
                         ₹{(item.purchaseCostRupees || 0).toLocaleString("en-IN")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.hallmarkUid ? (
-                          <span className="inline-block rounded bg-luxury-gold-subtle px-1.5 py-0.5 text-[10px] font-mono font-bold text-luxury-gold-dark border border-luxury-gold/30">
+                          <span className="inline-block rounded bg-luxury-gold/15 px-1.5 py-0.5 text-[10px] font-mono font-bold text-luxury-gold-bright border border-luxury-gold/30">
                             {item.hallmarkUid}
                           </span>
                         ) : (
@@ -746,7 +1086,7 @@ export default function InventoryManager({
                           <button
                             onClick={() => openSellModal(item)}
                             title="Sell Material (Deduct stock, record customer udhari & profit)"
-                            className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-2.5 py-1 text-[11px] font-bold text-white shadow-xs hover:brightness-105 active:scale-95 transition"
+                            className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-2.5 py-1 text-[11px] font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition-all btn-3d"
                           >
                             <ShoppingBag className="h-3 w-3" />
                             <span>Sell</span>
@@ -755,21 +1095,21 @@ export default function InventoryManager({
                           <button
                             onClick={() => openAdjustModal(item)}
                             title="Adjust Stock (Non-destructive)"
-                            className="rounded-lg p-1 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
+                            className="rounded-lg p-1 text-luxury-muted hover:bg-white/[0.08] hover:text-white transition-colors"
                           >
                             <Scale className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openHistoryModal(item)}
                             title="View Stock Movement Audit Trail"
-                            className="rounded-lg p-1 text-luxury-charcoal hover:bg-luxury-ivory hover:text-luxury-gold-dark transition"
+                            className="rounded-lg p-1 text-luxury-muted hover:bg-white/[0.08] hover:text-white transition-colors"
                           >
                             <History className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleArchiveItem(item)}
                             title="Archive / Remove"
-                            className="rounded-lg p-1 text-luxury-muted hover:bg-red-50 hover:text-red-700 transition"
+                            className="rounded-lg p-1 text-luxury-muted hover:bg-red-500/20 hover:text-red-400 transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -786,44 +1126,47 @@ export default function InventoryManager({
 
       {/* Modal 1: Add Stock Form */}
       {isAddStockOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 my-8 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
+                <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">
                   Add {metalType === "gold" ? "Gold" : "Silver"} Stock
                 </h3>
                 <p className="text-xs text-luxury-muted">Record new jewellery pieces into showroom stock</p>
               </div>
-              <button onClick={() => setIsAddStockOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+              <button
+                onClick={() => setIsAddStockOpen(false)}
+                className="rounded-lg p-1 text-luxury-muted hover:bg-white/10 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddStock} className="mt-4 space-y-4">
+            <form onSubmit={handleAddStock} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Item Name *</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Item Name *</label>
                   <input
                     type="text"
                     required
                     placeholder={`e.g. ${metalType === "gold" ? "22K Traditional Kada" : "Pure Silver Pooja Thali"}`}
                     value={stockForm.name}
                     onChange={(e) => setStockForm({ ...stockForm, name: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-luxury-charcoal">Category *</label>
+                    <label className="block text-xs font-semibold text-neutral-300">Category *</label>
                     <button
                       type="button"
                       onClick={() => {
                         setCategoryForm({ name: "" });
                         setIsCategoryModalOpen(true);
                       }}
-                      className="text-[10px] font-bold text-luxury-gold-dark hover:underline flex items-center gap-0.5"
+                      className="text-[10px] font-bold text-luxury-gold-bright hover:underline flex items-center gap-0.5"
                     >
                       <Plus className="h-3 w-3" /> + New Category
                     </button>
@@ -832,11 +1175,11 @@ export default function InventoryManager({
                     required
                     value={stockForm.categoryId}
                     onChange={(e) => setStockForm({ ...stockForm, categoryId: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
-                    <option value="">Select Category</option>
+                    <option value="" className="bg-luxury-obsidian text-neutral-400">Select Category</option>
                     {categories.map((c) => (
-                      <option key={c.id || c._id} value={c.id || c._id}>
+                      <option key={c.id || c._id} value={c.id || c._id} className="bg-luxury-obsidian text-white">
                         {c.name}
                       </option>
                     ))}
@@ -844,7 +1187,7 @@ export default function InventoryManager({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
                     Size / Dimensions (Optional)
                   </label>
                   <input
@@ -852,19 +1195,19 @@ export default function InventoryManager({
                     placeholder="e.g. Ring Size 14, 10.5 in, Bangle 2.4"
                     value={stockForm.size}
                     onChange={(e) => setStockForm({ ...stockForm, size: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Purity *</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Purity *</label>
                   <select
                     value={stockForm.purity}
                     onChange={(e) => setStockForm({ ...stockForm, purity: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   >
                     {purityOptions.map((p) => (
-                      <option key={p} value={p}>
+                      <option key={p} value={p} className="bg-luxury-obsidian text-white">
                         {p}
                       </option>
                     ))}
@@ -872,108 +1215,139 @@ export default function InventoryManager({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Quantity (Pieces) *</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Quantity (Pieces) *</label>
                   <input
                     type="number"
                     min="1"
                     required
                     value={stockForm.quantity}
                     onChange={(e) => setStockForm({ ...stockForm, quantity: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Gross Weight (grams) *</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Gross Weight (grams) *</label>
                   <input
                     type="number"
                     step="0.001"
                     required
                     placeholder="0.000"
                     value={stockForm.grossWeight}
-                    onChange={(e) => setStockForm({ ...stockForm, grossWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    onChange={(e) => {
+                      const gw = e.target.value;
+                      const sw = stockForm.stoneWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(sw)).toFixed(3) : "";
+                      setStockForm({
+                        ...stockForm,
+                        grossWeight: gw,
+                        netWeight: autoNet,
+                      });
+                    }}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Stone Weight (grams)</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Stone Weight (grams)</label>
                   <input
                     type="number"
                     step="0.001"
                     placeholder="0.000"
                     value={stockForm.stoneWeight}
-                    onChange={(e) => setStockForm({ ...stockForm, stoneWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    onChange={(e) => {
+                      const sw = e.target.value;
+                      const gw = stockForm.grossWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(sw)).toFixed(3) : "";
+                      setStockForm({
+                        ...stockForm,
+                        stoneWeight: sw,
+                        netWeight: autoNet,
+                      });
+                    }}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
+                </div>
+
+                {/* Net Metal Weight (grams) replaces Purchase Cost */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-amber-300">
+                      Net Metal Weight (grams) *
+                    </label>
+                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      direct entry
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.001"
+                    required
+                    placeholder="0.000"
+                    value={stockForm.netWeight}
+                    onChange={(e) => setStockForm({ ...stockForm, netWeight: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/50 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-200 placeholder:text-neutral-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-luxury-muted mt-0.5 block">
+                    Actual gold/silver weight in stock
+                  </span>
                 </div>
               </div>
 
               {/* Live Net Weight Banner */}
-              <div className="flex items-center justify-between rounded-xl bg-luxury-ivory p-3 border border-luxury-beige">
-                <span className="text-xs font-semibold text-luxury-charcoal">Calculated Net Metal Weight:</span>
-                <span className="font-serif text-sm font-bold text-luxury-gold-dark">
+              <div className="flex items-center justify-between rounded-xl bg-luxury-gold/15 p-3 border border-luxury-gold/30">
+                <span className="text-xs font-semibold text-neutral-200">Current Net Metal Weight:</span>
+                <span className="font-serif text-sm font-bold text-luxury-gold-bright">
                   {formNetWeight > 0 ? formNetWeight.toFixed(3) : "0.000"} g
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Purchase Cost (₹)</label>
-                  <input
-                    type="number"
-                    placeholder="₹ Total cost"
-                    value={stockForm.purchaseCostRupees}
-                    onChange={(e) => setStockForm({ ...stockForm, purchaseCostRupees: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Custom SKU (Optional)</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Custom SKU (Optional)</label>
                   <input
                     type="text"
                     placeholder="Leave empty to auto-generate"
                     value={stockForm.sku}
                     onChange={(e) => setStockForm({ ...stockForm, sku: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">HUID / Hallmark (Optional)</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">HUID / Hallmark (Optional)</label>
                   <input
                     type="text"
                     placeholder="6-character alphanumeric"
                     value={stockForm.hallmarkUid}
                     onChange={(e) => setStockForm({ ...stockForm, hallmarkUid: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Supplier Name (Optional)</label>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Supplier Name (Optional)</label>
                   <input
                     type="text"
                     placeholder="e.g. Zaveri Bullion Works"
                     value={stockForm.supplierName}
                     onChange={(e) => setStockForm({ ...stockForm, supplierName: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-3 border-t border-white/[0.1]">
                 <button
                   type="button"
                   onClick={() => setIsAddStockOpen(false)}
-                  className="rounded-xl border border-luxury-beige px-4 py-2 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory"
+                  className="rounded-xl border border-white/20 px-5 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
                 >
                   Save Stock Item
                 </button>
@@ -985,46 +1359,49 @@ export default function InventoryManager({
 
       {/* Modal 2: Stock Adjustment (Non-destructive) */}
       {isAdjustModalOpen && activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Adjust Stock Item</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">Adjust Stock Item</h3>
                 <p className="text-xs text-luxury-muted">
                   Non-destructive adjustment with mandatory audit explanation
                 </p>
               </div>
-              <button onClick={() => setIsAdjustModalOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+              <button
+                onClick={() => setIsAdjustModalOpen(false)}
+                className="rounded-lg p-1 text-luxury-muted hover:bg-white/10 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="my-3 rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-3 text-xs">
-              <span className="font-bold text-luxury-charcoal">{activeItem.name}</span>{" "}
-              <span className="font-mono text-luxury-muted">({activeItem.sku})</span>
+            <div className="rounded-xl border border-white/10 bg-black/50 p-3 text-xs space-y-1">
+              <span className="font-bold text-white">{activeItem.name}</span>{" "}
+              <span className="font-mono text-luxury-gold">({activeItem.sku})</span>
               <div className="mt-1 flex gap-4 text-luxury-muted">
-                <span>Current Qty: <strong className="text-luxury-charcoal">{activeItem.quantity}</strong></span>
-                <span>Gross: <strong className="text-luxury-charcoal">{activeItem.grossWeight.toFixed(3)}g</strong></span>
-                <span>Net: <strong className="text-luxury-gold-dark">{activeItem.netWeight.toFixed(3)}g</strong></span>
+                <span>Current Qty: <strong className="text-white">{activeItem.quantity}</strong></span>
+                <span>Gross: <strong className="text-white">{activeItem.grossWeight.toFixed(3)}g</strong></span>
+                <span>Net: <strong className="text-luxury-gold-bright">{activeItem.netWeight.toFixed(3)}g</strong></span>
               </div>
             </div>
 
             <form onSubmit={handleAdjustSubmit} className="space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">New Qty</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">New Qty</label>
                   <input
                     type="number"
                     min="0"
                     required
                     value={adjustForm.newQuantity}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newQuantity: Number(e.target.value) })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">New Gross Wt</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">New Gross Wt</label>
                   <input
                     type="number"
                     step="0.001"
@@ -1032,25 +1409,25 @@ export default function InventoryManager({
                     required
                     value={adjustForm.newGrossWeight}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newGrossWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-charcoal mb-1">New Stone Wt</label>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">New Stone Wt</label>
                   <input
                     type="number"
                     step="0.001"
                     min="0"
                     value={adjustForm.newStoneWeight}
                     onChange={(e) => setAdjustForm({ ...adjustForm, newStoneWeight: e.target.value })}
-                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">
                   Mandatory Adjustment Reason *
                 </label>
                 <textarea
@@ -1059,21 +1436,21 @@ export default function InventoryManager({
                   placeholder="Explain reason for adjustment (e.g. physical inventory audit discrepancy, re-weighed after polishing, sold 1 piece)"
                   value={adjustForm.reason}
                   onChange={(e) => setAdjustForm({ ...adjustForm, reason: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.1]">
                 <button
                   type="button"
                   onClick={() => setIsAdjustModalOpen(false)}
-                  className="rounded-xl border border-luxury-beige px-4 py-2 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory"
+                  className="rounded-xl border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
                 >
                   Record Adjustment
                 </button>
@@ -1085,17 +1462,20 @@ export default function InventoryManager({
 
       {/* Modal 3: Item History Audit Log */}
       {isHistoryModalOpen && activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">Stock Movement Audit Trail</h3>
+                <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">Stock Movement Audit Trail</h3>
                 <p className="text-xs text-luxury-muted">
                   Full transaction history for {activeItem.name} ({activeItem.sku})
                 </p>
               </div>
-              <button onClick={() => setIsHistoryModalOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+              <button
+                onClick={() => setIsHistoryModalOpen(false)}
+                className="rounded-lg p-1 text-luxury-muted hover:bg-white/10 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -1108,10 +1488,10 @@ export default function InventoryManager({
                 itemHistory.map((tx) => (
                   <div
                     key={tx._id}
-                    className="rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-3.5 text-xs space-y-1"
+                    className="rounded-xl border border-white/10 bg-black/40 p-3.5 text-xs space-y-1"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-luxury-gold-dark uppercase tracking-wide">
+                      <span className="font-bold text-luxury-gold uppercase tracking-wide">
                         {tx.transactionType.replace("_", " ")}
                       </span>
                       <span className="text-[10px] text-luxury-muted">
@@ -1119,16 +1499,16 @@ export default function InventoryManager({
                       </span>
                     </div>
 
-                    <p className="text-luxury-charcoal">
-                      Reason: <span className="font-medium">{tx.reason}</span>
+                    <p className="text-neutral-300">
+                      Reason: <span className="font-medium text-white">{tx.reason}</span>
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-luxury-muted border-t border-luxury-beige/60 pt-1 mt-1">
+                    <div className="grid grid-cols-2 gap-2 text-[11px] text-luxury-muted border-t border-white/[0.08] pt-1 mt-1">
                       <div>
-                        Qty: {tx.previousQuantity} → <strong className="text-luxury-charcoal">{tx.newQuantity}</strong> (Δ {tx.quantityChange > 0 ? `+${tx.quantityChange}` : tx.quantityChange})
+                        Qty: {tx.previousQuantity} → <strong className="text-white">{tx.newQuantity}</strong> (Δ {tx.quantityChange > 0 ? `+${tx.quantityChange}` : tx.quantityChange})
                       </div>
                       <div>
-                        Net Wt: {tx.previousNetWeight.toFixed(3)}g → <strong className="text-luxury-gold-dark">{tx.newNetWeight.toFixed(3)}g</strong>
+                        Net Wt: {tx.previousNetWeight.toFixed(3)}g → <strong className="text-luxury-gold-bright">{tx.newNetWeight.toFixed(3)}g</strong>
                       </div>
                     </div>
                   </div>
@@ -1136,10 +1516,10 @@ export default function InventoryManager({
               )}
             </div>
 
-            <div className="border-t border-luxury-beige pt-3 flex justify-end">
+            <div className="border-t border-white/[0.1] pt-3 flex justify-end">
               <button
                 onClick={() => setIsHistoryModalOpen(false)}
-                className="rounded-xl bg-luxury-onyx px-4 py-2 text-xs font-semibold text-luxury-gold border border-luxury-gold/30 hover:bg-luxury-onyx-surface transition"
+                className="rounded-xl bg-luxury-gold px-5 py-2 text-xs font-bold text-black hover:bg-luxury-gold-bright transition"
               >
                 Close Audit Trail
               </button>
@@ -1150,57 +1530,60 @@ export default function InventoryManager({
 
       {/* Modal 4: Manage / Rename Category */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="relative w-full max-w-md rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="relative w-full max-w-md rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx">
+                <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">
                   {categoryForm.id ? "Edit Category" : "Add Dynamic Category"}
                 </h3>
                 <p className="text-xs text-luxury-muted">
                   {metalType === "gold" ? "Gold" : "Silver"} showroom categorization
                 </p>
               </div>
-              <button onClick={() => setIsCategoryModalOpen(false)}>
-                <X className="h-5 w-5 text-luxury-muted" />
+              <button
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="rounded-lg p-1 text-luxury-muted hover:bg-white/10 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCategorySubmit} className="mt-4 space-y-4">
+            <form onSubmit={handleCategorySubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Category Name *</label>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">Category Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Bridal Chokers, Antique Bangles"
                   value={categoryForm.name}
                   onChange={(e) => setCategoryForm({ ...categoryForm, name: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Description (Optional)</label>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">Description (Optional)</label>
                 <textarea
                   rows={2}
                   placeholder="Category purpose or style notes"
                   value={categoryForm.description || ""}
                   onChange={(e) => setCategoryForm({ ...categoryForm, description: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.1]">
                 <button
                   type="button"
                   onClick={() => setIsCategoryModalOpen(false)}
-                  className="rounded-xl border border-luxury-beige px-4 py-2 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory"
+                  className="rounded-xl border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
                 >
                   {categoryForm.id ? "Update Category" : "Create Category"}
                 </button>
@@ -1210,18 +1593,18 @@ export default function InventoryManager({
         </div>
       )}
 
-      {/* Modal 5: Sell Material & Customer Udhari Khata */}
+      {/* Modal 5: Sell Material & Counter Billing with Old Metal Trade-In */}
       {isSellModalOpen && sellItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl border border-luxury-beige bg-white shadow-2xl p-6 my-8">
-            <div className="flex items-center justify-between border-b border-luxury-beige pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-luxury-onyx flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-luxury-gold-dark" />
+                <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5 text-luxury-gold" />
                   <span>Sell Material — Counter Billing</span>
                 </h3>
                 <p className="text-xs text-luxury-muted">
-                  Deducts showroom inventory, records manual profit, and tracks customer udhari
+                  Deducts showroom inventory, records old metal trade-in, split payments &amp; customer udhari
                 </p>
               </div>
               <button
@@ -1229,42 +1612,61 @@ export default function InventoryManager({
                   setIsSellModalOpen(false);
                   setSellSuccessData(null);
                 }}
+                className="text-luxury-muted hover:text-white"
               >
-                <X className="h-5 w-5 text-luxury-muted" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
             {sellSuccessData ? (
               <div className="my-6 space-y-5 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-luxury-gold-subtle border border-luxury-gold/50 shadow-gold-glow text-luxury-gold-dark">
-                  <Sparkles className="h-8 w-8 text-luxury-gold-dark" />
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-luxury-gold/20 border border-luxury-gold/50 shadow-gold-glow text-luxury-gold-bright">
+                  <Sparkles className="h-8 w-8 text-luxury-gold" />
                 </div>
 
                 <div>
-                  <h4 className="font-serif text-xl font-bold text-luxury-onyx">Sale Recorded Successfully!</h4>
-                  <p className="text-xs font-mono text-luxury-muted mt-1">{sellSuccessData.saleNumber}</p>
-                  <p className="text-xs text-luxury-charcoal mt-2">
-                    Item stock deducted. Cash counter credited automatically.
+                  <h4 className="font-serif text-xl font-bold text-white">Sale Recorded Successfully!</h4>
+                  <p className="text-xs font-mono text-luxury-gold mt-1">{sellSuccessData.saleNumber}</p>
+                  <p className="text-xs text-white/80 mt-2">
+                    Item stock deducted. Cash counter (Rojmel) credited automatically.
                   </p>
-                  {sellSuccessData.remainingBalance > 0 ? (
-                    <div className="mt-3 inline-block rounded-xl bg-amber-50 border border-amber-200 px-4 py-2 text-xs text-amber-900">
-                      Remaining Udhari Due: <strong>₹{sellSuccessData.remainingBalance.toLocaleString("en-IN")}</strong>
+
+                  <div className="my-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
+                    <div className="rounded-xl bg-luxury-obsidian/80 p-2.5 border border-white/10">
+                      <span className="text-[10px] uppercase text-luxury-muted">New Purchase</span>
+                      <p className="font-mono text-xs font-bold text-white">
+                        ₹{(sellSuccessData.totalNewPurchase || 0).toLocaleString("en-IN")}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="mt-3 inline-block rounded-xl bg-luxury-gold-subtle border border-luxury-gold/40 px-4 py-2 text-xs text-luxury-gold-dark font-semibold">
-                      Full Payment Received (₹0 Balance)
+                    <div className="rounded-xl bg-luxury-obsidian/80 p-2.5 border border-white/10">
+                      <span className="text-[10px] uppercase text-luxury-muted">Old Metal Credit</span>
+                      <p className="font-mono text-xs font-bold text-luxury-gold">
+                        -₹{(sellSuccessData.totalExchangeCredit || 0).toLocaleString("en-IN")}
+                      </p>
                     </div>
-                  )}
+                    <div className="rounded-xl bg-luxury-obsidian/80 p-2.5 border border-white/10">
+                      <span className="text-[10px] uppercase text-luxury-muted">Amount Paid</span>
+                      <p className="font-mono text-xs font-bold text-emerald-400">
+                        ₹{(sellSuccessData.amountPaid || 0).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-luxury-obsidian/80 p-2.5 border border-white/10">
+                      <span className="text-[10px] uppercase text-luxury-muted">Remaining Udhari</span>
+                      <p className="font-mono text-xs font-bold text-rose-400">
+                        ₹{sellSuccessData.remainingBalance.toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* WhatsApp Greeting & Receipt Button */}
-                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-4 text-left">
-                  <p className="text-xs font-semibold text-luxury-charcoal mb-2 flex items-center gap-1.5">
-                    <MessageCircle className="h-4 w-4 text-luxury-gold-dark" />
-                    <span>Send Customer WhatsApp Greeting & Payment Summary</span>
+                <div className="rounded-xl border border-white/10 bg-luxury-obsidian p-4 text-left">
+                  <p className="text-xs font-semibold text-white mb-2 flex items-center gap-1.5">
+                    <MessageCircle className="h-4 w-4 text-emerald-400" />
+                    <span>Send Customer WhatsApp Greeting &amp; Payment Summary</span>
                   </p>
                   <p className="text-[11px] text-luxury-muted mb-3">
-                    Click below to open WhatsApp with a personalized greeting, purchase breakdown, remaining due, and promised due date.
+                    Click below to open WhatsApp with a personalized greeting, purchase breakdown, old metal credit, remaining due, and promised due date.
                   </p>
                   <a
                     href={sellSuccessData.whatsappUrl}
@@ -1283,229 +1685,412 @@ export default function InventoryManager({
                       setIsSellModalOpen(false);
                       setSellSuccessData(null);
                     }}
-                    className="w-full rounded-xl bg-luxury-onyx px-5 py-2.5 text-xs font-bold text-luxury-gold hover:bg-luxury-onyx-surface transition"
+                    className="w-full rounded-xl bg-luxury-gold px-5 py-2.5 text-xs font-bold text-black hover:bg-luxury-gold-bright transition"
                   >
-                    Done & Close
+                    Done &amp; Close
                   </button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleSellSubmit} className="mt-4 space-y-4">
-                {/* Item Details Box */}
-                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/50 p-3.5 text-xs space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-luxury-charcoal text-sm">{sellItem.name}</span>
-                    <span className="rounded bg-luxury-gold-subtle px-2 py-0.5 text-[10px] font-bold text-luxury-gold-dark border border-luxury-gold/30">
-                      {sellItem.purity}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-4 text-luxury-muted text-[11px]">
-                    <span>SKU: <strong className="text-luxury-charcoal font-mono">{sellItem.sku}</strong></span>
-                    {sellItem.size && <span>Size: <strong className="text-luxury-gold-dark">{sellItem.size}</strong></span>}
-                    <span>Available Qty: <strong className="text-luxury-charcoal">{sellItem.quantity} pcs</strong></span>
-                    <span>Net Wt: <strong className="text-luxury-charcoal">{sellItem.netWeight.toFixed(3)}g</strong></span>
-                    <span>Unit Cost: <strong className="text-luxury-charcoal">₹{Math.round((sellItem.purchaseCostRupees || 0) / (sellItem.quantity || 1)).toLocaleString("en-IN")}</strong></span>
-                  </div>
-                </div>
-
-                {/* Quantity & Proportional Weight */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Quantity to Sell *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max={sellItem.quantity}
-                      required
-                      value={sellForm.quantitySold}
-                      onChange={(e) => {
-                        const q = Math.max(1, Math.min(sellItem.quantity, parseInt(e.target.value) || 1));
-                        setSellForm({ ...sellForm, quantitySold: q });
-                      }}
-                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                    />
-                    <span className="text-[10px] text-luxury-muted mt-0.5 block">Max available: {sellItem.quantity}</span>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Sold Net Weight (Est.)</label>
-                    <div className="w-full rounded-xl border border-luxury-beige bg-luxury-ivory/40 px-3 py-2 text-xs font-bold text-luxury-gold-dark">
-                      {((sellItem.netWeight / sellItem.quantity) * sellForm.quantitySold).toFixed(3)} grams
+                {/* ========================================================
+                    TOP SECTION: Today date / Day, Product Name, Net Weight (editable), Purity
+                    ======================================================== */}
+                <div className="rounded-2xl border border-luxury-gold/30 bg-gradient-to-br from-luxury-obsidian via-[#14120e] to-luxury-charcoal p-4 shadow-luxury space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-luxury-gold/15 px-3 py-1 text-xs font-semibold text-luxury-gold-bright border border-luxury-gold/30">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>Today: {new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(new Date())}</span>
+                      </span>
+                      <span className="text-[11px] text-luxury-muted">Day / Date</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Selling Price & Manual Profit/Loss */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Selling Price (₹) *</label>
-                    <input
-                      type="number"
-                      min="1"
-                      required
-                      placeholder="e.g. 10000"
-                      value={sellForm.sellingPriceRupees}
-                      onChange={(e) => {
-                        const sp = e.target.value;
-                        const approxCost = Math.round(((sellItem.purchaseCostRupees || 0) / sellItem.quantity) * sellForm.quantitySold);
-                        const autoProfit = sp ? String(Math.round(parseFloat(sp) - approxCost)) : "";
-                        setSellForm({
-                          ...sellForm,
-                          sellingPriceRupees: sp,
-                          manualProfitRupees: autoProfit,
-                          paidAmountRupees: sp, // default paid to full
-                        });
-                      }}
-                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-onyx focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-luxury-charcoal">
-                        Manual Profit / Loss (₹)
-                      </label>
-                      <span className="text-[10px] text-luxury-muted font-normal">(Owner only)</span>
-                    </div>
-                    <input
-                      type="number"
-                      placeholder="Calculated or manual margin"
-                      value={sellForm.manualProfitRupees}
-                      onChange={(e) => setSellForm({ ...sellForm, manualProfitRupees: e.target.value })}
-                      className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold text-luxury-gold-dark focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                    />
-                    <span className="text-[10px] text-luxury-muted mt-0.5 block">
-                      Net margin from this piece. Positive for profit, negative for loss.
-                    </span>
-                  </div>
-                </div>
-
-                {/* Payment Amount & Udhari Khata */}
-                <div className="rounded-xl border border-luxury-beige bg-luxury-ivory/30 p-3.5 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Paid Amount (₹)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Amount received today"
-                        value={sellForm.paidAmountRupees}
-                        onChange={(e) => setSellForm({ ...sellForm, paidAmountRupees: e.target.value })}
-                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-bold focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Payment Mode</label>
-                      <select
-                        value={sellForm.paymentMode}
-                        onChange={(e) => setSellForm({ ...sellForm, paymentMode: e.target.value as any })}
-                        className="w-full rounded-xl border border-luxury-beige bg-white px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      >
-                        <option value="cash">Cash (Counter)</option>
-                        <option value="online">Online / UPI</option>
-                        <option value="mixed">Mixed</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Remaining Balance & Udhari Badge */}
-                  {(() => {
-                    const sp = parseFloat(sellForm.sellingPriceRupees) || 0;
-                    const paid = parseFloat(sellForm.paidAmountRupees) || 0;
-                    const bal = Math.max(0, sp - paid);
-                    return (
-                      <div className="flex items-center justify-between rounded-lg bg-white p-2.5 border border-luxury-beige text-xs">
-                        <span className="font-medium text-luxury-muted">Remaining Balance:</span>
-                        {bal > 0 ? (
-                          <span className="font-serif text-sm font-bold text-amber-800">
-                            ₹{bal.toLocaleString("en-IN")} (Added to Udhari Khata)
-                          </span>
-                        ) : (
-                          <span className="font-serif text-xs font-bold text-luxury-gold-dark">
-                            ₹0 (Fully Paid)
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* Customer Details & Due Date */}
-                <div className="space-y-3 pt-1">
-                  <p className="text-xs font-bold text-luxury-onyx uppercase tracking-wider">
-                    Customer Information (For Greeting & Udhari)
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Customer Name *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Ramesh Patil"
-                        value={sellForm.customerName}
-                        onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
-                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Mobile Number (WhatsApp) *</label>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="10-digit mobile number"
-                        value={sellForm.customerPhone}
-                        onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
-                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Address (Optional)</label>
-                      <input
-                        type="text"
-                        placeholder="Locality / Village / Town"
-                        value={sellForm.customerAddress}
-                        onChange={(e) => setSellForm({ ...sellForm, customerAddress: e.target.value })}
-                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-luxury-charcoal mb-1">
-                        Promised Due Date (If Udhari)
-                      </label>
-                      <input
-                        type="date"
-                        value={sellForm.dueDate}
-                        onChange={(e) => setSellForm({ ...sellForm, dueDate: e.target.value })}
-                        className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                      />
-                      <span className="text-[10px] text-luxury-muted mt-0.5 block">
-                        Alert triggers 3 days before this date
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] uppercase tracking-wider text-luxury-muted font-bold">Purity:</span>
+                      <span className="rounded-lg bg-luxury-gold/20 px-3 py-1 text-xs font-bold text-luxury-gold-bright border border-luxury-gold/40 shadow-gold-glow">
+                        {sellItem.purity}
                       </span>
                     </div>
                   </div>
+
+                  {/* Product Name & Editable Net Weight (Selling Price option removed as requested) */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                    <div className="md:col-span-6">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-luxury-muted mb-1">
+                        Product Name
+                      </label>
+                      <div className="rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5">
+                        <p className="font-bold text-white text-sm truncate">{sellItem.name}</p>
+                        <p className="text-[10px] text-luxury-muted font-mono mt-0.5">
+                          SKU: <span className="text-luxury-gold">{sellItem.sku}</span> | In Stock: <span className="text-white">{sellItem.quantity} pcs</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                          Net Weight (g)
+                        </label>
+                        <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          editable
+                        </span>
+                      </div>
+                      <input
+                        type="number"
+                        step="0.001"
+                        required
+                        value={sellForm.netWeightSold}
+                        onChange={(e) => setSellForm({ ...sellForm, netWeightSold: e.target.value })}
+                        className="w-full rounded-xl border border-amber-500/50 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
+                        placeholder="0.000"
+                      />
+                      <span className="text-[9px] text-luxury-muted mt-0.5 block">
+                        Original piece net wt: {sellItem.netWeight.toFixed(3)}g
+                      </span>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-luxury-muted mb-1">
+                        Qty to Sell *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max={sellItem.quantity}
+                        required
+                        value={sellForm.quantitySold}
+                        onChange={(e) => {
+                          const q = Math.max(1, Math.min(sellItem.quantity, parseInt(e.target.value) || 1));
+                          const autoNet = ((sellItem.netWeight / sellItem.quantity) * q).toFixed(3);
+                          setSellForm({ ...sellForm, quantitySold: q, netWeightSold: autoNet });
+                        }}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs font-bold text-white focus:border-luxury-gold focus:outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-3 border-t border-luxury-beige">
+                {/* ========================================================
+                    MIDDLE SECTION: Old Metal Received. (Gold, Silver, Cash with split)
+                    (Rates removed in front of Gold & Silver as requested)
+                    ======================================================== */}
+                <div className="rounded-2xl border border-teal-500/30 bg-gradient-to-br from-[#081a17] via-luxury-obsidian to-[#0a1512] p-4 shadow-luxury space-y-3">
+                  <div className="flex items-center justify-between border-b border-teal-500/20 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🪙</span>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-teal-300">
+                        Old Metal Received.
+                      </h4>
+                    </div>
+                    <span className="text-[10px] text-teal-400/80">
+                      Physical old metal weights received at counter
+                    </span>
+                  </div>
+
+                  {/* Table with Net Wt (N.t) and Gross Wt (G.W) without rate columns */}
+                  <div className="space-y-2.5">
+                    {/* Header Columns */}
+                    <div className="grid grid-cols-12 gap-3 text-[10px] uppercase font-bold text-teal-300/80 px-2">
+                      <div className="col-span-3">Metal</div>
+                      <div className="col-span-4 text-center">Net Wt (N.t) (g)</div>
+                      <div className="col-span-5 text-center">Gross Wt (G.W) (g)</div>
+                    </div>
+
+                    {/* Row 1: Gold */}
+                    <div className="grid grid-cols-12 gap-3 items-center rounded-xl bg-black/40 border border-teal-500/20 p-2.5">
+                      <div className="col-span-3 flex items-center gap-2">
+                        <span className="text-lg">🪙</span>
+                        <span className="text-xs font-bold text-amber-300">Gold</span>
+                      </div>
+                      <div className="col-span-4">
+                        <input
+                          type="number"
+                          step="0.001"
+                          placeholder="Net wt (N.t)"
+                          value={goldExNetWeight}
+                          onChange={(e) => setGoldExNetWeight(e.target.value)}
+                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-amber-300 focus:border-amber-400 focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-5">
+                        <input
+                          type="number"
+                          step="0.001"
+                          placeholder="Gross wt (G.W)"
+                          value={goldExGrossWeight}
+                          onChange={(e) => setGoldExGrossWeight(e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 2: Silver */}
+                    <div className="grid grid-cols-12 gap-3 items-center rounded-xl bg-black/40 border border-teal-500/20 p-2.5">
+                      <div className="col-span-3 flex items-center gap-2">
+                        <span className="text-lg">🥈</span>
+                        <span className="text-xs font-bold text-slate-200">Silver</span>
+                      </div>
+                      <div className="col-span-4">
+                        <input
+                          type="number"
+                          step="0.001"
+                          placeholder="Net wt (N.t)"
+                          value={silverExNetWeight}
+                          onChange={(e) => setSilverExNetWeight(e.target.value)}
+                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-slate-200 focus:border-cyan-400 focus:outline-none"
+                        />
+                      </div>
+                      <div className="col-span-5">
+                        <input
+                          type="number"
+                          step="0.001"
+                          placeholder="Gross wt (G.W)"
+                          value={silverExGrossWeight}
+                          onChange={(e) => setSilverExGrossWeight(e.target.value)}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 3: Cash & Online Split (as drawn: [ Cash ] <---> split <---> [ Online ]) */}
+                    <div className="rounded-xl bg-black/40 border border-teal-500/20 p-3 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                        <span className="text-base">💵</span>
+                        <span>Cash &amp; Online Payment</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-11 gap-2 items-center">
+                        <div className="sm:col-span-5">
+                          <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">
+                            Cash (₹) <span className="text-[9px] text-luxury-muted font-normal">→ Counter Rojmel</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="₹ Cash amount"
+                            value={cashAmountRupees}
+                            onChange={(e) => setCashAmountRupees(e.target.value)}
+                            className="w-full rounded-xl border border-emerald-500/40 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-emerald-300 focus:border-emerald-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div className="sm:col-span-1 flex flex-col items-center justify-center pt-3">
+                          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-luxury-muted">
+                            <span>←</span>
+                            <span className="text-luxury-gold font-bold">split</span>
+                            <span>→</span>
+                          </div>
+                        </div>
+
+                        <div className="sm:col-span-5">
+                          <label className="block text-[10px] uppercase font-bold text-cyan-400 mb-1">
+                            Online (₹) <span className="text-[9px] text-luxury-muted font-normal">(UPI / Bank transfer)</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="₹ Online amount"
+                            value={onlineAmountRupees}
+                            onChange={(e) => setOnlineAmountRupees(e.target.value)}
+                            className="w-full rounded-xl border border-cyan-500/40 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-cyan-300 focus:border-cyan-400 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ========================================================
+                    FINANCIAL SUMMARY STRIP
+                    ======================================================== */}
+                {(() => {
+                  const cash = parseFloat(cashAmountRupees) || 0;
+                  const online = parseFloat(onlineAmountRupees) || 0;
+                  const udhari = parseFloat(sellForm.udhariRupees) || 0;
+                  const totalPaid = cash + online;
+                  const totalBill = totalPaid + udhari;
+
+                  const goldNW = parseFloat(goldExNetWeight) || 0;
+                  const silverNW = parseFloat(silverExNetWeight) || 0;
+
+                  return (
+                    <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-3.5 space-y-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                        <div className="rounded-xl bg-emerald-950/30 p-2 border border-emerald-500/20">
+                          <span className="text-[9px] uppercase tracking-wider text-emerald-300 block">Cash Paid</span>
+                          <p className="font-mono text-xs font-bold text-emerald-400 mt-0.5">₹{cash.toLocaleString("en-IN")}</p>
+                        </div>
+                        <div className="rounded-xl bg-cyan-950/30 p-2 border border-cyan-500/20">
+                          <span className="text-[9px] uppercase tracking-wider text-cyan-300 block">Online Paid</span>
+                          <p className="font-mono text-xs font-bold text-cyan-400 mt-0.5">₹{online.toLocaleString("en-IN")}</p>
+                        </div>
+                        <div className={`rounded-xl p-2 border ${udhari > 0 ? "bg-rose-950/30 border-rose-500/30" : "bg-white/5 border-white/5"}`}>
+                          <span className="text-[9px] uppercase tracking-wider text-luxury-muted block">Udhari (Due)</span>
+                          <p className={`font-mono text-xs font-bold mt-0.5 ${udhari > 0 ? "text-rose-400" : "text-emerald-400"}`}>
+                            ₹{udhari.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-luxury-gold/15 p-2 border border-luxury-gold/30">
+                          <span className="text-[9px] uppercase tracking-wider text-luxury-gold-champagne font-bold block">Total Transaction</span>
+                          <p className="font-mono text-xs font-bold text-luxury-gold-bright mt-0.5">₹{totalBill.toLocaleString("en-IN")}</p>
+                        </div>
+                      </div>
+
+                      {(goldNW > 0 || silverNW > 0) && (
+                        <div className="flex items-center justify-center gap-3 pt-1 text-[11px] text-teal-300">
+                          {goldNW > 0 && <span>🪙 Old Gold: <strong>{goldNW.toFixed(3)}g</strong></span>}
+                          {silverNW > 0 && <span>🥈 Old Silver: <strong>{silverNW.toFixed(3)}g</strong></span>}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* ========================================================
+                    BOTTOM 2-COLUMN SECTION: Exactly as drawn in notebook
+                    Left Column: Customer Name, Address (By default Visapur), Promise Date
+                    Right Column: Mobile No, Udhari (MANUAL input), Manual Profit (optional)
+                    ======================================================== */}
+                <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* LEFT COLUMN */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
+                          Customer Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Ramesh Patil"
+                          value={sellForm.customerName}
+                          onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                            Address
+                          </label>
+                          <span className="text-[10px] font-mono text-luxury-gold">
+                            By default Visapur.
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Visapur"
+                          value={sellForm.customerAddress}
+                          onChange={(e) => setSellForm({ ...sellForm, customerAddress: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                            Promise Date
+                          </label>
+                          {(() => {
+                            const udhari = parseFloat(sellForm.udhariRupees) || 0;
+                            return udhari > 0 ? (
+                              <span className="text-[10px] font-bold text-rose-400">Mandatory for Udhari</span>
+                            ) : (
+                              <span className="text-[10px] text-luxury-muted">Optional if full payment</span>
+                            );
+                          })()}
+                        </div>
+                        <input
+                          type="date"
+                          value={sellForm.dueDate}
+                          onChange={(e) => setSellForm({ ...sellForm, dueDate: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                        />
+                        <span className="text-[10px] text-luxury-muted mt-1 block">
+                          Triggers automated 3-stage WhatsApp payment reminders
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* RIGHT COLUMN */}
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
+                          Mobile No *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="10-digit mobile number"
+                          value={sellForm.customerPhone}
+                          onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono text-white focus:border-luxury-gold focus:outline-none"
+                        />
+                      </div>
+
+                      {/* Manual Udhari input as requested */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                            Udhari (₹)
+                          </label>
+                          <span className="text-[10px] font-semibold text-rose-400">
+                            manual entry
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="₹ 0"
+                          value={sellForm.udhariRupees}
+                          onChange={(e) => setSellForm({ ...sellForm, udhariRupees: e.target.value })}
+                          className="w-full rounded-xl border border-rose-500/40 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-rose-300 focus:border-rose-400 focus:outline-none"
+                        />
+                        <span className="text-[10px] text-luxury-muted mt-1 block">
+                          Enter remaining customer debt balance
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                            Manual Profit
+                          </label>
+                          <span className="text-[10px] font-semibold text-luxury-muted">
+                            optional
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          placeholder="Optional margin override"
+                          value={sellForm.manualProfitRupees}
+                          onChange={(e) => setSellForm({ ...sellForm, manualProfitRupees: e.target.value })}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-luxury-gold focus:border-luxury-gold focus:outline-none"
+                        />
+                        <span className="text-[10px] text-luxury-muted mt-1 block">
+                          Net margin earned for showroom analytics (Owner only)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* MODAL FOOTER ACTIONS */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.1]">
                   <button
                     type="button"
                     onClick={() => setIsSellModalOpen(false)}
-                    className="rounded-xl border border-luxury-beige px-4 py-2 text-xs font-semibold text-luxury-charcoal hover:bg-luxury-ivory"
+                    className="rounded-xl border border-white/20 px-5 py-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    <ShoppingBag className="h-3.5 w-3.5" />
-                    <span>Confirm Sale &amp; Deduct Stock</span>
+                    <ShoppingBag className="h-4 w-4" />
+                    <span>Confirm Sale &amp; Issue Invoice</span>
                   </button>
                 </div>
               </form>

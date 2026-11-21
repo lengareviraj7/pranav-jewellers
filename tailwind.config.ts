@@ -11,36 +11,59 @@ const config: Config = {
     extend: {
       colors: {
         luxury: {
-          // ── 22K Warm Jewelry Gold Spectrum ──
-          gold: "#C9A84C",           // Primary jewelry gold
-          "gold-bright": "#E8C97A",  // Shimmer / hover
-          "gold-dark": "#8B6914",    // Deep antique text
-          "gold-hover": "#B5921E",   // Button hover
-          "gold-subtle": "#FAF4E6",  // Ultra soft wash
-          "gold-champagne": "#F0E4C4", // Borders & dividers
+          // ── Obsidian & Dark Graphite Surfaces ──
+          obsidian: "#09090C",
+          "obsidian-elevated": "#0F0E14",
+          graphite: "#16151E",
+          "graphite-card": "#1C1B26",
+          "graphite-border": "rgba(255, 255, 255, 0.08)",
+          "graphite-hover": "#242332",
 
-          // ── Deep Velvet Onyx (Jewelry Display Case) ──
-          onyx: "#0F0D0A",           // Deepest black
-          "onyx-surface": "#1A1714", // Elevated surfaces
-          "onyx-light": "#2A2420",   // Charcoal variant
-          charcoal: "#2A2420",       // Primary body text
+          // ── 22K Warm Champagne Gold Spectrum ──
+          gold: "#C9A84C",
+          "gold-champagne": "#E5C583",
+          "gold-bright": "#F3DB9E",
+          "gold-dark": "#9E7B28",
+          "gold-hover": "#D8B75B",
+          "gold-subtle": "rgba(201, 168, 76, 0.12)",
+          "gold-border": "rgba(201, 168, 76, 0.35)",
 
-          // ── Neutral Luxury Canvas ──
-          ivory: "#FAF7F2",          // Warm page background
-          cream: "#F5EFE0",          // Card backgrounds
-          champagne: "#EDE0C4",      // Borders / hairlines
-          beige: "#E8DED0",          // Subtle separators
-          white: "#FFFFFF",          // Pure white
-          muted: "#6B6460",          // Secondary text
+          // ── Silver Metallic Spectrum ──
+          silver: "#C0C4CC",
+          "silver-bright": "#E8ECF2",
+          "silver-dark": "#7E8492",
+          "silver-subtle": "rgba(192, 196, 204, 0.12)",
+          "silver-border": "rgba(192, 196, 204, 0.30)",
+
+          // ── Deep Velvet Onyx Legacy ──
+          onyx: "#0B0A0E",
+          "onyx-surface": "#15141C",
+          "onyx-light": "#201F2B",
+          charcoal: "#F2EFE9",
+          "charcoal-muted": "#9E9993",
+
+          // ── Neutral Canvas (Dark Mode Primary) ──
+          ivory: "#0A090D",
+          cream: "#14131B",
+          champagne: "rgba(229, 197, 131, 0.20)",
+          beige: "rgba(255, 255, 255, 0.08)",
+          white: "#FFFFFF",
+          muted: "#9E9993",
 
           // ── Semantic colors ──
-          green: "#1A1714",          // Mapped to onyx (no green!)
-          "green-dark": "#0F0D0A",
-          "green-light": "#2A2420",
+          success: "#10B981", // Professional emerald green
+          "success-subtle": "rgba(16, 185, 129, 0.12)",
+          "success-border": "rgba(16, 185, 129, 0.30)",
+          warning: "#F59E0B", // Controlled amber
+          "warning-subtle": "rgba(245, 158, 11, 0.12)",
+          "warning-border": "rgba(245, 158, 11, 0.30)",
+          danger: "#EF4444",  // Clear red
+          "danger-subtle": "rgba(239, 68, 68, 0.12)",
+          "danger-border": "rgba(239, 68, 68, 0.30)",
         },
-        border: "#E8DED0",
-        background: "#FAF7F2",
-        foreground: "#2A2420",
+        border: "rgba(255, 255, 255, 0.08)",
+        background: "#0A090D",
+        foreground: "#F2EFE9",
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Cinzel", "Playfair Display", "Georgia", "serif"],

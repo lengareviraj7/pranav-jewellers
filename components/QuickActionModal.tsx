@@ -246,78 +246,78 @@ export default function QuickActionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto modal-backdrop">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-champagne bg-white shadow-luxury-xl overflow-hidden my-8 modal-content">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl overflow-hidden my-8 modal-content">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-luxury-champagne bg-luxury-gold-subtle/40 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.02] px-6 py-4">
           <div>
-            <h3 className="font-serif text-[15px] font-bold tracking-wide text-luxury-onyx">Quick Action Hub</h3>
+            <h3 className="font-serif text-[15px] font-bold tracking-wide text-white">Quick Action Hub</h3>
             <p className="text-[11px] text-luxury-muted">Fast transactional entry — select an operation below</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-luxury-muted hover:bg-luxury-champagne hover:text-luxury-onyx transition-colors"
+            className="rounded-lg p-1.5 text-luxury-muted hover:bg-white/[0.08] hover:text-white transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-luxury-champagne bg-white px-4 py-2 gap-1 overflow-x-auto scrollbar-thin">
+        <div className="flex border-b border-white/[0.08] bg-luxury-obsidian/60 px-4 py-2 gap-1 overflow-x-auto scrollbar-thin">
           <button
             onClick={() => setActiveTab("gold_stock")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
               activeTab === "gold_stock"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+                : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
-            <Coins className="h-4 w-4 text-luxury-gold" />
+            <Coins className="h-4 w-4" />
             <span>Add Gold</span>
           </button>
 
           <button
             onClick={() => setActiveTab("silver_stock")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
               activeTab === "silver_stock"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-slate-300 text-black shadow-xs font-bold border border-white/60"
+                : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
-            <Gem className="h-4 w-4 text-luxury-gold" />
+            <Gem className="h-4 w-4" />
             <span>Add Silver</span>
           </button>
 
           <button
             onClick={() => setActiveTab("used_purchase")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
               activeTab === "used_purchase"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+                : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
-            <RefreshCw className="h-4 w-4 text-luxury-gold" />
+            <RefreshCw className="h-4 w-4" />
             <span>Used Metal</span>
           </button>
 
           <button
             onClick={() => setActiveTab("finance_client")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
               activeTab === "finance_client"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+                : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
-            <UserPlus className="h-4 w-4 text-luxury-gold" />
+            <UserPlus className="h-4 w-4" />
             <span>Add Client</span>
           </button>
 
           <button
             onClick={() => setActiveTab("finance_payment")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition shrink-0 ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
               activeTab === "finance_payment"
-                ? "bg-luxury-onyx text-luxury-gold border border-luxury-gold/40 shadow-sm"
-                : "text-luxury-charcoal hover:bg-white hover:text-luxury-gold-dark"
+                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+                : "text-luxury-muted hover:bg-white/[0.06] hover:text-white"
             }`}
           >
             <CreditCard className="h-4 w-4 text-luxury-gold" />

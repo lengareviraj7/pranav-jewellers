@@ -122,7 +122,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Stone weight cannot exceed or equal gross weight" }, { status: 400 });
     }
 
-    const calculatedNet = Number((numGross - numStone).toFixed(3));
+    const calculatedNet = (body.netWeight !== undefined && !isNaN(Number(body.netWeight)) && Number(body.netWeight) > 0)
+      ? Number(Number(body.netWeight).toFixed(3))
+      : Number((numGross - numStone).toFixed(3));
 
     // Category check
     const cat = await Category.findById(categoryId);
