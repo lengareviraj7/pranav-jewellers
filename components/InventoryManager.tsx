@@ -1953,125 +1953,124 @@ export default function InventoryManager({
                     ======================================================== */}
                 <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-4 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* LEFT COLUMN */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
-                          Customer Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="e.g. Ramesh Patil"
-                          value={sellForm.customerName}
-                          onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
-                            Address
-                          </label>
-                          <span className="text-[10px] font-mono text-luxury-gold">
-                            By default Visapur.
-                          </span>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Visapur"
-                          value={sellForm.customerAddress}
-                          onChange={(e) => setSellForm({ ...sellForm, customerAddress: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
-                            Promise Date
-                          </label>
-                          {(() => {
-                            const udhari = parseFloat(sellForm.udhariRupees) || 0;
-                            return udhari > 0 ? (
-                              <span className="text-[10px] font-bold text-rose-400">Mandatory for Udhari</span>
-                            ) : (
-                              <span className="text-[10px] text-luxury-muted">Optional if full payment</span>
-                            );
-                          })()}
-                        </div>
-                        <input
-                          type="date"
-                          value={sellForm.dueDate}
-                          onChange={(e) => setSellForm({ ...sellForm, dueDate: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
-                        />
-                        <span className="text-[10px] text-luxury-muted mt-1 block">
-                          Triggers automated 3-stage WhatsApp payment reminders
-                        </span>
-                      </div>
+                    {/* Row 1, Col 1: Customer Name */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
+                        Customer Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Ramesh Patil"
+                        value={sellForm.customerName}
+                        onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                      />
                     </div>
 
-                    {/* RIGHT COLUMN */}
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
-                          Mobile No *
+                    {/* Row 1, Col 2: Mobile No */}
+                    <div>
+                      <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
+                        Mobile No *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="10-digit mobile number"
+                        value={sellForm.customerPhone}
+                        onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono text-white focus:border-luxury-gold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Row 2, Col 1: Address (By default Visapur) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                          Address
                         </label>
-                        <input
-                          type="tel"
-                          required
-                          placeholder="10-digit mobile number"
-                          value={sellForm.customerPhone}
-                          onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono text-white focus:border-luxury-gold focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Manual Udhari input as requested */}
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
-                            Udhari (₹)
-                          </label>
-                          <span className="text-[10px] font-semibold text-rose-400">
-                            manual entry
-                          </span>
-                        </div>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="₹ 0"
-                          value={sellForm.udhariRupees}
-                          onChange={(e) => setSellForm({ ...sellForm, udhariRupees: e.target.value })}
-                          className="w-full rounded-xl border border-rose-500/40 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-rose-300 focus:border-rose-400 focus:outline-none"
-                        />
-                        <span className="text-[10px] text-luxury-muted mt-1 block">
-                          Enter remaining customer debt balance
+                        <span className="text-[10px] font-mono text-luxury-gold">
+                          By default Visapur.
                         </span>
                       </div>
+                      <input
+                        type="text"
+                        placeholder="Visapur"
+                        value={sellForm.customerAddress}
+                        onChange={(e) => setSellForm({ ...sellForm, customerAddress: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                      />
+                    </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
-                            Manual Profit
-                          </label>
-                          <span className="text-[10px] font-semibold text-luxury-muted">
-                            optional
-                          </span>
-                        </div>
-                        <input
-                          type="number"
-                          placeholder="Optional margin override"
-                          value={sellForm.manualProfitRupees}
-                          onChange={(e) => setSellForm({ ...sellForm, manualProfitRupees: e.target.value })}
-                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-luxury-gold focus:border-luxury-gold focus:outline-none"
-                        />
-                        <span className="text-[10px] text-luxury-muted mt-1 block">
-                          Net margin earned for showroom analytics (Owner only)
+                    {/* Row 2, Col 2: Manual Udhari input */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                          Udhari (₹)
+                        </label>
+                        <span className="text-[10px] font-semibold text-rose-400">
+                          manual entry
                         </span>
                       </div>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="₹ 0"
+                        value={sellForm.udhariRupees}
+                        onChange={(e) => setSellForm({ ...sellForm, udhariRupees: e.target.value })}
+                        className="w-full rounded-xl border border-rose-500/40 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-rose-300 focus:border-rose-400 focus:outline-none"
+                      />
+                      <span className="text-[10px] text-luxury-muted mt-1 block">
+                        Enter remaining customer debt balance
+                      </span>
+                    </div>
+
+                    {/* Row 3, Col 1: Promise Date */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                          Promise Date
+                        </label>
+                        {(() => {
+                          const udhari = parseFloat(sellForm.udhariRupees) || 0;
+                          return udhari > 0 ? (
+                            <span className="text-[10px] font-bold text-rose-400">Mandatory for Udhari</span>
+                          ) : (
+                            <span className="text-[10px] text-luxury-muted">Optional if full payment</span>
+                          );
+                        })()}
+                      </div>
+                      <input
+                        type="date"
+                        value={sellForm.dueDate}
+                        onChange={(e) => setSellForm({ ...sellForm, dueDate: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                      />
+                      <span className="text-[10px] text-luxury-muted mt-1 block">
+                        Triggers automated 3-stage WhatsApp payment reminders
+                      </span>
+                    </div>
+
+                    {/* Row 3, Col 2: Manual Profit */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                          Manual Profit
+                        </label>
+                        <span className="text-[10px] font-semibold text-luxury-muted">
+                          optional
+                        </span>
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="Optional margin override"
+                        value={sellForm.manualProfitRupees}
+                        onChange={(e) => setSellForm({ ...sellForm, manualProfitRupees: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono font-bold text-luxury-gold focus:border-luxury-gold focus:outline-none"
+                      />
+                      <span className="text-[10px] text-luxury-muted mt-1 block">
+                        Net margin earned for showroom analytics (Owner only)
+                      </span>
                     </div>
                   </div>
                 </div>

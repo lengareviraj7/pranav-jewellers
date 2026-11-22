@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/AuthContext";
 import { ThemeProvider } from "@/components/ThemeContext";
 import AppShell from "@/components/AppShell";
+import KeyboardNavigation from "@/components/KeyboardNavigation";
 
 export const metadata: Metadata = {
   title: "SIDHESHWAR JEWELLERS — Sarafa ERP",
@@ -43,6 +44,7 @@ export default function RootLayout({
         <div className="fixed inset-0 pointer-events-none z-0 ambient-bg" />
         <ThemeProvider>
           <AuthProvider>
+            <KeyboardNavigation />
             <div className="relative z-10 h-screen overflow-hidden">
               <AppShell>{children}</AppShell>
             </div>
