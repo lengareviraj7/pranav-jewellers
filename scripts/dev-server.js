@@ -1,6 +1,34 @@
 const { spawn } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const dns = require("dns");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (_) {}
+
+// Read MONGODB_URI from .env.local or .env if present
+function loadEnvUri() {
+  const envFiles = [".env.local", ".env"];
+  for (const file of envFiles) {
+    const fullPath = path.resolve(process.cwd(), file);
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, "utf8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith("MONGODB_URI=") && !trimmed.startsWith("#")) {
+          const val = trimmed.replace("MONGODB_URI=", "").trim().replace(/^["']|["']$/g, "");
+          if (val) return val;
+        }
+      }
+    }
+  }
+  return process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/sidheshwar_jewellers";
+}
+
+const activeMongoUri = loadEnvUri();
 
 async function checkPort27017() {
   try {
@@ -194,20 +222,29 @@ async function seedData(conn) {
 }
 
 async function start() {
-  const isRunning = await checkPort27017();
+  const isCloudOrCustom = !activeMongoUri.includes("127.0.0.1:27017") && !activeMongoUri.includes("localhost:27017");
 
-  if (!isRunning) {
-    console.log("Starting embedded MongoDB instance on port 27017...");
-    const { MongoMemoryServer } = require("mongodb-memory-server");
-    const mongod = await MongoMemoryServer.create({
-      instance: {
-        port: 27017,
-        dbName: "sidheshwar_jewellers",
-      },
-    });
-    console.log(`Embedded MongoDB listening on: ${mongod.getUri()}`);
-    await mongoose.connect("mongodb://127.0.0.1:27017/sidheshwar_jewellers");
+  if (isCloudOrCustom) {
+    console.log(`Connecting to external MongoDB: ${activeMongoUri.replace(/:[^:@]+@/, ":****@")} ...`);
+    await mongoose.connect(activeMongoUri, { serverSelectionTimeoutMS: 8000 });
+    console.log("✅ Connected to MongoDB cluster successfully!");
     await seedData(mongoose.connection);
+  } else {
+    const isRunning = await checkPort27017();
+
+    if (!isRunning) {
+      console.log("Starting embedded MongoDB instance on port 27017...");
+      const { MongoMemoryServer } = require("mongodb-memory-server");
+      const mongod = await MongoMemoryServer.create({
+        instance: {
+          port: 27017,
+          dbName: "sidheshwar_jewellers",
+        },
+      });
+      console.log(`Embedded MongoDB listening on: ${mongod.getUri()}`);
+      await mongoose.connect("mongodb://127.0.0.1:27017/sidheshwar_jewellers");
+      await seedData(mongoose.connection);
+    }
   }
 
   // Start Next.js
@@ -218,7 +255,7 @@ async function start() {
     stdio: "inherit",
     env: {
       ...process.env,
-      MONGODB_URI: "mongodb://127.0.0.1:27017/sidheshwar_jewellers",
+      MONGODB_URI: activeMongoUri,
     },
   });
 

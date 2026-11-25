@@ -1,4 +1,10 @@
 import mongoose from "mongoose";
+import dns from "dns";
+
+// Ensure rock-solid SRV DNS resolution for MongoDB Atlas across all macOS/router networks
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch (_) {}
 
 interface MongooseCache {
   conn: typeof mongoose | null;
