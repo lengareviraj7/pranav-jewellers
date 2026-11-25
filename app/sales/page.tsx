@@ -22,6 +22,8 @@ import {
   ReceiptText,
   FileSpreadsheet,
   Download,
+  History,
+  FileText,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
@@ -50,6 +52,11 @@ interface SaleRecord {
   dueDate?: string;
   paymentStatus: "paid" | "partial" | "unpaid";
   saleDate: string;
+  splitPayments?: {
+    cashPaise: number;
+    onlinePaise: number;
+  };
+  totalExchangeCreditPaise?: number;
   payments: Array<{
     amountPaise: number;
     paymentMode: string;
@@ -84,10 +91,16 @@ export default function SalesPage() {
   const [collectAmount, setCollectAmount] = useState("");
   const [collectMode, setCollectMode] = useState<"cash" | "online">("cash");
   const [collectNotes, setCollectNotes] = useState("");
+  const [nextDueDate, setNextDueDate] = useState("");
+  const [showHistoryInCollect, setShowHistoryInCollect] = useState(true);
   const [collectSuccessData, setCollectSuccessData] = useState<{
     whatsappUrl: string;
     customerName: string;
   } | null>(null);
+
+  // Customer Full Lifetime Statement Modal
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historySale, setHistorySale] = useState<SaleRecord | null>(null);
 
   const fetchSales = useCallback(async () => {
     try {
@@ -131,11 +144,19 @@ export default function SalesPage() {
   // Handle open collect modal
   const openCollectModal = (sale: SaleRecord) => {
     setActiveSale(sale);
-    setCollectAmount((sale.balanceDuePaise / 100).toString());
+    setCollectAmount(""); // Leave empty so user specifies exact installment amount
     setCollectMode("cash");
     setCollectNotes("");
+    setNextDueDate(sale.dueDate ? new Date(sale.dueDate).toISOString().split("T")[0] : "");
     setCollectSuccessData(null);
+    setShowHistoryInCollect(true);
     setIsCollectOpen(true);
+  };
+
+  // Handle open customer lifetime history modal
+  const openHistoryModal = (sale: SaleRecord) => {
+    setHistorySale(sale);
+    setIsHistoryOpen(true);
   };
 
   // Submit Collect Payment
@@ -144,19 +165,27 @@ export default function SalesPage() {
     if (!activeSale) return;
 
     try {
-      const amountPaise = Math.round(Number(collectAmount) * 100);
-      if (isNaN(amountPaise) || amountPaise <= 0) {
-        alert("Enter a valid recovery amount");
+      const amountNum = parseFloat(collectAmount);
+      const maxPendingRs = activeSale.balanceDuePaise / 100;
+
+      if (isNaN(amountNum) || amountNum <= 0) {
+        setError("Please enter a valid recovery amount greater than ₹0.");
         return;
       }
 
-      const res = await fetch(`/api/sales/${activeSale._id}/payments`, {
+      if (amountNum > maxPendingRs) {
+        setError(`Payment amount cannot exceed the pending balance of ₹${maxPendingRs.toLocaleString("en-IN")}.`);
+        return;
+      }
+
+      const res = await fetch(`/api/sales/${activeSale._id}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amountPaise,
+          amountRupees: amountNum,
           paymentMode: collectMode,
           notes: collectNotes.trim(),
+          nextDueDate: nextDueDate || undefined,
         }),
       });
 
@@ -168,12 +197,12 @@ export default function SalesPage() {
         customerName: activeSale.customer.name,
       });
 
-      setSuccessMsg(`Payment of ₹${collectAmount} recorded successfully!`);
+      setSuccessMsg(`Payment installment of ₹${amountNum.toLocaleString("en-IN")} recorded successfully!`);
       fetchSales();
       window.dispatchEvent(new Event("sj-refresh-data"));
-      setTimeout(() => setSuccessMsg(null), 3000);
+      setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to record recovery payment");
     }
   };
 
@@ -572,12 +601,22 @@ export default function SalesPage() {
                             <Phone className="h-4 w-4" />
                           </a>
 
+                          {/* Full Customer History Statement Button */}
+                          <button
+                            onClick={() => openHistoryModal(s)}
+                            title="View Full Customer Purchase & Payment History"
+                            className="flex items-center gap-1 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white transition-all"
+                          >
+                            <History className="h-3 w-3 text-luxury-gold" />
+                            <span>History</span>
+                          </button>
+
                           {/* Collect Payment Button */}
                           {balance > 0 && (
                             <button
                               onClick={() => openCollectModal(s)}
                               title="Collect Udhari Payment"
-                              className="flex items-center gap-1 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition-all btn-3d"
+                              className="flex items-center gap-1 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition-all btn-3d"
                             >
                               <CreditCard className="h-3 w-3" />
                               <span>Collect</span>
@@ -594,22 +633,30 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Modal: Collect Udhari Payment */}
+      {/* ========================================================
+          MODAL 1: COLLECT UDHARI PAYMENT WITH LIVE DUE CALCULATOR
+          ======================================================== */}
       {isCollectOpen && activeSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-md rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
-                <h3 className="font-serif text-lg font-bold text-white">Collect Udhari Payment</h3>
-                <p className="text-xs text-luxury-muted">Record customer recovery towards balance</p>
+                <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-luxury-gold" />
+                  <span>Collect Udhari Payment</span>
+                </h3>
+                <p className="text-xs text-luxury-muted">
+                  Record partial or full recovery towards pending balance &amp; auto-sync cash till
+                </p>
               </div>
               <button
                 onClick={() => {
                   setIsCollectOpen(false);
                   setCollectSuccessData(null);
                 }}
+                className="text-luxury-muted hover:text-white transition p-1"
               >
-                <X className="h-5 w-5 text-luxury-muted hover:text-white" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
@@ -643,74 +690,592 @@ export default function SalesPage() {
               </div>
             ) : (
               <form onSubmit={handleCollectSubmit} className="mt-4 space-y-4">
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3 text-xs space-y-1">
-                  <div className="flex justify-between font-bold text-white">
-                    <span>{activeSale.customer.name}</span>
-                    <span className="text-amber-400">
-                      Pending: ₹{(activeSale.balanceDuePaise / 100).toLocaleString("en-IN")}
-                    </span>
+                {/* Customer & Sale Overview Card */}
+                <div className="rounded-xl border border-white/10 bg-black/40 p-4 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.08] pb-2.5">
+                    <div>
+                      <p className="text-sm font-bold text-white flex items-center gap-2">
+                        <User className="h-4 w-4 text-luxury-gold" />
+                        <span>{activeSale.customer.name}</span>
+                      </p>
+                      <p className="text-[11px] text-luxury-muted font-mono mt-0.5">
+                        📞 {activeSale.customer.phone} • 📍 {activeSale.customer.address || "Visapur"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-luxury-muted block">Sale Number</span>
+                      <span className="font-mono text-xs font-bold text-luxury-gold">{activeSale.saleNumber}</span>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-luxury-muted">
-                    Item: {activeSale.itemName} ({activeSale.saleNumber})
-                  </p>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
+                    <div>
+                      <span className="text-luxury-muted block text-[10px] uppercase">Purchased Item</span>
+                      <span className="font-semibold text-white truncate block">{activeSale.itemName}</span>
+                    </div>
+                    <div>
+                      <span className="text-luxury-muted block text-[10px] uppercase">Purchase Date</span>
+                      <span className="font-semibold text-white">
+                        {new Date(activeSale.saleDate).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-luxury-muted block text-[10px] uppercase">Total Bill Value</span>
+                      <span className="font-mono font-bold text-white">
+                        ₹{(activeSale.sellingPricePaise / 100).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-luxury-muted block text-[10px] uppercase">Total Paid So Far</span>
+                      <span className="font-mono font-bold text-emerald-400">
+                        ₹{(activeSale.paidAmountPaise / 100).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
+                {/* ========================================================
+                    LIVE DUE BREAKDOWN CALCULATOR
+                    ======================================================== */}
+                {(() => {
+                  const pendingDue = activeSale.balanceDuePaise / 100;
+                  const payingNow = parseFloat(collectAmount) || 0;
+                  const remainingDue = Math.max(0, pendingDue - payingNow);
+                  const isOverpaying = payingNow > pendingDue;
+                  const isFull = payingNow > 0 && payingNow === pendingDue;
+
+                  return (
+                    <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-4 space-y-3">
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="rounded-xl bg-white/5 p-3 border border-white/10">
+                          <span className="text-[10px] uppercase font-bold text-luxury-muted block">
+                            Current Pending Due
+                          </span>
+                          <p className="font-mono text-base font-bold text-amber-300 mt-1">
+                            ₹{pendingDue.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div className="rounded-xl bg-luxury-gold/15 p-3 border border-luxury-gold/30">
+                          <span className="text-[10px] uppercase font-bold text-luxury-gold-champagne block">
+                            Amount Paying Today
+                          </span>
+                          <p className="font-mono text-base font-bold text-luxury-gold-bright mt-1">
+                            ₹{payingNow.toLocaleString("en-IN")}
+                          </p>
+                        </div>
+
+                        <div
+                          className={`rounded-xl p-3 border transition-all ${
+                            isOverpaying
+                              ? "bg-rose-950/40 border-rose-500/50"
+                              : isFull
+                              ? "bg-emerald-950/40 border-emerald-500/50"
+                              : "bg-rose-950/20 border-rose-500/30"
+                          }`}
+                        >
+                          <span className="text-[10px] uppercase font-bold text-luxury-muted block">
+                            Remaining Due After
+                          </span>
+                          <p
+                            className={`font-mono text-base font-bold mt-1 ${
+                              isOverpaying ? "text-rose-400" : isFull ? "text-emerald-400" : "text-rose-300"
+                            }`}
+                          >
+                            {isOverpaying
+                              ? `+₹${(payingNow - pendingDue).toLocaleString("en-IN")} excess`
+                              : `₹${remainingDue.toLocaleString("en-IN")}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isFull && (
+                        <div className="flex items-center gap-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-2 text-xs text-emerald-300 font-semibold">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                          <span>This payment will completely settle the remaining balance (₹0 Due) ✅</span>
+                        </div>
+                      )}
+
+                      {!isFull && remainingDue > 0 && payingNow > 0 && (
+                        <div className="flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 text-xs text-amber-300 font-semibold">
+                          <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+                          <span>
+                            ₹{remainingDue.toLocaleString("en-IN")} will remain as pending customer Udhari.
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Amount Paying Input with Quick Chips */}
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-muted mb-1">
-                    Payment Amount (₹) *
-                  </label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-white uppercase tracking-wider">
+                      Payment Amount (₹) *
+                    </label>
+                    <span className="text-[11px] text-luxury-muted font-mono">
+                      Max Pending: ₹{(activeSale.balanceDuePaise / 100).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
                   <input
                     type="number"
                     step="1"
                     min="1"
                     max={activeSale.balanceDuePaise / 100}
                     required
+                    placeholder="Enter amount customer is paying today (e.g. 2000)"
                     value={collectAmount}
                     onChange={(e) => setCollectAmount(e.target.value)}
-                    className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-luxury-gold/40 bg-black/60 px-4 py-2.5 text-sm font-mono font-bold text-luxury-gold-bright placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
+
+                  {/* Quick Shortcut Percentage Chips */}
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    <span className="text-[10px] text-luxury-muted uppercase font-bold">Quick:</span>
+                    {(() => {
+                      const bal = activeSale.balanceDuePaise / 100;
+                      return [
+                        { label: "25%", val: Math.round(bal * 0.25) },
+                        { label: "50%", val: Math.round(bal * 0.5) },
+                        { label: "75%", val: Math.round(bal * 0.75) },
+                        { label: `Pay Full (₹${bal.toLocaleString("en-IN")})`, val: bal },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => setCollectAmount(chip.val.toString())}
+                          className="rounded-lg bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/90 hover:text-luxury-gold hover:bg-luxury-gold/15 border border-white/10 transition"
+                        >
+                          {chip.label}
+                        </button>
+                      ));
+                    })()}
+                  </div>
                 </div>
 
+                {/* Payment Mode: 3D Buttons (Fixes White Bar Bug) */}
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-muted mb-1">Payment Mode</label>
-                  <select
-                    value={collectMode}
-                    onChange={(e) => setCollectMode(e.target.value as any)}
-                    className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                  >
-                    <option value="cash" className="bg-luxury-obsidian text-white">Cash (Counter Credit)</option>
-                    <option value="online" className="bg-luxury-obsidian text-white">Online / UPI</option>
-                  </select>
+                  <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1.5">
+                    Payment Mode *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCollectMode("cash")}
+                      className={`flex items-center justify-center gap-2 rounded-xl p-3 text-xs font-bold transition-all border ${
+                        collectMode === "cash"
+                          ? "bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white border-emerald-400 shadow-lg shadow-emerald-950/50 scale-[1.02]"
+                          : "bg-black/50 text-neutral-400 border-white/10 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="text-base">💵</span>
+                      <span>Cash (Counter Rojmel)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCollectMode("online")}
+                      className={`flex items-center justify-center gap-2 rounded-xl p-3 text-xs font-bold transition-all border ${
+                        collectMode === "online"
+                          ? "bg-gradient-to-r from-cyan-600 via-cyan-500 to-blue-600 text-white border-cyan-400 shadow-lg shadow-cyan-950/50 scale-[1.02]"
+                          : "bg-black/50 text-neutral-400 border-white/10 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="text-base">📲</span>
+                      <span>Online (UPI / Bank)</span>
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-luxury-muted mt-1.5">
+                    {collectMode === "cash"
+                      ? "✓ Cash payment is automatically recorded into today's Cash Counter Book (Rojmel Jama)."
+                      : "✓ Online payment is recorded without altering physical drawer cash."}
+                  </p>
                 </div>
 
+                {/* Next Promised Due Date (Only if remaining balance > 0) */}
+                {(() => {
+                  const bal = (activeSale.balanceDuePaise / 100) - (parseFloat(collectAmount) || 0);
+                  if (bal <= 0) return null;
+
+                  return (
+                    <div className="rounded-xl border border-white/10 bg-black/40 p-3.5 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-amber-300 uppercase tracking-wider">
+                          Next Promised Due Date (Optional)
+                        </label>
+                        <span className="text-[10px] text-luxury-muted font-mono">
+                          Remaining: ₹{bal.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <input
+                        type="date"
+                        value={nextDueDate}
+                        onChange={(e) => setNextDueDate(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/60 px-3.5 py-2 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                      />
+                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                        <span className="text-[10px] text-luxury-muted">Quick Dates:</span>
+                        {[
+                          { label: "+7 Days", days: 7 },
+                          { label: "+15 Days", days: 15 },
+                          { label: "+1 Month", days: 30 },
+                        ].map((chip) => (
+                          <button
+                            key={chip.label}
+                            type="button"
+                            onClick={() => {
+                              const d = new Date();
+                              d.setDate(d.getDate() + chip.days);
+                              setNextDueDate(d.toISOString().split("T")[0]);
+                            }}
+                            className="rounded-lg bg-white/5 px-2.5 py-0.5 text-[10px] font-semibold text-luxury-muted hover:text-luxury-gold hover:bg-luxury-gold/15 border border-white/5 transition"
+                          >
+                            {chip.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Notes Input */}
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-muted mb-1">Notes (Optional)</label>
+                  <label className="block text-xs font-semibold text-luxury-muted mb-1">
+                    Notes / Remarks (Optional)
+                  </label>
                   <input
                     type="text"
-                    placeholder="e.g. Received in shop from customer"
+                    placeholder="e.g. Received via GPay, handed by customer brother, etc."
                     value={collectNotes}
                     onChange={(e) => setCollectNotes(e.target.value)}
-                    className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2 text-xs text-white focus:border-luxury-gold focus:outline-none"
                   />
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-white/[0.08]">
+                {/* ========================================================
+                    CUSTOMER PAST PURCHASE & PAYMENT HISTORY ACCORDION
+                    ======================================================== */}
+                <div className="rounded-xl border border-white/10 bg-black/30 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowHistoryInCollect(!showHistoryInCollect)}
+                    className="w-full flex items-center justify-between p-3 text-left hover:bg-white/[0.03] transition"
+                  >
+                    <span className="text-xs font-bold text-luxury-gold-champagne flex items-center gap-2">
+                      <History className="h-4 w-4 text-luxury-gold" />
+                      <span>
+                        Customer History &amp; Installments ({activeSale.payments?.length || 0})
+                      </span>
+                    </span>
+                    <span className="text-[11px] text-luxury-muted">
+                      {showHistoryInCollect ? "▲ Hide" : "▼ View Timeline"}
+                    </span>
+                  </button>
+
+                  {showHistoryInCollect && (
+                    <div className="p-3 border-t border-white/[0.08] space-y-2.5 text-xs max-h-48 overflow-y-auto">
+                      {/* Step 1: Initial Purchase */}
+                      <div className="flex items-start gap-2.5 rounded-lg bg-white/[0.02] p-2.5 border border-white/[0.05]">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-luxury-gold/20 text-luxury-gold text-[11px] font-bold">
+                          1
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-bold text-white">Initial Purchase &amp; Billing</p>
+                            <span className="text-[10px] text-luxury-muted font-mono">
+                              {new Date(activeSale.saleDate).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-luxury-muted mt-0.5">
+                            Total Bill: <strong className="text-white">₹{(activeSale.sellingPricePaise / 100).toLocaleString("en-IN")}</strong>
+                            {activeSale.splitPayments && (
+                              <span> • Down Payment: ₹{((activeSale.splitPayments.cashPaise + activeSale.splitPayments.onlinePaise) / 100).toLocaleString("en-IN")}</span>
+                            )}
+                          </p>
+                          {activeSale.dueDate && (
+                            <p className="text-[10px] text-amber-300 mt-0.5">
+                              Promised Due Date: {new Date(activeSale.dueDate).toLocaleDateString("en-IN")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Step 2+: All Subsequent Installments */}
+                      {activeSale.payments && activeSale.payments.length > 0 ? (
+                        activeSale.payments.map((p, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2.5 rounded-lg bg-emerald-950/20 p-2.5 border border-emerald-500/20"
+                          >
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-[11px] font-bold">
+                              {idx + 2}
+                            </span>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <p className="font-bold text-emerald-300">
+                                  +₹{(p.amountPaise / 100).toLocaleString("en-IN")} Paid
+                                </p>
+                                <span className="text-[10px] text-luxury-muted font-mono">
+                                  {new Date(p.date).toLocaleString("en-IN", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-luxury-muted mt-0.5">
+                                Mode: <strong className="text-white">{p.paymentMode === "online" ? "Online / UPI" : "Cash (Counter)"}</strong>
+                                {p.notes && ` • Notes: ${p.notes}`}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-2 text-center text-[11px] text-luxury-muted">
+                          No previous recovery installments recorded yet. This will be Installment #1.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/[0.1]">
                   <button
                     type="button"
                     onClick={() => setIsCollectOpen(false)}
-                    className="rounded-xl border border-white/[0.1] px-4 py-2 text-xs font-semibold text-luxury-muted hover:text-white hover:bg-white/[0.05]"
+                    className="rounded-xl border border-white/20 px-5 py-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d"
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
-                    Record Recovery
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Confirm Recovery Payment</span>
                   </button>
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL 2: DEDICATED CUSTOMER LIFETIME STATEMENT & HISTORY
+          ======================================================== */}
+      {isHistoryOpen && historySale && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto space-y-5">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
+                  <History className="h-5 w-5 text-luxury-gold" />
+                  <span>Customer Account Statement &amp; History</span>
+                </h3>
+                <p className="text-xs text-luxury-muted">
+                  Complete chronological ledger of purchases, due dates &amp; payment installments
+                </p>
+              </div>
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className="text-luxury-muted hover:text-white transition p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Customer Details Strip */}
+            <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-luxury-gold/20 border border-luxury-gold/40 text-luxury-gold font-serif font-bold text-base">
+                    {historySale.customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-sm">{historySale.customer.name}</h4>
+                    <p className="text-xs text-luxury-gold font-mono mt-0.5">📞 {historySale.customer.phone}</p>
+                    <p className="text-[11px] text-luxury-muted">📍 {historySale.customer.address || "Visapur"}</p>
+                  </div>
+                </div>
+
+                <a
+                  href={getWhatsAppLink(historySale)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-bold text-white hover:brightness-105 transition"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>WhatsApp Statement</span>
+                </a>
+              </div>
+
+              {/* Account Financials */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
+                <div className="rounded-xl bg-white/5 p-2.5 border border-white/10">
+                  <span className="text-[10px] uppercase font-bold text-luxury-muted block">Total Purchase</span>
+                  <p className="font-mono text-xs font-bold text-white mt-1">
+                    ₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-emerald-950/30 p-2.5 border border-emerald-500/20">
+                  <span className="text-[10px] uppercase font-bold text-emerald-300 block">Total Paid</span>
+                  <p className="font-mono text-xs font-bold text-emerald-400 mt-1">
+                    ₹{(historySale.paidAmountPaise / 100).toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div
+                  className={`rounded-xl p-2.5 border ${
+                    historySale.balanceDuePaise > 0
+                      ? "bg-rose-950/30 border-rose-500/30 text-rose-300"
+                      : "bg-emerald-950/30 border-emerald-500/30 text-emerald-300"
+                  }`}
+                >
+                  <span className="text-[10px] uppercase font-bold block">Current Balance</span>
+                  <p className="font-mono text-xs font-bold mt-1">
+                    ₹{(historySale.balanceDuePaise / 100).toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-luxury-gold/15 p-2.5 border border-luxury-gold/30">
+                  <span className="text-[10px] uppercase font-bold text-luxury-gold-champagne block">Status</span>
+                  <p className="font-bold text-xs text-luxury-gold-bright mt-1 uppercase">
+                    {historySale.paymentStatus}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Complete Chronological History Timeline */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-luxury-gold-champagne flex items-center gap-1.5">
+                <FileText className="h-4 w-4 text-luxury-gold" />
+                <span>Chronological Transaction Ledger</span>
+              </h4>
+
+              <div className="space-y-2.5">
+                {/* 1. Date of Purchase */}
+                <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-3.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxury-gold/20 text-luxury-gold font-bold text-xs">
+                    🛍️
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <p className="font-bold text-white text-xs">
+                        Purchased: {historySale.itemName} ({historySale.quantitySold} pc, {historySale.netWeightSold.toFixed(3)}g net)
+                      </p>
+                      <span className="text-[10px] text-luxury-muted font-mono">
+                        {new Date(historySale.saleDate).toLocaleString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-luxury-muted mt-1">
+                      Invoice No: <span className="font-mono text-luxury-gold">{historySale.saleNumber}</span> • Purity: {historySale.purity} • Total Bill: <span className="text-white font-bold">₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}</span>
+                    </p>
+                    {historySale.dueDate && (
+                      <p className="text-[11px] text-amber-300 font-semibold mt-1">
+                        📅 Original Promised Due Date: {new Date(historySale.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2. Initial Down Payment if any */}
+                {historySale.splitPayments && (historySale.splitPayments.cashPaise > 0 || historySale.splitPayments.onlinePaise > 0) && (
+                  <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                      💵
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                        <p className="font-bold text-emerald-300 text-xs">
+                          Initial Counter Down Payment
+                        </p>
+                        <span className="text-[10px] text-luxury-muted font-mono">
+                          {new Date(historySale.saleDate).toLocaleDateString("en-IN")}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-white mt-1 font-mono">
+                        {historySale.splitPayments.cashPaise > 0 && (
+                          <span>Cash: ₹{(historySale.splitPayments.cashPaise / 100).toLocaleString("en-IN")} </span>
+                        )}
+                        {historySale.splitPayments.onlinePaise > 0 && (
+                          <span>• Online UPI: ₹{(historySale.splitPayments.onlinePaise / 100).toLocaleString("en-IN")}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Subsequent Installment Payments */}
+                {historySale.payments && historySale.payments.length > 0 ? (
+                  historySale.payments.map((p, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                        💳
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <p className="font-bold text-emerald-300 text-xs">
+                            Installment #{idx + 1}: +₹{(p.amountPaise / 100).toLocaleString("en-IN")}
+                          </p>
+                          <span className="text-[10px] text-luxury-muted font-mono">
+                            {new Date(p.date).toLocaleString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-luxury-muted mt-1">
+                          Payment Mode: <strong className="text-white">{p.paymentMode === "online" ? "Online / UPI" : "Cash (Counter Rojmel)"}</strong>
+                          {p.notes && ` • Notes: ${p.notes}`}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center text-xs text-luxury-muted">
+                    No recovery installments paid yet towards this account.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
+              <span className="text-[11px] text-luxury-muted">
+                Sidheshwar Jewellers &amp; Finance • Since 2009
+              </span>
+              <button
+                onClick={() => setIsHistoryOpen(false)}
+                className="rounded-xl bg-white/[0.08] px-5 py-2 text-xs font-bold text-white hover:bg-white/[0.12] transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
