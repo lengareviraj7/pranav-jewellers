@@ -659,10 +659,10 @@ export default function InventoryManager({
           <a
             href={`/api/export/inventory?metalType=${metalType}`}
             download
-            className="flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-luxury-graphite/80 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-white/[0.08] hover:border-luxury-gold/40 transition-all"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
           >
-            <Download className="h-3.5 w-3.5 text-luxury-gold" />
-            <span>Export CSV</span>
+            <Download className="h-3.5 w-3.5" />
+            <span>Export Stock (Excel)</span>
           </a>
 
           <button

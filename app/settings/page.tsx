@@ -350,7 +350,7 @@ export default function SettingsPage() {
           <div>
             <h3 className="font-serif text-base font-bold text-white">Data Export Center</h3>
             <p className="text-xs text-luxury-muted">
-              Download clean CSV spreadsheets for accounting, audit, and offline backup
+              Download clean Excel spreadsheets (.xlsx) for accounting, CA audits, tax filing, and offline backup
             </p>
           </div>
           <FileSpreadsheet className="h-5 w-5 text-luxury-gold" />
@@ -358,12 +358,36 @@ export default function SettingsPage() {
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <a
+            href="/api/export/sales"
+            download
+            className="flex items-center justify-between rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 hover:border-emerald-400 hover:bg-emerald-950/40 transition-all shadow-xs"
+          >
+            <div>
+              <p className="font-bold text-xs text-emerald-300">Sales Ledger (Excel)</p>
+              <p className="text-[11px] text-luxury-muted mt-0.5">Customer bills, Udhari, modes</p>
+            </div>
+            <Download className="h-4 w-4 text-emerald-400" />
+          </a>
+
+          <a
+            href="/api/export/cash-book"
+            download
+            className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-950/20 p-4 hover:border-amber-400 hover:bg-amber-950/40 transition-all shadow-xs"
+          >
+            <div>
+              <p className="font-bold text-xs text-amber-300">Rojmel Cash Book (Excel)</p>
+              <p className="text-[11px] text-luxury-muted mt-0.5">Counter Jama &amp; Kharach</p>
+            </div>
+            <Download className="h-4 w-4 text-amber-400" />
+          </a>
+
+          <a
             href="/api/export/inventory?metalType=gold"
             download
             className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-luxury-gold/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-white">Gold Inventory CSV</p>
+              <p className="font-bold text-xs text-white">Gold Inventory (Excel)</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active gold stock</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -375,10 +399,22 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-slate-400/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-white">Silver Inventory CSV</p>
+              <p className="font-bold text-xs text-white">Silver Inventory (Excel)</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">All active silver stock</p>
             </div>
             <Download className="h-4 w-4 text-slate-300" />
+          </a>
+
+          <a
+            href="/api/export/profit-loss"
+            download
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-emerald-500/50 hover:bg-white/[0.06] transition-all"
+          >
+            <div>
+              <p className="font-bold text-xs text-white">Profit &amp; Loss (Excel)</p>
+              <p className="text-[11px] text-luxury-muted mt-0.5">Realized margins &amp; revenues</p>
+            </div>
+            <Download className="h-4 w-4 text-emerald-400" />
           </a>
 
           <a
@@ -387,7 +423,7 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-luxury-gold/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-white">Used Metal Scrap CSV</p>
+              <p className="font-bold text-xs text-white">Used Metal Scrap (Excel)</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">Customer exchange vouchers</p>
             </div>
             <Download className="h-4 w-4 text-luxury-gold" />
@@ -399,10 +435,22 @@ export default function SettingsPage() {
             className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-amber-500/50 hover:bg-white/[0.06] transition-all"
           >
             <div>
-              <p className="font-bold text-xs text-white">Finance Portfolio CSV</p>
+              <p className="font-bold text-xs text-white">Finance Portfolio (Excel)</p>
               <p className="text-[11px] text-luxury-muted mt-0.5">Loans, dues &amp; pledged items</p>
             </div>
             <Download className="h-4 w-4 text-amber-400" />
+          </a>
+
+          <a
+            href="/api/export/stocktake"
+            download
+            className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 hover:border-teal-500/50 hover:bg-white/[0.06] transition-all"
+          >
+            <div>
+              <p className="font-bold text-xs text-white">Stock Audit Checklist (Excel)</p>
+              <p className="text-[11px] text-luxury-muted mt-0.5">Physical showroom audit</p>
+            </div>
+            <Download className="h-4 w-4 text-teal-400" />
           </a>
         </div>
       </div>

@@ -12,6 +12,7 @@ import {
   Sparkles,
   ArrowUpRight,
   Filter,
+  FileSpreadsheet,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber, GlassCard, PulseDot } from "@/components/Motion";
 
@@ -96,27 +97,38 @@ export default function ProfitLossPage() {
           </p>
         </div>
 
-        {/* Timeframe Filter Chips */}
-        <div className="flex flex-wrap items-center gap-2">
-          {[
-            { id: "today", label: "Today" },
-            { id: "week", label: "This Week" },
-            { id: "month", label: "This Month" },
-            { id: "year", label: "This Year" },
-            { id: "all", label: "All Time" },
-          ].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setRange(t.id)}
-              className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                range === t.id
-                  ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright scale-105"
-                  : "border border-white/[0.08] bg-luxury-graphite/70 text-luxury-muted hover:text-white hover:bg-white/[0.05]"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Actions & Timeframe Filter Chips */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { id: "today", label: "Today" },
+              { id: "week", label: "This Week" },
+              { id: "month", label: "This Month" },
+              { id: "year", label: "This Year" },
+              { id: "all", label: "All Time" },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setRange(t.id)}
+                className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                  range === t.id
+                    ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright scale-105"
+                    : "border border-white/[0.08] bg-luxury-graphite/70 text-luxury-muted hover:text-white hover:bg-white/[0.05]"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <a
+            href="/api/export/profit-loss"
+            download
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-1.5 text-xs font-bold text-white shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            <span>Download P&amp;L (Excel)</span>
+          </a>
         </div>
       </div>
 

@@ -155,13 +155,24 @@ export default function CashBookPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsAddOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition-all btn-3d"
-        >
-          <Plus className="h-4 w-4 text-black" />
-          <span>Record Cash Entry (Jama / Kharach)</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="/api/export/cash-book"
+            download
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
+          >
+            <Download className="h-4 w-4" />
+            <span>Export Rojmel (Excel)</span>
+          </a>
+
+          <button
+            onClick={() => setIsAddOpen(true)}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-4 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 active:scale-95 transition-all btn-3d"
+          >
+            <Plus className="h-4 w-4 text-black" />
+            <span>Record Cash Entry (Jama / Kharach)</span>
+          </button>
+        </div>
       </div>
 
       {/* Alerts */}

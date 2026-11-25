@@ -20,6 +20,8 @@ import {
   CreditCard,
   User,
   ReceiptText,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
@@ -212,6 +214,17 @@ export default function SalesPage() {
           <p className="mt-1 text-xs text-luxury-muted">
             Live showroom sales tracking, owner profit analysis, and due date WhatsApp reminders
           </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="/api/export/sales"
+            download
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            <span>Download Sales Report (Excel)</span>
+          </a>
         </div>
       </div>
 

@@ -414,10 +414,10 @@ function GoldFinancePageInner() {
           <a
             href="/api/export/finance-loans"
             download
-            className="flex items-center gap-1.5 rounded-xl border border-luxury-beige bg-white px-3.5 py-2 text-xs font-semibold text-luxury-charcoal shadow-xs hover:bg-luxury-ivory transition"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:scale-[1.02] active:scale-[0.98] transition border border-emerald-400/30"
           >
-            <Download className="h-3.5 w-3.5 text-luxury-gold" />
-            <span>Export Loans CSV</span>
+            <Download className="h-3.5 w-3.5" />
+            <span>Export Loans (Excel)</span>
           </a>
 
           <button
