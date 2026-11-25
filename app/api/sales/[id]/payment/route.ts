@@ -116,8 +116,8 @@ export async function POST(
 
     const waText =
       sale.balanceDuePaise > 0
-        ? `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your installment payment of *₹${paidRs}* (${modeLabel}) at *SIDHESHWAR JEWELLERS*.\n\n✨ *Updated Account Summary:*\n- Item: ${sale.itemName} (${sale.saleNumber})\n- Amount Paid Today: ₹${paidRs}\n- *Remaining Balance Due: ₹${newBalRs}*${dueDateStr ? `\n- *Next Promise Due Date: ${dueDateStr}*` : ""}\n\nThank you for your timely payment! For any questions, please contact us at +91 98765 43210.\n\nHave a blessed day! 🌟`
-        : `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your final payment of *₹${paidRs}* (${modeLabel}) at *SIDHESHWAR JEWELLERS*.\n\n✨ *Congratulations!* Your balance for ${sale.itemName} (${sale.saleNumber}) is *FULLY CLEARED (₹0 remaining)* ✅.\n\nThank you for your valuable patronage and trust in Sidheshwar Jewellers!\n\nHave a blessed day! 🌟`;
+        ? `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your installment payment of *₹${paidRs}* (${modeLabel}) at *SIDHESHWAR JEWELLERS*.\n\n✨ *Updated Account Summary:*\n- Item: ${sale.itemName} (${sale.saleNumber})\n- Amount Paid Today: ₹${paidRs}\n- *Remaining Balance Due: ₹${newBalRs}*${dueDateStr ? `\n- *Next Promise Due Date: ${dueDateStr}*` : ""}\n\nThank you for your timely payment! For any questions, please contact us at +91 8329465301.\n\nHave a blessed day! 🌟`
+        : `Namaste ${sale.customer.name} ji! 🙏\n\nWe have received your final payment of *₹${paidRs}* (${modeLabel}) at *SIDHESHWAR JEWELLERS*.\n\n✨ *Congratulations!* Your balance for ${sale.itemName} (${sale.saleNumber}) is *FULLY CLEARED (₹0 remaining)* ✅.\n\nThank you for your valuable patronage and trust in Sidheshwar Jewellers! For any inquiries, contact us at +91 8329465301.\n\nHave a blessed day! 🌟`;
 
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}`;
 

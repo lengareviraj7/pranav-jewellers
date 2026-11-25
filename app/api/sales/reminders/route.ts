@@ -94,17 +94,17 @@ export async function POST(req: NextRequest) {
         {
           type: "3_days",
           date: stage1Date,
-          msg: `Namaste ${sale.customer.name} ji,\n\nAapko Sidheshwar Jewellers ki taraf se ek vinamra yaad dilayi ja rahi hai.\n\nAapke bill ${sale.saleNumber} ki ${balFormatted} ki shesh rakam ki bhugtan tithi ${dueFormatted} hai.\n\nKripya apni suvidha ke anusaar nirdharit tithi tak bhugtan karne ki kripa karein.\n\nAapke sahyog ke liye dhanyavaad.\n\nSadar,\nSidheshwar Jewellers`,
+          msg: `Namaste ${sale.customer.name} ji! 🙏\n\nAapko *SIDHESHWAR JEWELLERS* ki taraf se ek vinamra yaad dilayi ja rahi hai.\n\nAapke bill *${sale.saleNumber}* ki *${balFormatted}* ki shesh rakam ki bhugtan tithi *${dueFormatted}* hai.\n\nKripya apni suvidha ke anusaar nirdharit tithi tak bhugtan karne ki kripa karein.\n\nKisi bhi jaankari ya prashna ke liye humse sampark karein:\n📞 *Contact Us: 8329465301*\n\nAapke sahyog ke liye dhanyavaad.\n\nSadar,\n*Sidheshwar Jewellers & Finance*`,
         },
         {
           type: "due_date",
           date: stage2Date,
-          msg: `Namaste ${sale.customer.name} ji,\n\nSidheshwar Jewellers ki taraf se aapko vinamra yaad dilayi ja rahi hai ki aaj ${dueFormatted} ko aapke bill ${sale.saleNumber} ki ${balFormatted} ki bhugtan tithi hai.\n\nKripya apni suvidha anusaar aaj bhugtan karne ki kripa karein.\n\nAgar aapne pahle hi bhugtan kar diya hai, to kripya is sandesh ko nazarandaaz karein.\n\nDhanyavaad,\nSidheshwar Jewellers`,
+          msg: `Namaste ${sale.customer.name} ji! 🙏\n\n*SIDHESHWAR JEWELLERS* ki taraf se vinamra sandesh ki aaj *${dueFormatted}* ko aapke bill *${sale.saleNumber}* ki *${balFormatted}* ki bhugtan tithi hai.\n\nKripya apni suvidha anusaar aaj bhugtan karne ki kripa karein.\n\nKisi bhi sahayata ke liye humse sampark karein:\n📞 *Contact Us: 8329465301*\n\nAgar aapne pahle hi bhugtan kar diya hai, to kripya is sandesh ko nazarandaaz karein.\n\nDhanyavaad,\n*Sidheshwar Jewellers & Finance*`,
         },
         {
           type: "overdue",
           date: stage3Date,
-          msg: `Namaste ${sale.customer.name} ji,\n\nSidheshwar Jewellers ki taraf se ek vinamra follow-up sandesh hai.\n\nHamare record ke anusaar aapke bill ${sale.saleNumber} ki ${balFormatted} ki rakam abhi baki dikh rahi hai, aur nirdharit bhugtan tithi ${dueFormatted} beet chuki hai.\n\nKripya apni suvidha ke anusaar baki rakam ka bhugtan karne ya humse sampark karne ki kripa karein.\n\nYadi aapne bhugtan kar diya hai, to kripya humein suchit karein taaki hum apna record update kar saken.\n\nDhanyavaad,\nSidheshwar Jewellers`,
+          msg: `Namaste ${sale.customer.name} ji! 🙏\n\n*SIDHESHWAR JEWELLERS* ki taraf se vinamra follow-up sandesh.\n\nHamare record ke anusaar aapke bill *${sale.saleNumber}* ki *${balFormatted}* ki rakam abhi baki hai, aur nirdharit bhugtan tithi *${dueFormatted}* beet chuki hai.\n\nKripya baki rakam ka bhugtan karne ya humse sampark karne ki kripa karein:\n📞 *Contact Us: 8329465301*\n\nYadi aapne bhugtan kar diya hai, to kripya humein suchit karein taaki record update ho sake.\n\nDhanyavaad,\n*Sidheshwar Jewellers & Finance*`,
         },
       ];
 

@@ -34,7 +34,7 @@ export default function SettingsPage() {
   // Shop Profile Settings
   const [shopSettings, setShopSettings] = useState({
     shopName: "SIDHESHWAR JEWELLERS",
-    phone: "+91 98765 43210",
+    phone: "+91 8329465301",
     email: "contact@sidheshwarjewellers.com",
     address: "Shop No. 12, Sarafa Bazaar, Main Road",
     defaultMonthlyInterestRate: 2.0,

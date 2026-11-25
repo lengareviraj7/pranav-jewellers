@@ -16,7 +16,7 @@ export interface IAppSettings extends Document {
 const AppSettingsSchema = new Schema<IAppSettings>(
   {
     shopName: { type: String, default: "SIDHESHWAR JEWELLERS" },
-    phone: { type: String, default: "+91 98765 43210" },
+    phone: { type: String, default: "+91 8329465301" },
     email: { type: String, default: "contact@sidheshwarjewellers.com" },
     address: { type: String, default: "Main Market, Sarafa Bazaar" },
     gstin: { type: String },

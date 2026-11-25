@@ -506,17 +506,17 @@ export async function POST(req: NextRequest) {
         {
           reminderType: "3_days",
           scheduledDate: stage1Date,
-          messageBody: `Namaste ${cleanCustName} ji,\n\nAapko Sidheshwar Jewellers ki taraf se ek vinamra yaad dilayi ja rahi hai.\n\nAapke bill ${saleNumber} ki ${balFormatted} ki shesh rakam ki bhugtan tithi ${dueFormatted} hai.\n\nKripya apni suvidha ke anusaar nirdharit tithi tak bhugtan karne ki kripa karein.\n\nAapke sahyog ke liye dhanyavaad.\n\nSadar,\nSidheshwar Jewellers`,
+          messageBody: `Namaste ${cleanCustName} ji! 🙏\n\nAapko *SIDHESHWAR JEWELLERS* ki taraf se ek vinamra yaad dilayi ja rahi hai.\n\nAapke bill *${saleNumber}* ki *${balFormatted}* ki shesh rakam ki bhugtan tithi *${dueFormatted}* hai.\n\nKripya apni suvidha ke anusaar nirdharit tithi tak bhugtan karne ki kripa karein.\n\nKisi bhi sahayata ya prashna ke liye humse sampark karein:\n📞 *Contact Us: 8329465301*\n\nAapke sahyog ke liye dhanyavaad.\n\nSadar,\n*Sidheshwar Jewellers & Finance*`,
         },
         {
           reminderType: "due_date",
           scheduledDate: stage2Date,
-          messageBody: `Namaste ${cleanCustName} ji,\n\nSidheshwar Jewellers ki taraf se aapko vinamra yaad dilayi ja rahi hai ki aaj ${dueFormatted} ko aapke bill ${saleNumber} ki ${balFormatted} ki bhugtan tithi hai.\n\nKripya apni suvidha anusaar aaj bhugtan karne ki kripa karein.\n\nAgar aapne pahle hi bhugtan kar diya hai, to kripya is sandesh ko nazarandaaz karein.\n\nDhanyavaad,\nSidheshwar Jewellers`,
+          messageBody: `Namaste ${cleanCustName} ji! 🙏\n\n*SIDHESHWAR JEWELLERS* ki taraf se vinamra sandesh ki aaj *${dueFormatted}* ko aapke bill *${saleNumber}* ki *${balFormatted}* ki bhugtan tithi hai.\n\nKripya apni suvidha anusaar aaj bhugtan karne ki kripa karein.\n\nKisi bhi jaankari ke liye humse sampark karein:\n📞 *Contact Us: 8329465301*\n\nAgar aapne pahle hi bhugtan kar diya hai, to kripya is sandesh ko nazarandaaz karein.\n\nDhanyavaad,\n*Sidheshwar Jewellers & Finance*`,
         },
         {
           reminderType: "overdue",
           scheduledDate: stage3Date,
-          messageBody: `Namaste ${cleanCustName} ji,\n\nSidheshwar Jewellers ki taraf se ek vinamra follow-up sandesh hai.\n\nHamare record ke anusaar aapke bill ${saleNumber} ki ${balFormatted} ki rakam abhi baki dikh rahi hai, aur nirdharit bhugtan tithi ${dueFormatted} beet chuki hai.\n\nKripya apni suvidha ke anusaar baki rakam ka bhugtan karne ya humse sampark karne ki kripa karein.\n\nYadi aapne bhugtan kar diya hai, to kripya humein suchit karein taaki hum apna record update kar saken.\n\nDhanyavaad,\nSidheshwar Jewellers`,
+          messageBody: `Namaste ${cleanCustName} ji! 🙏\n\n*SIDHESHWAR JEWELLERS* ki taraf se vinamra follow-up sandesh.\n\nHamare record ke anusaar aapke bill *${saleNumber}* ki *${balFormatted}* ki rakam abhi baki hai, aur nirdharit bhugtan tithi *${dueFormatted}* beet chuki hai.\n\nKripya baki rakam ka bhugtan karne ya humse sampark karne ki kripa karein:\n📞 *Contact Us: 8329465301*\n\nYadi aapne bhugtan kar diya hai, to kripya humein suchit karein taaki record update ho sake.\n\nDhanyavaad,\n*Sidheshwar Jewellers & Finance*`,
         },
       ];
 
@@ -569,7 +569,7 @@ export async function POST(req: NextRequest) {
     } else {
       waText += `- Status: Fully Settled ✅\n\n`;
     }
-    waText += `We deeply value your trust and patronage! 🙏\n*Sidheshwar Jewellers*`;
+    waText += `For any inquiries, please contact us:\n📞 *Contact Us: 8329465301*\n\nWe deeply value your trust and patronage! 🙏\n*Sidheshwar Jewellers & Finance*`;
 
     const whatsappUrl = `https://wa.me/${cleanCustPhone}?text=${encodeURIComponent(waText)}`;
 

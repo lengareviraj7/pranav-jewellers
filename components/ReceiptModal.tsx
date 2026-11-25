@@ -75,7 +75,7 @@ export default function ReceiptModal({ isOpen, onClose, data }: ReceiptModalProp
               Since 2009 • Gold Ornaments, Silver, Bullion &amp; Mortgage Finance
             </p>
             <p className="text-[11px] text-luxury-muted mt-1">
-              Shop No. 12, Sarafa Bazaar, Main Road • Phone: +91 98765 43210
+              Shop No. 12, Sarafa Bazaar, Main Road • Phone: +91 8329465301
             </p>
             <div className="inline-block mt-2 rounded-full border border-luxury-beige bg-luxury-ivory px-3 py-0.5 text-[10px] font-bold text-luxury-gold-dark tracking-wider uppercase">
               Official Mortgage Repayment Voucher

@@ -223,8 +223,8 @@ export default function SalesPage() {
 
     const text =
       sale.balanceDuePaise > 0
-        ? `Namaste ${sale.customer.name} ji! 🙏\n\nGreetings from *SIDHESHWAR JEWELLERS*.\n\nThis is a gentle reminder regarding your purchase of *${sale.itemName}*.\n- Total Amount: ₹${totalRs}\n- *Pending Balance: ₹${balRs}*\n- *Promised Due Date: ${dueDateStr}*\n\nPlease arrange the payment at your earliest convenience. For any queries, contact us at +91 98765 43210.\n\nThank you for choosing Sidheshwar Jewellers! 🌟`
-        : `Namaste ${sale.customer.name} ji! 🙏\n\nThank you for shopping at *SIDHESHWAR JEWELLERS*! Your account for *${sale.itemName}* is fully settled. We look forward to serving you again! 🌟`;
+        ? `Namaste ${sale.customer.name} ji! 🙏\n\nGreetings from *SIDHESHWAR JEWELLERS*.\n\nThis is a gentle reminder regarding your purchase of *${sale.itemName}*.\n- Total Amount: ₹${totalRs}\n- *Pending Balance: ₹${balRs}*\n- *Promised Due Date: ${dueDateStr}*\n\nPlease arrange the payment at your earliest convenience. For any queries, contact us at +91 8329465301.\n\nThank you for choosing Sidheshwar Jewellers! 🌟`
+        : `Namaste ${sale.customer.name} ji! 🙏\n\nThank you for shopping at *SIDHESHWAR JEWELLERS*! Your account for *${sale.itemName}* is fully settled. For any queries, contact us at +91 8329465301. We look forward to serving you again! 🌟`;
 
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
   };
@@ -1267,7 +1267,7 @@ export default function SalesPage() {
             {/* Modal Actions */}
             <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
               <span className="text-[11px] text-luxury-muted">
-                Sidheshwar Jewellers &amp; Finance • Since 2009
+                Sidheshwar Jewellers &amp; Finance • Since 2009 • 📞 Contact: 8329465301
               </span>
               <button
                 onClick={() => setIsHistoryOpen(false)}

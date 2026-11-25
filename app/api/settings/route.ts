@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     if (!settings) {
       const created = await AppSettings.create({
         shopName: "SIDHESHWAR JEWELLERS",
-        phone: "+91 98765 43210",
+        phone: "+91 8329465301",
         address: "Sarafa Bazaar, Main Road",
         timezone: "Asia/Kolkata",
         currency: "INR",
