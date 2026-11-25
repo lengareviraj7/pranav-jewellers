@@ -209,27 +209,82 @@ body {
 }
 
 /* ══════════════════════════════
-   LUXURY FORM ELEMENTS
+   HIGH-CONTRAST FORM ELEMENTS: OFF-WHITE BACKGROUND & BLACK TEXT
+   Ensures 100% visibility for text entry across Dark and Light modes
    ══════════════════════════════ */
 
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="date"],
-input[type="tel"],
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]),
 select,
-textarea {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+textarea,
+.glass-input {
+  background-color: #FAF9F5 !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(201, 168, 76, 0.45) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"])::placeholder,
+textarea::placeholder {
+  color: #52525B !important;
+  opacity: 0.85 !important;
+  font-weight: 400 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):focus,
 select:focus,
-textarea:focus {
-  outline: none;
-  border-color: var(--color-gold) !important;
-  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.12) !important;
-  background-color: white !important;
+textarea:focus,
+.glass-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):active,
+select:active,
+textarea:active {
+  outline: none !important;
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
+  font-weight: 600 !important;
+  border-color: #C9A84C !important;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.32), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+select option {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]):not([type="range"]):disabled,
+select:disabled,
+textarea:disabled {
+  background-color: #EBEAE5 !important;
+  color: #52525B !important;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  filter: invert(0) brightness(0.2) sepia(1) hue-rotate(5deg) saturate(5);
+}
+
+input::selection,
+textarea::selection {
+  background-color: #C9A84C !important;
+  color: #000000 !important;
+}
+
+/* Icons inside input wrappers */
+.relative:has(input:not([type="checkbox"]):not([type="radio"])) > .pointer-events-none svg,
+.relative:has(input:not([type="checkbox"]):not([type="radio"])) > svg:first-child {
+  color: #52525B !important;
+}
+
+.relative:has(input:not([type="checkbox"]):not([type="radio"])) > button svg {
+  color: #52525B !important;
+}
+
+.relative:has(input:not([type="checkbox"]):not([type="radio"])) > button:hover svg {
+  color: #000000 !important;
 }
 
 /* ══════════════════════════════
@@ -417,15 +472,19 @@ tbody tr {
 }
 
 .glass-input {
-  background: rgba(15, 14, 20, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background-color: #FAF9F5 !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
+  border: 1px solid rgba(201, 168, 76, 0.45) !important;
   transition: all 0.2s ease;
 }
 
 .glass-input:focus {
-  background: rgba(22, 21, 30, 0.90);
-  border-color: rgba(201, 168, 76, 0.6);
-  box-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
+  border-color: #C9A84C !important;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.32) !important;
 }
 
 /* 3D Card Hover & Elevation */
@@ -699,27 +758,33 @@ html.light input:not([type="checkbox"]):not([type="radio"]),
 html.light select,
 html.light textarea,
 html.light .glass-input {
-  background: #FFFFFF !important;
-  color: #111015 !important;
-  border: 1px solid rgba(0, 0, 0, 0.20) !important;
+  background-color: #FAF9F5 !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(201, 168, 76, 0.45) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) inset !important;
 }
 
 html.light input::placeholder,
 html.light textarea::placeholder {
-  color: #8C867E !important;
+  color: #52525B !important;
+  opacity: 0.85 !important;
 }
 
 html.light input:focus,
 html.light select:focus,
 html.light textarea:focus {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  caret-color: #000000 !important;
   border-color: #C9A84C !important;
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.25) !important;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.32) !important;
 }
 
 html.light select option {
-  background: #FFFFFF !important;
-  color: #111015 !important;
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
 }
 
 /* Tables in Light Mode */
