@@ -1055,7 +1055,11 @@ export default function InventoryManager({
 
       {/* Inventory Table */}
       <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl shadow-luxury">
-        <div className="overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-luxury-gold-champagne bg-luxury-gold/10 border-b border-white/[0.08] md:hidden">
+          <span>👈 Swipe horizontally to view all columns 👉</span>
+          <span className="font-mono text-[10px] text-luxury-muted">Net Wt • Actions</span>
+        </div>
+        <div className="overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
               <tr>
@@ -1196,8 +1200,8 @@ export default function InventoryManager({
 
       {/* Modal 1: Add Stock Form */}
       {isAddStockOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 my-8 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">
@@ -1483,8 +1487,8 @@ export default function InventoryManager({
 
       {/* Modal 2: Stock Adjustment (Non-destructive) */}
       {isAdjustModalOpen && activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-lg rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">Adjust Stock Item</h3>
@@ -1586,8 +1590,8 @@ export default function InventoryManager({
 
       {/* Modal 3: Item History Audit Log */}
       {isHistoryModalOpen && activeItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] flex flex-col modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">Stock Movement Audit Trail</h3>
@@ -1654,8 +1658,8 @@ export default function InventoryManager({
 
       {/* Modal 4: Manage / Rename Category */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="relative w-full max-w-md rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-md rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">
@@ -1719,8 +1723,8 @@ export default function InventoryManager({
 
       {/* Modal 5: Sell Material & Counter Billing with Old Metal Trade-In */}
       {isSellModalOpen && sellItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm overflow-y-auto">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/75 backdrop-blur-sm overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">

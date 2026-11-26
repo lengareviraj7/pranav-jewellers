@@ -320,7 +320,11 @@ export default function CashBookPage() {
 
       {/* Ledger Table */}
       <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl shadow-luxury">
-        <div className="overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-luxury-gold-champagne bg-luxury-gold/10 border-b border-white/[0.08] md:hidden">
+          <span>👈 Swipe horizontally to view full ledger 👉</span>
+          <span className="font-mono text-[10px] text-luxury-muted">Jama • Naave</span>
+        </div>
+        <div className="overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
               <tr>

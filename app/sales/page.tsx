@@ -434,7 +434,11 @@ export default function SalesPage() {
 
       {/* Sales & Udhari Ledger Table */}
       <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl shadow-luxury">
-        <div className="overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-luxury-gold-champagne bg-luxury-gold/10 border-b border-white/[0.08] md:hidden">
+          <span>👈 Swipe horizontally to view all sales &amp; udhari 👉</span>
+          <span className="font-mono text-[10px] text-luxury-muted">Actions</span>
+        </div>
+        <div className="overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
               <tr>
@@ -637,8 +641,8 @@ export default function SalesPage() {
           MODAL 1: COLLECT UDHARI PAYMENT WITH LIVE DUE CALCULATOR
           ======================================================== */}
       {isCollectOpen && activeSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
@@ -1078,8 +1082,8 @@ export default function SalesPage() {
           MODAL 2: DEDICATED CUSTOMER LIFETIME STATEMENT & HISTORY
           ======================================================== */}
       {isHistoryOpen && historySale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 sm:space-y-5 modal-content">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">

@@ -249,10 +249,10 @@ export default function QuickActionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl overflow-hidden my-8 modal-content">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-white/[0.12] bg-luxury-graphite text-white shadow-2xl overflow-hidden my-auto max-h-[92dvh] flex flex-col modal-content">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.02] px-6 py-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.02] px-4 sm:px-6 py-3.5 sm:py-4 shrink-0">
           <div>
             <h3 className="font-serif text-[15px] font-bold tracking-wide text-white">Quick Action Hub</h3>
             <p className="text-[11px] text-luxury-muted">Fast transactional entry — select an operation below</p>
@@ -266,7 +266,7 @@ export default function QuickActionModal({
         </div>
 
         {/* Tab Selection */}
-        <div className="flex border-b border-white/[0.08] bg-luxury-obsidian/60 px-4 py-2 gap-1 overflow-x-auto scrollbar-thin">
+        <div className="flex border-b border-white/[0.08] bg-luxury-obsidian/60 px-3 sm:px-4 py-2 gap-1 overflow-x-auto scrollbar-thin shrink-0">
           <button
             onClick={() => setActiveTab("gold_stock")}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 shrink-0 ${
@@ -328,25 +328,29 @@ export default function QuickActionModal({
           </button>
         </div>
 
-        {/* Status Alerts */}
-        <div className="px-6 pt-4">
-          {error && (
-            <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+        {/* Scrollable Modal Content Container */}
+        <div className="overflow-y-auto flex-1 overscroll-y-contain">
+          {/* Status Alerts */}
+          {(error || successMsg) && (
+            <div className="px-4 sm:px-6 pt-4">
+              {error && (
+                <div className="flex items-center gap-2 rounded-xl bg-red-50 p-3 text-xs text-red-700 border border-red-200">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {successMsg && (
+                <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
+                  <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
+                  <span>{successMsg}</span>
+                </div>
+              )}
             </div>
           )}
-          {successMsg && (
-            <div className="flex items-center gap-2 rounded-xl bg-luxury-gold-subtle p-3 text-xs text-luxury-gold-dark border border-luxury-gold/30 font-medium">
-              <Check className="h-4 w-4 shrink-0 text-luxury-gold-dark" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-        </div>
 
-        {/* Tab 1: Gold Stock Form */}
-        {activeTab === "gold_stock" && (
-          <form onSubmit={handleGoldSubmit} className="p-6 space-y-4">
+          {/* Tab 1: Gold Stock Form */}
+          {activeTab === "gold_stock" && (
+            <form onSubmit={handleGoldSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Item Name *</label>
@@ -496,7 +500,7 @@ export default function QuickActionModal({
 
         {/* Tab 2: Silver Stock Form */}
         {activeTab === "silver_stock" && (
-          <form onSubmit={handleSilverSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSilverSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Item Name *</label>
@@ -635,7 +639,7 @@ export default function QuickActionModal({
 
         {/* Tab 3: Used Metal Purchase Form */}
         {activeTab === "used_purchase" && (
-          <form onSubmit={handleUsedSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleUsedSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Metal Type *</label>
@@ -800,7 +804,7 @@ export default function QuickActionModal({
 
         {/* Tab 4: Finance Client Form */}
         {activeTab === "finance_client" && (
-          <form onSubmit={handleClientSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleClientSubmit} className="p-4 sm:p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Customer Full Name *</label>
@@ -884,7 +888,7 @@ export default function QuickActionModal({
 
         {/* Tab 5: Record Finance Payment */}
         {activeTab === "finance_payment" && (
-          <form onSubmit={handlePaymentSubmit} className="p-6 space-y-4">
+          <form onSubmit={handlePaymentSubmit} className="p-4 sm:p-6 space-y-4">
             <div>
               <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Select Active Loan *</label>
               <select
@@ -989,6 +993,7 @@ export default function QuickActionModal({
             </div>
           </form>
         )}
+        </div>
       </div>
     </div>
   );

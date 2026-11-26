@@ -833,3 +833,64 @@ html.light ::-webkit-scrollbar-thumb {
 html.light ::-webkit-scrollbar-thumb:hover {
   background: rgba(201, 168, 76, 0.7);
 }
+
+/* ═══════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS SYSTEM (ANDROID & IPHONE / IOS SAFARI)
+   ═══════════════════════════════════════════════════ */
+
+/* 1. Prevent iOS Safari auto-zoom on input focus */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .glass-input {
+    font-size: 16px !important; /* iOS triggers zoom if < 16px */
+  }
+}
+
+/* 2. Global Touch & Tap Optimization */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
+}
+
+/* 3. Smooth Momentum Inertia Scrolling on iOS & Android */
+.overflow-x-auto,
+.overflow-y-auto,
+table,
+aside,
+main,
+.modal-backdrop,
+.modal-content {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 4. Safe Area Insets Utilities for iPhone Notch, Island & Home Bar */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* 5. Mobile Modals & Sheets */
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 0.5rem !important;
+  }
+  .modal-content {
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    max-height: 92dvh !important;
+  }
+}
+

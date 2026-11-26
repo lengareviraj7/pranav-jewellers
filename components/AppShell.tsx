@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import MobileBottomNav from "./MobileBottomNav";
 import QuickActionModal from "./QuickActionModal";
 import { useAuth } from "./AuthContext";
 import { Sparkles } from "lucide-react";
@@ -55,10 +56,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-luxury-ivory text-luxury-charcoal">
+    <div className="flex min-h-[100dvh] h-[100dvh] overflow-hidden bg-luxury-ivory text-luxury-charcoal">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex flex-1 flex-col min-w-0 h-screen overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden">
         <Header
           onOpenQuickAction={() => {
             setQuickActionInitialTab("gold_stock");
@@ -67,11 +68,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8 animate-fadeInUp">
+        <main className="flex-1 overflow-y-auto overscroll-y-contain pb-24 lg:pb-8">
+          <div className="mx-auto max-w-7xl p-3 sm:p-6 lg:p-8 animate-fadeInUp">
             {children}
           </div>
         </main>
+
+        {/* Dedicated Mobile Touch Navigation Bar for iOS & Android */}
+        <MobileBottomNav onOpenMenu={() => setSidebarOpen(true)} />
       </div>
 
       <QuickActionModal

@@ -118,8 +118,8 @@ export default function CustomerHistoryModal({
   const whatsappUrl = `https://wa.me/91${displayPhone.replace(/\D/g, "")}?text=${statementText}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-6 my-8 max-h-[90vh] overflow-y-auto space-y-5 animate-scaleUp">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 sm:space-y-5 animate-scaleUp modal-content">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
           <div>
