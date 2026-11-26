@@ -1027,7 +1027,6 @@ export default function InventoryManager({
                 <th className="px-4 py-3.5 text-right">Gross Wt</th>
                 <th className="px-4 py-3.5 text-right">Stones</th>
                 <th className="px-4 py-3.5 text-right">Net Wt</th>
-                <th className="px-4 py-3.5 text-right">Purchase Cost</th>
                 <th className="px-4 py-3.5 text-center">HUID / Ref</th>
                 <th className="px-4 py-3.5 text-center">Actions</th>
               </tr>
@@ -1035,14 +1034,14 @@ export default function InventoryManager({
             <tbody className="divide-y divide-white/[0.06]">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
                     <div className="inline-block h-6 w-6 rounded-full border-2 border-luxury-gold border-t-transparent animate-spin mb-2"></div>
                     <p>Loading inventory...</p>
                   </td>
                 </tr>
               ) : displayedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
                     <p className="font-serif text-sm font-semibold text-white">
                       {isWeightSearchActive ? `No pieces found within ±${weightTolerance}g of ${targetWeightNum.toFixed(3)}g` : "No items match your query"}
                     </p>
@@ -1101,9 +1100,6 @@ export default function InventoryManager({
                               : `${(item as any).diffMg}mg`}
                           </span>
                         )}
-                      </td>
-                      <td className="px-4 py-3 text-right text-white font-mono tabular-nums font-semibold">
-                        ₹{(item.purchaseCostRupees || 0).toLocaleString("en-IN")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         {item.hallmarkUid ? (

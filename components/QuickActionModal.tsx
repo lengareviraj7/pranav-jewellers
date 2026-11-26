@@ -433,28 +433,15 @@ export default function QuickActionModal({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Purchase Cost (₹)</label>
-                <input
-                  type="number"
-                  placeholder="₹ Total cost"
-                  value={goldForm.purchaseCostRupees}
-                  onChange={(e) => setGoldForm({ ...goldForm, purchaseCostRupees: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">HUID / Hallmark (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. ABC123"
-                  value={goldForm.hallmarkUid}
-                  onChange={(e) => setGoldForm({ ...goldForm, hallmarkUid: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                />
-              </div>
+            <div>
+              <label className="block text-xs font-semibold text-luxury-charcoal mb-1">HUID / Hallmark (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. ABC123"
+                value={goldForm.hallmarkUid}
+                onChange={(e) => setGoldForm({ ...goldForm, hallmarkUid: e.target.value })}
+                className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
