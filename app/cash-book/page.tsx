@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Wallet,
   ArrowDownLeft,
@@ -89,8 +89,14 @@ export default function CashBookPage() {
     return () => window.removeEventListener("sj-refresh-data", handleRefresh);
   }, [fetchTransactions]);
 
+  const isSubmittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
     try {
       const res = await fetch("/api/cash-book", {
         method: "POST",
@@ -118,6 +124,9 @@ export default function CashBookPage() {
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -540,9 +549,10 @@ export default function CashBookPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d"
+                  disabled={submitting}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Entry
+                  {submitting ? "Saving..." : "Save Entry"}
                 </button>
               </div>
             </form>

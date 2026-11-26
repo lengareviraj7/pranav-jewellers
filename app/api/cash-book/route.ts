@@ -118,9 +118,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Purpose / Description is required" }, { status: 400 });
     }
 
+    const amountPaise = Math.round(amount * 100);
+
+    // Duplicate transaction prevention within 4 seconds
+    const recentTx = await CashTransaction.findOne({
+      transactionType,
+      amountPaise,
+      purpose: purpose.trim(),
+      date: { $gte: new Date(Date.now() - 4000) },
+    });
+    if (recentTx) {
+      return NextResponse.json({ success: true, transaction: recentTx, duplicatePrevented: true });
+    }
+
     const tx = await CashTransaction.create({
       transactionType,
-      amountPaise: Math.round(amount * 100),
+      amountPaise,
       category: category || (transactionType === "credit" ? "other_income" : "shop_expense"),
       purpose: purpose.trim(),
       notes: notes ? notes.trim() : undefined,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   ShoppingBag,
@@ -88,6 +88,8 @@ export default function SalesPage() {
   const [metalFilter, setMetalFilter] = useState<string>("all");
 
   // Collect Payment Modal
+  const isSubmittingRef = useRef(false);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
   const [isCollectOpen, setIsCollectOpen] = useState(false);
   const [activeSale, setActiveSale] = useState<SaleRecord | null>(null);
   const [collectAmount, setCollectAmount] = useState("");
@@ -173,7 +175,9 @@ export default function SalesPage() {
   // Submit Collect Payment
   const handleCollectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeSale) return;
+    if (!activeSale || isSubmittingRef.current || submittingPayment) return;
+    isSubmittingRef.current = true;
+    setSubmittingPayment(true);
 
     try {
       const amountNum = parseFloat(collectAmount);
@@ -214,6 +218,9 @@ export default function SalesPage() {
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message || "Failed to record recovery payment");
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingPayment(false);
     }
   };
 
@@ -1160,10 +1167,20 @@ export default function SalesPage() {
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    disabled={submittingPayment}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Confirm Recovery Payment</span>
+                    {submittingPayment ? (
+                      <>
+                        <span className="inline-block h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        <span>Recording Recovery...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>Confirm Recovery Payment</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

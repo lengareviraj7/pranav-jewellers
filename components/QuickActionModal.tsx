@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Coins, Gem, RefreshCw, UserPlus, CreditCard, Check, AlertCircle } from "lucide-react";
 
 interface QuickActionModalProps {
@@ -17,6 +17,7 @@ export default function QuickActionModal({
   onSuccess,
 }: QuickActionModalProps) {
   const [activeTab, setActiveTab] = useState(initialTab);
+  const isSubmittingRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -129,6 +130,8 @@ export default function QuickActionModal({
 
   const handleGoldSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -149,12 +152,15 @@ export default function QuickActionModal({
     } catch (err: any) {
       setError(err.message);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   const handleSilverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -175,12 +181,15 @@ export default function QuickActionModal({
     } catch (err: any) {
       setError(err.message);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   const handleUsedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -198,12 +207,15 @@ export default function QuickActionModal({
     } catch (err: any) {
       setError(err.message);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -221,12 +233,15 @@ export default function QuickActionModal({
     } catch (err: any) {
       setError(err.message);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || loading) return;
+    isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
@@ -238,12 +253,13 @@ export default function QuickActionModal({
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Failed to record payment");
 
-      setSuccessMsg(`Payment receipt "${data.payment.receiptNumber}" generated successfully!`);
+      setSuccessMsg(`Payment of ₹${paymentForm.totalAmountRupees} recorded!`);
       onSuccess();
       setTimeout(() => onClose(), 1200);
     } catch (err: any) {
       setError(err.message);
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };

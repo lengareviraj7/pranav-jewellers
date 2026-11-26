@@ -132,6 +132,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Category does not exist" }, { status: 404 });
     }
 
+    // Backend Double-Click & Rapid Re-submission Prevention (Idempotency)
+    const recentDuplicate = await InventoryItem.findOne({
+      metalType,
+      categoryId,
+      name: name.trim(),
+      grossWeight: Number(numGross.toFixed(3)),
+      netWeight: calculatedNet,
+      quantity: numQty,
+      isActive: true,
+      createdAt: { $gte: new Date(Date.now() - 4000) },
+    });
+    if (recentDuplicate) {
+      return NextResponse.json({ success: true, item: recentDuplicate, duplicatePrevented: true });
+    }
+
     // SKU Generation / Check
     let itemSku = (sku || "").trim().toUpperCase();
     if (!itemSku) {

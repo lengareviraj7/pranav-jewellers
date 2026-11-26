@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Coins,
   Gem,
@@ -197,12 +197,20 @@ export default function InventoryManager({
     setShowCustomerDropdown(false);
   };
 
-  // Add Stock Form State
+  // Double-submission lock states and ref
+  const isSubmittingRef = useRef(false);
+  const [submittingStock, setSubmittingStock] = useState(false);
+  const [submittingSell, setSubmittingSell] = useState(false);
+  const [submittingAdjust, setSubmittingAdjust] = useState(false);
+  const [submittingCategory, setSubmittingCategory] = useState(false);
+
+  // Add Stock Form State - Defaults to 22K for gold
+  const defaultPurity = metalType === "gold" ? "22K" : (purityOptions[0] || "999");
   const [stockForm, setStockForm] = useState({
     name: "",
     categoryId: "",
     sku: "",
-    purity: purityOptions[0] || "22K",
+    purity: defaultPurity,
     size: "",
     quantity: 1,
     grossWeight: "",
@@ -366,6 +374,9 @@ export default function InventoryManager({
   // 1. Submit Add Stock
   const handleAddStock = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submittingStock) return;
+    isSubmittingRef.current = true;
+    setSubmittingStock(true);
     try {
       const computedNet = stockForm.netWeight !== ""
         ? Number(stockForm.netWeight)
@@ -390,7 +401,7 @@ export default function InventoryManager({
         name: "",
         categoryId: "",
         sku: "",
-        purity: purityOptions[0] || "22K",
+        purity: defaultPurity,
         size: "",
         quantity: 1,
         grossWeight: "",
@@ -405,6 +416,9 @@ export default function InventoryManager({
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingStock(false);
     }
   };
 
@@ -423,7 +437,9 @@ export default function InventoryManager({
   // 3. Submit Adjust Stock
   const handleAdjustSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeItem) return;
+    if (!activeItem || isSubmittingRef.current || submittingAdjust) return;
+    isSubmittingRef.current = true;
+    setSubmittingAdjust(true);
 
     try {
       const res = await fetch(`/api/inventory/items/${activeItem.id || activeItem._id}/adjust`, {
@@ -440,6 +456,9 @@ export default function InventoryManager({
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingAdjust(false);
     }
   };
 
@@ -485,6 +504,9 @@ export default function InventoryManager({
   // 6. Category Management (Add or Edit)
   const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submittingCategory) return;
+    isSubmittingRef.current = true;
+    setSubmittingCategory(true);
     try {
       const isEditing = Boolean(categoryForm.id);
       const url = isEditing
@@ -512,6 +534,9 @@ export default function InventoryManager({
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingCategory(false);
     }
   };
 
@@ -599,7 +624,9 @@ export default function InventoryManager({
 
   const handleSellSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!sellItem) return;
+    if (!sellItem || isSubmittingRef.current || submittingSell) return;
+    isSubmittingRef.current = true;
+    setSubmittingSell(true);
 
     const cashVal = parseFloat(cashAmountRupees) || 0;
     const onlineVal = parseFloat(onlineAmountRupees) || 0;
@@ -715,6 +742,9 @@ export default function InventoryManager({
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message || "Failed to record sale");
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingSell(false);
     }
   };
 
@@ -1471,9 +1501,17 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
+                  disabled={submittingStock}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Stock Item
+                  {submittingStock ? (
+                    <>
+                      <span className="inline-block h-3.5 w-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>Saving Stock...</span>
+                    </>
+                  ) : (
+                    <span>Save Stock Item</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -1574,9 +1612,10 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
+                  disabled={submittingAdjust}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Record Adjustment
+                  {submittingAdjust ? "Recording..." : "Record Adjustment"}
                 </button>
               </div>
             </form>
@@ -1707,9 +1746,10 @@ export default function InventoryManager({
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition"
+                  disabled={submittingCategory}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {categoryForm.id ? "Update Category" : "Create Category"}
+                  {submittingCategory ? "Saving..." : categoryForm.id ? "Update Category" : "Create Category"}
                 </button>
               </div>
             </form>
@@ -2381,10 +2421,20 @@ export default function InventoryManager({
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    disabled={submittingSell}
+                    className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2.5 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <ShoppingBag className="h-4 w-4" />
-                    <span>Confirm Sale &amp; Issue Invoice</span>
+                    {submittingSell ? (
+                      <>
+                        <span className="inline-block h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                        <span>Processing Sale &amp; Invoice...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="h-4 w-4" />
+                        <span>Confirm Sale &amp; Issue Invoice</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>

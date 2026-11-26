@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Landmark,
@@ -282,9 +282,16 @@ function GoldFinancePageInner() {
     }
   };
 
+  // Submission lock ref & state to prevent double entries
+  const isSubmittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+
   // Submit New Loan
   const handleNewLoanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
     try {
       const res = await fetch("/api/finance/loans", {
         method: "POST",
@@ -300,13 +307,18 @@ function GoldFinancePageInner() {
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
   // Submit Payment
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedLoanForPayment) return;
+    if (!selectedLoanForPayment || isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
 
     try {
       const res = await fetch("/api/finance/payments", {
@@ -343,12 +355,18 @@ function GoldFinancePageInner() {
       setIsReceiptOpen(true);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
   // Submit New Customer
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
     try {
       const res = await fetch("/api/finance/customers", {
         method: "POST",
@@ -372,6 +390,9 @@ function GoldFinancePageInner() {
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -1448,9 +1469,10 @@ function GoldFinancePageInner() {
 
                 <button
                   type="submit"
-                  className="w-full mt-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark py-2.5 text-xs font-semibold text-white shadow-luxury hover:brightness-105 transition"
+                  disabled={submitting}
+                  className="w-full mt-2 rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark py-2.5 text-xs font-semibold text-white shadow-luxury hover:brightness-105 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Customer Record
+                  {submitting ? "Saving..." : "Save Customer Record"}
                 </button>
               </form>
             </div>
@@ -2044,9 +2066,10 @@ function GoldFinancePageInner() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  disabled={submitting}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create Mortgage Agreement
+                  {submitting ? "Creating..." : "Create Mortgage Agreement"}
                 </button>
               </div>
             </form>
@@ -2167,9 +2190,10 @@ function GoldFinancePageInner() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition"
+                  disabled={submitting}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-semibold text-white shadow-luxury hover:brightness-105 active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Acknowledge Payment & Print Voucher
+                  {submitting ? "Processing..." : "Acknowledge Payment & Print Voucher"}
                 </button>
               </div>
             </form>

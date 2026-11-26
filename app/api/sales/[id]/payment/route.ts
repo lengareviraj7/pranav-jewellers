@@ -57,6 +57,17 @@ export async function POST(
     }
 
     const amountPaise = Math.round(amount * 100);
+
+    // Duplicate payment prevention within 4 seconds
+    const lastPayment = sale.payments && sale.payments.length > 0 ? sale.payments[sale.payments.length - 1] : null;
+    if (lastPayment && lastPayment.amountPaise === amountPaise && (Date.now() - new Date(lastPayment.date).getTime()) < 4000) {
+      return NextResponse.json({
+        success: true,
+        sale,
+        duplicatePrevented: true,
+      });
+    }
+
     const remainingDuePaise = sale.balanceDuePaise;
     let clearedDuePaise = amountPaise;
     let excessAdvancePaise = 0;

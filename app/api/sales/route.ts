@@ -181,6 +181,23 @@ export async function POST(req: NextRequest) {
       ? (cashVal + onlineVal + advanceVal + manualUdhariVal)
       : parseFloat(sellingPriceRupees);
 
+    // Backend Double-Click & Rapid Re-submission Prevention (Idempotency)
+    const expectedSellPricePaise = Math.round(autoSellPrice * 100);
+    const expectedPaidPaise = Math.round((cashVal + onlineVal + advanceVal) * 100);
+    const recentDuplicateSale = await SaleRecord.findOne({
+      "customer.phone": cleanCustPhone,
+      sellingPricePaise: expectedSellPricePaise,
+      paidAmountPaise: expectedPaidPaise,
+      createdAt: { $gte: new Date(Date.now() - 4000) },
+    });
+    if (recentDuplicateSale) {
+      return NextResponse.json({
+        success: true,
+        sale: recentDuplicateSale,
+        duplicatePrevented: true,
+      });
+    }
+
     // Build Cart Items (Multi-item support + legacy single-item adapter)
     let cartItems: any[] = [];
     if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {

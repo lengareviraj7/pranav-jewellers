@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   ReceiptText,
   Plus,
@@ -263,8 +263,12 @@ export default function CounterBillingPage() {
   const totalPaidRupees = (cashAmountRupees || 0) + (onlineAmountRupees || 0) + (advanceAmountRupees || 0);
   const outstandingUdhariRupees = Math.max(0, netAmountPayableRupees - totalPaidRupees);
 
+  // Double-click lock ref
+  const isSubmittingRef = useRef(false);
+
   // Submit Counter Bill
   const handleSubmitCounterBill = async () => {
+    if (isSubmittingRef.current || submitting) return;
     setErrorMsg(null);
     if (cartItems.length === 0) {
       setErrorMsg("Please add at least one jewellery item to the bill.");
@@ -280,6 +284,7 @@ export default function CounterBillingPage() {
     }
 
     try {
+      isSubmittingRef.current = true;
       setSubmitting(true);
       const payload = {
         customerName: customerName.trim(),
@@ -324,6 +329,7 @@ export default function CounterBillingPage() {
     } catch (e: any) {
       setErrorMsg(e.message || "Network error submitting counter bill.");
     } finally {
+      isSubmittingRef.current = false;
       setSubmitting(false);
     }
   };

@@ -9,7 +9,7 @@ export default function GoldInventoryPage() {
       metalType="gold"
       title="Gold Showroom Inventory"
       subtitle="Complete stock tracking of gold jewellery, bullion, coins, and ornaments with dynamic category management and milligram net weights."
-      purityOptions={["24K", "22K", "20K", "18K"]}
+      purityOptions={["22K", "24K", "20K", "18K"]}
     />
   );
 }

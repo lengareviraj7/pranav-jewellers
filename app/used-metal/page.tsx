@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   RefreshCw,
   Coins,
@@ -85,6 +85,8 @@ export default function UsedMetalPage() {
   });
 
   // Convert Form
+  const isSubmittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
   const [convertForm, setConvertForm] = useState({
     targetCategoryId: "",
     refinedNetWeight: "",
@@ -145,6 +147,9 @@ export default function UsedMetalPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
     try {
       const res = await fetch("/api/used-metal", {
         method: "POST",
@@ -180,6 +185,9 @@ export default function UsedMetalPage() {
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -198,7 +206,9 @@ export default function UsedMetalPage() {
 
   const handleConvertSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPurchase) return;
+    if (!selectedPurchase || isSubmittingRef.current || submitting) return;
+    isSubmittingRef.current = true;
+    setSubmitting(true);
 
     try {
       const res = await fetch(`/api/used-metal/${selectedPurchase.id || selectedPurchase._id}/convert`, {
@@ -215,6 +225,9 @@ export default function UsedMetalPage() {
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmitting(false);
     }
   };
 
@@ -675,9 +688,10 @@ export default function UsedMetalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d"
+                  disabled={submitting}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Scrap Purchase
+                  {submitting ? "Saving Scrap..." : "Save Scrap Purchase"}
                 </button>
               </div>
             </form>
@@ -766,9 +780,10 @@ export default function UsedMetalPage() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d"
+                  disabled={submitting}
+                  className="rounded-xl bg-gradient-to-r from-luxury-gold-dark via-luxury-gold to-luxury-gold-dark px-5 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-110 transition btn-3d disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm &amp; Add to Stock
+                  {submitting ? "Adding..." : "Confirm & Add to Stock"}
                 </button>
               </div>
             </form>
