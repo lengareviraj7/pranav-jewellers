@@ -128,6 +128,7 @@ export default function InventoryManager({
   const [silverExRate, setSilverExRate] = useState("75");
   const [cashAmountRupees, setCashAmountRupees] = useState("");
   const [onlineAmountRupees, setOnlineAmountRupees] = useState("");
+  const [advanceAmountRupees, setAdvanceAmountRupees] = useState("");
 
   // Legacy exchange array state for compatibility
   const [sellExchangeItems, setSellExchangeItems] = useState<Array<{
@@ -226,7 +227,7 @@ export default function InventoryManager({
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) setCustomPurities(parsed);
       }
-    } catch (_) {}
+    } catch (_) { }
   }, [metalType]);
 
   // Combined purities from default props, custom added, and existing inventory items
@@ -244,7 +245,7 @@ export default function InventoryManager({
       setCustomPurities(updated);
       try {
         localStorage.setItem(`sj_custom_purities_${metalType}`, JSON.stringify(updated));
-      } catch (_) {}
+      } catch (_) { }
     }
     setStockForm((prev) => ({ ...prev, purity: val }));
     setNewPurityInput("");
@@ -602,11 +603,12 @@ export default function InventoryManager({
 
     const cashVal = parseFloat(cashAmountRupees) || 0;
     const onlineVal = parseFloat(onlineAmountRupees) || 0;
+    const advanceVal = parseFloat(advanceAmountRupees) || 0;
     const udhariVal = parseFloat(sellForm.udhariRupees) || 0;
-    const totalTransactionAmount = cashVal + onlineVal + udhariVal;
+    const totalTransactionAmount = cashVal + onlineVal + advanceVal + udhariVal;
 
     if (totalTransactionAmount <= 0) {
-      alert("Please enter at least Cash Received, Online payment, or an Udhari amount.");
+      alert("Please enter at least Cash Received, Online payment, Advance payment, or an Udhari amount.");
       return;
     }
 
@@ -681,6 +683,7 @@ export default function InventoryManager({
           })),
           cashAmountRupees: cashVal,
           onlineAmountRupees: onlineVal,
+          advanceAmountRupees: advanceVal,
           customerName: sellForm.customerName.trim(),
           customerPhone: sellForm.customerPhone.trim(),
           customerAddress: sellForm.customerAddress.trim() || undefined,
@@ -803,22 +806,18 @@ export default function InventoryManager({
         <TiltCard
           maxTilt={8}
           glare={true}
-          className={`rounded-2xl border ${
-            metalType === "gold" ? "border-luxury-gold/40" : "border-slate-400/40"
-          } bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury`}
+          className={`rounded-2xl border ${metalType === "gold" ? "border-luxury-gold/40" : "border-slate-400/40"
+            } bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury`}
         >
-          <span className={`text-[11px] font-semibold uppercase tracking-wider ${
-            metalType === "gold" ? "text-luxury-gold-champagne" : "text-slate-300"
-          }`}>
+          <span className={`text-[11px] font-semibold uppercase tracking-wider ${metalType === "gold" ? "text-luxury-gold-champagne" : "text-slate-300"
+            }`}>
             Total Net Metal Weight
           </span>
-          <p className={`mt-2 font-serif text-2xl font-bold ${
-            metalType === "gold" ? "text-luxury-gold-bright" : "text-slate-200"
-          }`}>
+          <p className={`mt-2 font-serif text-2xl font-bold ${metalType === "gold" ? "text-luxury-gold-bright" : "text-slate-200"
+            }`}>
             <AnimatedNumber value={totalNetWeight} decimals={3} />{" "}
-            <span className={`text-xs font-sans font-normal ${
-              metalType === "gold" ? "text-luxury-gold" : "text-slate-400"
-            }`}>g pure</span>
+            <span className={`text-xs font-sans font-normal ${metalType === "gold" ? "text-luxury-gold" : "text-slate-400"
+              }`}>g pure</span>
           </p>
           <span className="text-[11px] text-luxury-muted/80 mt-1 block">Auto-computed (Gross - Stones)</span>
         </TiltCard>
@@ -850,11 +849,10 @@ export default function InventoryManager({
         <div className="mt-4 flex flex-wrap gap-2.5">
           <button
             onClick={() => setSelectedCategory("all")}
-            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${
-              selectedCategory === "all"
-                ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
-                : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
-            }`}
+            className={`rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${selectedCategory === "all"
+              ? "bg-luxury-gold text-black shadow-gold-glow font-bold border border-luxury-gold-bright"
+              : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
+              }`}
           >
             All Categories ({items.length})
           </button>
@@ -862,11 +860,10 @@ export default function InventoryManager({
           {categories.map((cat) => (
             <div
               key={cat.id || cat._id}
-              className={`flex items-center rounded-xl border transition-all duration-200 overflow-hidden ${
-                selectedCategory === (cat.id || cat._id)
-                  ? "border-luxury-gold bg-luxury-gold/15 text-luxury-gold-bright shadow-xs"
-                  : "border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
-              }`}
+              className={`flex items-center rounded-xl border transition-all duration-200 overflow-hidden ${selectedCategory === (cat.id || cat._id)
+                ? "border-luxury-gold bg-luxury-gold/15 text-luxury-gold-bright shadow-xs"
+                : "border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
+                }`}
             >
               <button
                 onClick={() => setSelectedCategory(cat.id || cat._id)}
@@ -1129,19 +1126,18 @@ export default function InventoryManager({
                         <div>{item.netWeight.toFixed(3)}g</div>
                         {isWeightSearchActive && (item as any).diffMg !== undefined && (
                           <span
-                            className={`inline-block text-[9px] px-1.5 py-0.5 rounded font-mono font-bold mt-0.5 ${
-                              (item as any).diffMg === 0
-                                ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                                : (item as any).diffMg > 0
+                            className={`inline-block text-[9px] px-1.5 py-0.5 rounded font-mono font-bold mt-0.5 ${(item as any).diffMg === 0
+                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              : (item as any).diffMg > 0
                                 ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
                                 : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                            }`}
+                              }`}
                           >
                             {(item as any).diffMg === 0
                               ? "🎯 Exact match"
                               : (item as any).diffMg > 0
-                              ? `+${(item as any).diffMg}mg`
-                              : `${(item as any).diffMg}mg`}
+                                ? `+${(item as any).diffMg}mg`
+                                : `${(item as any).diffMg}mg`}
                           </span>
                         )}
                       </td>
@@ -1981,14 +1977,14 @@ export default function InventoryManager({
                       </div>
                     </div>
 
-                    {/* Row 3: Cash & Online Split (as drawn: [ Cash ] <---> split <---> [ Online ]) */}
+                    {/* Row 3: Cash, Online & Advance Split */}
                     <div className="rounded-xl bg-black/40 border border-teal-500/20 p-3 space-y-2">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                        <span className="text-base">💵</span>
-                        <span>Cash &amp; Online Payment</span>
+                        <span className="text-base">💳</span>
+                        <span>Payment Breakdown (Cash, Online &amp; Advance)</span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-11 gap-2 items-center">
-                        <div className="sm:col-span-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
                           <label className="block text-[10px] uppercase font-bold text-emerald-400 mb-1">
                             Cash (₹) <span className="text-[9px] text-luxury-muted font-normal">→ Counter Rojmel</span>
                           </label>
@@ -2002,15 +1998,7 @@ export default function InventoryManager({
                           />
                         </div>
 
-                        <div className="sm:col-span-1 flex flex-col items-center justify-center pt-3">
-                          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-mono text-luxury-muted">
-                            <span>←</span>
-                            <span className="text-luxury-gold font-bold">split</span>
-                            <span>→</span>
-                          </div>
-                        </div>
-
-                        <div className="sm:col-span-5">
+                        <div>
                           <label className="block text-[10px] uppercase font-bold text-cyan-400 mb-1">
                             Online (₹) <span className="text-[9px] text-luxury-muted font-normal">(UPI / Bank transfer)</span>
                           </label>
@@ -2021,6 +2009,20 @@ export default function InventoryManager({
                             value={onlineAmountRupees}
                             onChange={(e) => setOnlineAmountRupees(e.target.value)}
                             className="w-full rounded-xl border border-cyan-500/40 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-cyan-300 focus:border-cyan-400 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-amber-400 mb-1">
+                            Advance (₹) <span className="text-[9px] text-luxury-muted font-normal">(Customer Advance)</span>
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="₹ Advance amount"
+                            value={advanceAmountRupees}
+                            onChange={(e) => setAdvanceAmountRupees(e.target.value)}
+                            className="w-full rounded-xl border border-amber-500/40 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-300 focus:border-amber-400 focus:outline-none"
                           />
                         </div>
                       </div>
@@ -2034,8 +2036,9 @@ export default function InventoryManager({
                 {(() => {
                   const cash = parseFloat(cashAmountRupees) || 0;
                   const online = parseFloat(onlineAmountRupees) || 0;
+                  const advance = parseFloat(advanceAmountRupees) || 0;
                   const udhari = parseFloat(sellForm.udhariRupees) || 0;
-                  const totalPaid = cash + online;
+                  const totalPaid = cash + online + advance;
                   const totalBill = totalPaid + udhari;
 
                   const goldNW = parseFloat(goldExNetWeight) || 0;
@@ -2043,7 +2046,7 @@ export default function InventoryManager({
 
                   return (
                     <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-3.5 space-y-2.5">
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                         <div className="rounded-xl bg-emerald-950/30 p-2 border border-emerald-500/20">
                           <span className="text-[9px] uppercase tracking-wider text-emerald-300 block">Cash Paid</span>
                           <p className="font-mono text-xs font-bold text-emerald-400 mt-0.5">₹{cash.toLocaleString("en-IN")}</p>
@@ -2051,6 +2054,10 @@ export default function InventoryManager({
                         <div className="rounded-xl bg-cyan-950/30 p-2 border border-cyan-500/20">
                           <span className="text-[9px] uppercase tracking-wider text-cyan-300 block">Online Paid</span>
                           <p className="font-mono text-xs font-bold text-cyan-400 mt-0.5">₹{online.toLocaleString("en-IN")}</p>
+                        </div>
+                        <div className="rounded-xl bg-amber-950/30 p-2 border border-amber-500/20">
+                          <span className="text-[9px] uppercase tracking-wider text-amber-300 block">Advance Paid</span>
+                          <p className="font-mono text-xs font-bold text-amber-400 mt-0.5">₹{advance.toLocaleString("en-IN")}</p>
                         </div>
                         <div className={`rounded-xl p-2 border ${udhari > 0 ? "bg-rose-950/30 border-rose-500/30" : "bg-white/5 border-white/5"}`}>
                           <span className="text-[9px] uppercase tracking-wider text-luxury-muted block">Udhari (Due)</span>

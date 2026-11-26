@@ -9,6 +9,7 @@ export interface ICustomer extends Document {
   identificationType?: "aadhar" | "pan" | "voter_id" | "other";
   identificationNumber?: string;
   notes?: string;
+  advanceBalancePaise?: number; // Advance credit stored for customer (अॅडव्हान्स जमा)
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -28,6 +29,7 @@ const CustomerSchema = new Schema<ICustomer>(
     },
     identificationNumber: { type: String, trim: true },
     notes: { type: String, trim: true },
+    advanceBalancePaise: { type: Number, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
   },
   {

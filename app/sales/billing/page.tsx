@@ -104,6 +104,7 @@ export default function CounterBillingPage() {
   // Payment & Split Payments
   const [cashAmountRupees, setCashAmountRupees] = useState<number>(0);
   const [onlineAmountRupees, setOnlineAmountRupees] = useState<number>(0);
+  const [advanceAmountRupees, setAdvanceAmountRupees] = useState<number>(0);
 
   // Customer & Credit info
   const [customerName, setCustomerName] = useState<string>("");
@@ -259,7 +260,7 @@ export default function CounterBillingPage() {
   const totalExchangeCreditRupees = exchangeItems.reduce((acc, ex) => acc + ex.exchangeValueRupees, 0);
   const netAmountPayableRupees = Math.max(0, totalNewPurchaseRupees - totalExchangeCreditRupees);
 
-  const totalPaidRupees = (cashAmountRupees || 0) + (onlineAmountRupees || 0);
+  const totalPaidRupees = (cashAmountRupees || 0) + (onlineAmountRupees || 0) + (advanceAmountRupees || 0);
   const outstandingUdhariRupees = Math.max(0, netAmountPayableRupees - totalPaidRupees);
 
   // Submit Counter Bill
@@ -300,6 +301,7 @@ export default function CounterBillingPage() {
         })),
         cashAmountRupees,
         onlineAmountRupees,
+        advanceAmountRupees,
         dueDate: outstandingUdhariRupees > 0 ? promisedDueDate : undefined,
         manualProfitRupees: manualProfitRupees ? parseFloat(manualProfitRupees) : undefined,
         notes,
@@ -867,11 +869,11 @@ export default function CounterBillingPage() {
           </div>
         </div>
 
-        {/* Split Payments: Cash + Online */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Split Payments: Cash + Online + Advance */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">
-              Cash Received (₹) → Auto-credits to Rojmel
+            <label className="block text-[11px] font-bold text-emerald-400 uppercase mb-1">
+              Cash (₹) → Rojmel Jama
             </label>
             <input
               type="number"
@@ -884,14 +886,28 @@ export default function CounterBillingPage() {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">
-              Online Received (UPI / Bank) (₹)
+            <label className="block text-[11px] font-bold text-cyan-400 uppercase mb-1">
+              Online (UPI / Bank) (₹)
             </label>
             <input
               type="number"
               min="0"
               value={onlineAmountRupees || ""}
               onChange={(e) => setOnlineAmountRupees(parseFloat(e.target.value) || 0)}
+              className="w-full rounded-xl border border-white/10 bg-luxury-obsidian p-2.5 text-xs font-mono font-bold text-white focus:border-luxury-gold focus:outline-none"
+              placeholder="₹ 0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-amber-400 uppercase mb-1">
+              Advance Paid (₹) (Deposit)
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={advanceAmountRupees || ""}
+              onChange={(e) => setAdvanceAmountRupees(parseFloat(e.target.value) || 0)}
               className="w-full rounded-xl border border-white/10 bg-luxury-obsidian p-2.5 text-xs font-mono font-bold text-white focus:border-luxury-gold focus:outline-none"
               placeholder="₹ 0"
             />

@@ -46,14 +46,14 @@ export interface ISaleRecord extends Document {
     phone: string;
     address?: string;
   };
-  paymentMode: "cash" | "online" | "mixed";
+  paymentMode: "cash" | "online" | "advance" | "mixed";
   paidAmountPaise: number;
   balanceDuePaise: number;
   dueDate?: Date;
   paymentStatus: "paid" | "partial" | "unpaid";
   payments: Array<{
     amountPaise: number;
-    paymentMode: "cash" | "online";
+    paymentMode: "cash" | "online" | "advance";
     date: Date;
     notes?: string;
   }>;
@@ -67,6 +67,7 @@ export interface ISaleRecord extends Document {
   splitPayments?: {
     cashPaise: number;
     onlinePaise: number;
+    advancePaise?: number;
   };
   manualProfitRupees?: number;
   whatsappSent: boolean;
@@ -99,7 +100,7 @@ const SaleRecordSchema = new Schema<ISaleRecord>(
     },
     paymentMode: {
       type: String,
-      enum: ["cash", "online", "mixed"],
+      enum: ["cash", "online", "advance", "mixed"],
       default: "cash",
     },
     paidAmountPaise: { type: Number, required: true, min: 0, default: 0 },
@@ -113,7 +114,7 @@ const SaleRecordSchema = new Schema<ISaleRecord>(
     payments: [
       {
         amountPaise: { type: Number, required: true, min: 0 },
-        paymentMode: { type: String, enum: ["cash", "online"], default: "cash" },
+        paymentMode: { type: String, enum: ["cash", "online", "advance"], default: "cash" },
         date: { type: Date, default: Date.now },
         notes: { type: String, trim: true },
       },
@@ -153,6 +154,7 @@ const SaleRecordSchema = new Schema<ISaleRecord>(
     splitPayments: {
       cashPaise: { type: Number, default: 0 },
       onlinePaise: { type: Number, default: 0 },
+      advancePaise: { type: Number, default: 0 },
     },
     manualProfitRupees: { type: Number },
     whatsappSent: { type: Boolean, default: false },

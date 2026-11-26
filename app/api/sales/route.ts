@@ -131,6 +131,7 @@ export async function POST(req: NextRequest) {
       // Split payments
       cashAmountRupees,
       onlineAmountRupees,
+      advanceAmountRupees,
       // Customer
       customerName,
       customerPhone,
@@ -166,12 +167,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Derive selling price if omitted (Cash + Online + Udhari)
+    // Derive selling price if omitted (Cash + Online + Advance + Udhari)
     const cashVal = parseFloat(cashAmountRupees) || 0;
     const onlineVal = parseFloat(onlineAmountRupees) || 0;
+    const advanceVal = parseFloat(advanceAmountRupees) || 0;
     const manualUdhariVal = parseFloat(body.udhariAmountRupees || body.udhariRupees) || 0;
     const autoSellPrice = (!sellingPriceRupees || isNaN(parseFloat(sellingPriceRupees)))
-      ? (cashVal + onlineVal + manualUdhariVal)
+      ? (cashVal + onlineVal + advanceVal + manualUdhariVal)
       : parseFloat(sellingPriceRupees);
 
     // Build Cart Items (Multi-item support + legacy single-item adapter)
@@ -337,14 +339,18 @@ export async function POST(req: NextRequest) {
     // Split Payments calculation
     let cashPaise = 0;
     let onlinePaise = 0;
+    let advancePaise = 0;
 
-    if (cashAmountRupees !== undefined || onlineAmountRupees !== undefined) {
+    if (cashAmountRupees !== undefined || onlineAmountRupees !== undefined || advanceAmountRupees !== undefined) {
       cashPaise = Math.max(0, Math.round((parseFloat(cashAmountRupees) || 0) * 100));
       onlinePaise = Math.max(0, Math.round((parseFloat(onlineAmountRupees) || 0) * 100));
+      advancePaise = Math.max(0, Math.round((parseFloat(advanceAmountRupees) || 0) * 100));
     } else if (paidAmountRupees !== undefined) {
       const pPaise = Math.round((parseFloat(paidAmountRupees) || 0) * 100);
       if (paymentMode === "online") {
         onlinePaise = pPaise;
+      } else if (paymentMode === "advance") {
+        advancePaise = pPaise;
       } else {
         cashPaise = pPaise;
       }
@@ -362,12 +368,12 @@ export async function POST(req: NextRequest) {
 
     if (manualUdhariPaise !== null) {
       balanceDuePaise = manualUdhariPaise;
-      totalPaidPaise = cashPaise + onlinePaise;
+      totalPaidPaise = cashPaise + onlinePaise + advancePaise;
       if (totalNewPurchasePaise === 0) {
         totalNewPurchasePaise = totalPaidPaise + balanceDuePaise;
       }
     } else {
-      totalPaidPaise = Math.min(netPayablePaise, cashPaise + onlinePaise);
+      totalPaidPaise = Math.min(netPayablePaise, cashPaise + onlinePaise + advancePaise);
       balanceDuePaise = Math.max(0, netPayablePaise - totalPaidPaise);
     }
 
@@ -397,9 +403,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Payment Mode flag
-    let resolvedPaymentMode: "cash" | "online" | "mixed" = "cash";
-    if (cashPaise > 0 && onlinePaise > 0) {
+    let resolvedPaymentMode: "cash" | "online" | "advance" | "mixed" = "cash";
+    const modesUsed = [cashPaise > 0, onlinePaise > 0, advancePaise > 0].filter(Boolean).length;
+    if (modesUsed > 1) {
       resolvedPaymentMode = "mixed";
+    } else if (advancePaise > 0) {
+      resolvedPaymentMode = "advance";
     } else if (onlinePaise > 0) {
       resolvedPaymentMode = "online";
     } else {
@@ -426,6 +435,14 @@ export async function POST(req: NextRequest) {
         paymentMode: "online",
         date: new Date(),
         notes: "UPI / Bank Online payment",
+      });
+    }
+    if (advancePaise > 0) {
+      paymentsLedger.push({
+        amountPaise: advancePaise,
+        paymentMode: "advance",
+        date: new Date(),
+        notes: "Customer Advance Payment applied",
       });
     }
 
@@ -465,6 +482,7 @@ export async function POST(req: NextRequest) {
       splitPayments: {
         cashPaise,
         onlinePaise,
+        advancePaise,
       },
       manualProfitRupees:
         manualProfitRupees !== undefined && manualProfitRupees !== null && manualProfitRupees !== ""

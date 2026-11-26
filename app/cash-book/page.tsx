@@ -125,6 +125,7 @@ export default function CashBookPage() {
     const labels: Record<string, string> = {
       sale_cash: "Counter Cash Sale",
       udhari_recovery: "Udhari Recovery",
+      customer_advance: "Customer Advance Deposit (अॅडव्हान्स जमा)",
       loan_interest: "Finance Interest",
       loan_principal: "Loan Principal",
       opening_cash: "Opening Counter Cash",

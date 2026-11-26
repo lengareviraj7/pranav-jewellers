@@ -6,6 +6,7 @@ export interface ICashTransaction extends Document {
   category:
     | "sale_cash"
     | "udhari_recovery"
+    | "customer_advance"
     | "loan_interest"
     | "loan_principal"
     | "opening_cash"
@@ -38,6 +39,7 @@ const CashTransactionSchema = new Schema<ICashTransaction>(
       enum: [
         "sale_cash",
         "udhari_recovery",
+        "customer_advance",
         "loan_interest",
         "loan_principal",
         "opening_cash",

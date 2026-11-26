@@ -55,6 +55,7 @@ interface CustomerDetails {
   totalBilledPaise: number;
   totalPaidPaise: number;
   outstandingUdhariPaise: number;
+  advanceBalancePaise?: number;
   sales: CustomerSale[];
 }
 
@@ -114,7 +115,8 @@ export default function CustomerHistoryModal({
 
   // Generate WhatsApp Account Statement Link
   const shopPhone = "8329465301";
-  const statementText = `*SIDHESHWAR JEWELLERS* 👑%0A*Customer Account Statement*%0A--------------------------------%0A👤 Customer: *${displayName}*%0A📞 Mobile: *${displayPhone}*%0A📍 Village: *${displayAddress}*%0A%0A📦 Total Lifetime Purchases: *${data?.totalPurchasesCount || 0}*%0A💰 Total Billed: *₹${totalBilledRupees.toLocaleString("en-IN")}*%0A💵 Total Paid: *₹${totalPaidRupees.toLocaleString("en-IN")}*%0A⚠️ *Current Udhari Balance: ₹${totalDueRupees.toLocaleString("en-IN")}*%0A--------------------------------%0AThank you for being our valued customer!%0AFor any queries, contact: +91 ${shopPhone}`;
+  const advRupees = ((data?.advanceBalancePaise || 0) / 100);
+  const statementText = `*SIDHESHWAR JEWELLERS* 👑%0A*Customer Account Statement*%0A--------------------------------%0A👤 Customer: *${displayName}*%0A📞 Mobile: *${displayPhone}*%0A📍 Village: *${displayAddress}*%0A%0A📦 Total Lifetime Purchases: *${data?.totalPurchasesCount || 0}*%0A💰 Total Billed: *₹${totalBilledRupees.toLocaleString("en-IN")}*%0A💵 Total Paid: *₹${totalPaidRupees.toLocaleString("en-IN")}*%0A⚠️ *Current Udhari Balance: ₹${totalDueRupees.toLocaleString("en-IN")}*${advRupees > 0 ? `%0A🎁 *Customer Advance Credit: ₹${advRupees.toLocaleString("en-IN")}*` : ""}%0A--------------------------------%0AThank you for being our valued customer!%0AFor any queries, contact: +91 ${shopPhone}`;
   const whatsappUrl = `https://wa.me/91${displayPhone.replace(/\D/g, "")}?text=${statementText}`;
 
   return (
@@ -227,6 +229,19 @@ export default function CustomerHistoryModal({
                   </p>
                 </div>
               </div>
+
+              {/* Advance Balance Alert if available */}
+              {(data?.advanceBalancePaise || 0) > 0 && (
+                <div className="flex items-center justify-between rounded-xl bg-amber-500/15 border border-amber-500/30 p-2.5 px-3.5 text-xs text-amber-300 font-semibold">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">💰</span>
+                    <span>Customer Advance Deposit Credit (अॅडव्हान्स जमा):</span>
+                  </div>
+                  <span className="font-mono text-sm font-bold text-amber-200">
+                    ₹{((data?.advanceBalancePaise || 0) / 100).toLocaleString("en-IN")}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Chronological Past Purchases & Installment Timeline */}

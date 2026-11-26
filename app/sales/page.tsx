@@ -55,6 +55,7 @@ interface SaleRecord {
   splitPayments?: {
     cashPaise: number;
     onlinePaise: number;
+    advancePaise?: number;
   };
   totalExchangeCreditPaise?: number;
   payments: Array<{
@@ -89,7 +90,7 @@ export default function SalesPage() {
   const [isCollectOpen, setIsCollectOpen] = useState(false);
   const [activeSale, setActiveSale] = useState<SaleRecord | null>(null);
   const [collectAmount, setCollectAmount] = useState("");
-  const [collectMode, setCollectMode] = useState<"cash" | "online">("cash");
+  const [collectMode, setCollectMode] = useState<"cash" | "online" | "advance">("cash");
   const [collectNotes, setCollectNotes] = useState("");
   const [nextDueDate, setNextDueDate] = useState("");
   const [showHistoryInCollect, setShowHistoryInCollect] = useState(true);
@@ -751,6 +752,7 @@ export default function SalesPage() {
                   const remainingDue = Math.max(0, pendingDue - payingNow);
                   const isOverpaying = payingNow > pendingDue;
                   const isFull = payingNow > 0 && payingNow === pendingDue;
+                  const excessAdvance = isOverpaying ? payingNow - pendingDue : 0;
 
                   return (
                     <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-4 space-y-3">
@@ -776,35 +778,48 @@ export default function SalesPage() {
                         <div
                           className={`rounded-xl p-3 border transition-all ${
                             isOverpaying
-                              ? "bg-rose-950/40 border-rose-500/50"
+                              ? "bg-purple-950/40 border-purple-500/50"
                               : isFull
                               ? "bg-emerald-950/40 border-emerald-500/50"
                               : "bg-rose-950/20 border-rose-500/30"
                           }`}
                         >
                           <span className="text-[10px] uppercase font-bold text-luxury-muted block">
-                            Remaining Due After
+                            {isOverpaying ? "Advance Credit" : "Remaining Due After"}
                           </span>
                           <p
                             className={`font-mono text-base font-bold mt-1 ${
-                              isOverpaying ? "text-rose-400" : isFull ? "text-emerald-400" : "text-rose-300"
+                              isOverpaying
+                                ? "text-purple-300"
+                                : isFull
+                                ? "text-emerald-400"
+                                : "text-rose-300"
                             }`}
                           >
                             {isOverpaying
-                              ? `+₹${(payingNow - pendingDue).toLocaleString("en-IN")} excess`
+                              ? `+₹${excessAdvance.toLocaleString("en-IN")}`
                               : `₹${remainingDue.toLocaleString("en-IN")}`}
                           </p>
                         </div>
                       </div>
 
-                      {isFull && (
+                      {isOverpaying && (
+                        <div className="flex items-center gap-2 rounded-xl bg-purple-500/15 border border-purple-500/30 px-3.5 py-2 text-xs text-purple-300 font-semibold">
+                          <Sparkles className="h-4 w-4 text-purple-400 shrink-0" />
+                          <span>
+                            Due cleared (₹0 Due) ✅. Excess ₹{excessAdvance.toLocaleString("en-IN")} will be credited as Customer Advance Deposit (अॅडव्हान्स जमा) 💰
+                          </span>
+                        </div>
+                      )}
+
+                      {isFull && !isOverpaying && (
                         <div className="flex items-center gap-2 rounded-xl bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-2 text-xs text-emerald-300 font-semibold">
                           <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
                           <span>This payment will completely settle the remaining balance (₹0 Due) ✅</span>
                         </div>
                       )}
 
-                      {!isFull && remainingDue > 0 && payingNow > 0 && (
+                      {!isFull && !isOverpaying && remainingDue > 0 && payingNow > 0 && (
                         <div className="flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3.5 py-2 text-xs text-amber-300 font-semibold">
                           <Clock className="h-4 w-4 text-amber-400 shrink-0" />
                           <span>
@@ -823,7 +838,7 @@ export default function SalesPage() {
                       Payment Amount (₹) *
                     </label>
                     <span className="text-[11px] text-luxury-muted font-mono">
-                      Max Pending: ₹{(activeSale.balanceDuePaise / 100).toLocaleString("en-IN")}
+                      Current Due: ₹{(activeSale.balanceDuePaise / 100).toLocaleString("en-IN")}
                     </span>
                   </div>
 
@@ -831,7 +846,6 @@ export default function SalesPage() {
                     type="number"
                     step="1"
                     min="1"
-                    max={activeSale.balanceDuePaise / 100}
                     required
                     placeholder="Enter amount customer is paying today (e.g. 2000)"
                     value={collectAmount}
@@ -849,6 +863,7 @@ export default function SalesPage() {
                         { label: "50%", val: Math.round(bal * 0.5) },
                         { label: "75%", val: Math.round(bal * 0.75) },
                         { label: `Pay Full (₹${bal.toLocaleString("en-IN")})`, val: bal },
+                        { label: `+₹5,000 Adv`, val: bal + 5000 },
                       ].map((chip) => (
                         <button
                           key={chip.label}
@@ -863,12 +878,12 @@ export default function SalesPage() {
                   </div>
                 </div>
 
-                {/* Payment Mode: 3D Buttons (Fixes White Bar Bug) */}
+                {/* Payment Mode: 3D Buttons (Cash, Online, Advance) */}
                 <div>
                   <label className="block text-xs font-bold text-white uppercase tracking-wider mb-1.5">
                     Payment Mode *
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <button
                       type="button"
                       onClick={() => setCollectMode("cash")}
@@ -879,7 +894,7 @@ export default function SalesPage() {
                       }`}
                     >
                       <span className="text-base">💵</span>
-                      <span>Cash (Counter Rojmel)</span>
+                      <span>Cash (Counter)</span>
                     </button>
 
                     <button
@@ -892,13 +907,28 @@ export default function SalesPage() {
                       }`}
                     >
                       <span className="text-base">📲</span>
-                      <span>Online (UPI / Bank)</span>
+                      <span>Online (UPI)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCollectMode("advance")}
+                      className={`flex items-center justify-center gap-2 rounded-xl p-3 text-xs font-bold transition-all border ${
+                        collectMode === "advance"
+                          ? "bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 text-white border-amber-400 shadow-lg shadow-amber-950/50 scale-[1.02]"
+                          : "bg-black/50 text-neutral-400 border-white/10 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <span className="text-base">💰</span>
+                      <span>Advance Pay</span>
                     </button>
                   </div>
                   <p className="text-[10px] text-luxury-muted mt-1.5">
                     {collectMode === "cash"
                       ? "✓ Cash payment is automatically recorded into today's Cash Counter Book (Rojmel Jama)."
-                      : "✓ Online payment is recorded without altering physical drawer cash."}
+                      : collectMode === "online"
+                      ? "✓ Online payment is recorded without altering physical drawer cash."
+                      : "✓ Recorded as Advance Payment from customer deposit / booking advance (अॅडव्हान्स जमा)."}
                   </p>
                 </div>
 
@@ -1202,7 +1232,7 @@ export default function SalesPage() {
                 </div>
 
                 {/* 2. Initial Down Payment if any */}
-                {historySale.splitPayments && (historySale.splitPayments.cashPaise > 0 || historySale.splitPayments.onlinePaise > 0) && (
+                {historySale.splitPayments && (historySale.splitPayments.cashPaise > 0 || historySale.splitPayments.onlinePaise > 0 || (historySale.splitPayments.advancePaise && historySale.splitPayments.advancePaise > 0)) && (
                   <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3.5">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
                       💵
@@ -1221,7 +1251,10 @@ export default function SalesPage() {
                           <span>Cash: ₹{(historySale.splitPayments.cashPaise / 100).toLocaleString("en-IN")} </span>
                         )}
                         {historySale.splitPayments.onlinePaise > 0 && (
-                          <span>• Online UPI: ₹{(historySale.splitPayments.onlinePaise / 100).toLocaleString("en-IN")}</span>
+                          <span>• Online UPI: ₹{(historySale.splitPayments.onlinePaise / 100).toLocaleString("en-IN")} </span>
+                        )}
+                        {historySale.splitPayments.advancePaise && historySale.splitPayments.advancePaise > 0 && (
+                          <span>• Advance: ₹{(historySale.splitPayments.advancePaise / 100).toLocaleString("en-IN")}</span>
                         )}
                       </p>
                     </div>
@@ -1254,7 +1287,7 @@ export default function SalesPage() {
                           </span>
                         </div>
                         <p className="text-[11px] text-luxury-muted mt-1">
-                          Payment Mode: <strong className="text-white">{p.paymentMode === "online" ? "Online / UPI" : "Cash (Counter Rojmel)"}</strong>
+                          Payment Mode: <strong className="text-white">{p.paymentMode === "advance" ? "Advance Payment (अॅडव्हान्स जमा)" : p.paymentMode === "online" ? "Online / UPI" : "Cash (Counter Rojmel)"}</strong>
                           {p.notes && ` • Notes: ${p.notes}`}
                         </p>
                       </div>
