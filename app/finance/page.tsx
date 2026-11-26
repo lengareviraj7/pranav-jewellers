@@ -453,9 +453,6 @@ function FinanceDashboardContent() {
             <Landmark className="h-6 w-6 text-luxury-gold" />
             <span>Finance Dashboard</span>
           </h1>
-          <p className="text-xs text-luxury-muted mt-0.5">
-            कर्ज व गहाण खाते पुस्तक • Real-time capital financing &amp; customer mortgage ledger
-          </p>
         </div>
 
         {/* Global Action Status */}

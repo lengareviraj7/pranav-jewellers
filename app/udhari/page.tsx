@@ -234,27 +234,16 @@ export default function UdhariPage() {
         </Link>
         <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-300 text-xs font-bold shadow-sm">
           <BookOpen className="h-3.5 w-3.5 text-amber-400" />
-          <span>Customer Udhari Khata</span>
+          <span>Customer Udhari</span>
         </div>
       </div>
 
       {/* ── Page Header ── */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center animate-fadeInUp">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold-champagne">
-              CUSTOMER CREDIT &amp; RECOVERY KHATA • उधारी खातेवही
-            </span>
-            <span className="rounded-full bg-rose-500/20 border border-rose-500/40 px-2 py-0.5 text-[9px] font-bold text-rose-300">
-              Recovery Hub
-            </span>
-          </div>
-          <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Customer Udhari Khata
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Customer Udhari
           </h1>
-          <p className="mt-1 text-xs text-luxury-muted">
-            Track pending customer balances, overdue alerts, 3-stage WhatsApp reminders, and record partial/full installment recoveries.
-          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
@@ -264,7 +253,7 @@ export default function UdhariPage() {
             className="btn-3d flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-semibold text-white/90 hover:text-white hover:bg-white/10 transition"
           >
             <ShoppingBag className="h-4 w-4 text-luxury-gold" />
-            <span>Go to Sales Ledger</span>
+            <span>Go to Sales</span>
           </Link>
 
           {/* Export Udhari Excel */}
@@ -273,7 +262,7 @@ export default function UdhariPage() {
             className="btn-3d flex items-center gap-1.5 rounded-xl border border-luxury-gold/40 bg-luxury-obsidian px-3.5 py-2 text-xs font-semibold text-luxury-gold-champagne shadow-xs hover:border-luxury-gold hover:text-white transition-all backdrop-blur-md"
           >
             <Download className="h-3.5 w-3.5 text-luxury-gold" />
-            <span>Download Udhari Excel</span>
+            <span>Download Excel</span>
           </a>
         </div>
       </div>
@@ -294,9 +283,6 @@ export default function UdhariPage() {
             <p className="mt-2 font-mono text-2xl font-bold text-rose-400">
               <AnimatedNumber value={metrics.totalOutstandingUdhariRupees} prefix="₹" />
             </p>
-            <p className="mt-1 text-[11px] text-luxury-muted">
-              Market credit to recover across all customers
-            </p>
           </div>
         </TiltCard>
 
@@ -313,9 +299,6 @@ export default function UdhariPage() {
             </div>
             <p className="mt-2 font-mono text-2xl font-bold text-red-400">
               <AnimatedNumber value={metrics.overdueCount} /> <span className="text-sm font-sans font-normal text-luxury-muted">accounts</span>
-            </p>
-            <p className="mt-1 text-[11px] text-luxury-muted">
-              Missed promised payment due date
             </p>
           </div>
         </TiltCard>
@@ -334,9 +317,6 @@ export default function UdhariPage() {
             <p className="mt-2 font-mono text-2xl font-bold text-amber-300">
               <AnimatedNumber value={metrics.due3DaysCount} /> <span className="text-sm font-sans font-normal text-luxury-muted">due soon</span>
             </p>
-            <p className="mt-1 text-[11px] text-luxury-muted">
-              Pre-due WhatsApp reminder queue
-            </p>
           </div>
         </TiltCard>
 
@@ -353,9 +333,6 @@ export default function UdhariPage() {
             </div>
             <p className="mt-2 font-mono text-2xl font-bold text-emerald-400">
               <AnimatedNumber value={metrics.totalRevenueRupees} prefix="₹" />
-            </p>
-            <p className="mt-1 text-[11px] text-luxury-muted">
-              Total transaction volume billed
             </p>
           </div>
         </TiltCard>
