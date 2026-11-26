@@ -2427,13 +2427,13 @@ export default function InventoryManager({
                     </span>
                   </div>
 
-                  {/* Table with Net Wt (N.t) and Gross Wt (G.W) without rate columns */}
+                  {/* Table with Gross Wt (G.W) first, then Net Wt (N.t) without rate columns */}
                   <div className="space-y-2.5">
                     {/* Header Columns */}
                     <div className="grid grid-cols-12 gap-3 text-[10px] uppercase font-bold text-teal-300/80 px-2">
                       <div className="col-span-3">Metal</div>
-                      <div className="col-span-4 text-center">Net Wt (N.t) (g)</div>
-                      <div className="col-span-5 text-center">Gross Wt (G.W) (g)</div>
+                      <div className="col-span-4 text-center">Gross Wt (G.W) (g)</div>
+                      <div className="col-span-5 text-center">Net Wt (N.t) (g)</div>
                     </div>
 
                     {/* Row 1: Gold */}
@@ -2446,20 +2446,34 @@ export default function InventoryManager({
                         <input
                           type="number"
                           step="0.001"
-                          placeholder="Net wt (N.t)"
-                          value={goldExNetWeight}
-                          onChange={(e) => setGoldExNetWeight(e.target.value)}
-                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-amber-300 focus:border-amber-400 focus:outline-none"
+                          placeholder="Gross wt (G.W)"
+                          value={goldExGrossWeight}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setGoldExGrossWeight(val);
+                            if (!goldExNetWeight || goldExNetWeight === goldExGrossWeight) {
+                              setGoldExNetWeight(val);
+                            }
+                          }}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
                         />
                       </div>
                       <div className="col-span-5">
                         <input
                           type="number"
                           step="0.001"
-                          placeholder="Gross wt (G.W)"
-                          value={goldExGrossWeight}
-                          onChange={(e) => setGoldExGrossWeight(e.target.value)}
-                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
+                          placeholder="Net wt (N.t)"
+                          value={goldExNetWeight}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setGoldExNetWeight(val);
+                            const numNet = parseFloat(val) || 0;
+                            const numGross = parseFloat(goldExGrossWeight) || 0;
+                            if (!goldExGrossWeight || (numGross > 0 && numGross < numNet)) {
+                              setGoldExGrossWeight(val);
+                            }
+                          }}
+                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-amber-300 focus:border-amber-400 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -2474,20 +2488,34 @@ export default function InventoryManager({
                         <input
                           type="number"
                           step="0.001"
-                          placeholder="Net wt (N.t)"
-                          value={silverExNetWeight}
-                          onChange={(e) => setSilverExNetWeight(e.target.value)}
-                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-slate-200 focus:border-cyan-400 focus:outline-none"
+                          placeholder="Gross wt (G.W)"
+                          value={silverExGrossWeight}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSilverExGrossWeight(val);
+                            if (!silverExNetWeight || silverExNetWeight === silverExGrossWeight) {
+                              setSilverExNetWeight(val);
+                            }
+                          }}
+                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
                         />
                       </div>
                       <div className="col-span-5">
                         <input
                           type="number"
                           step="0.001"
-                          placeholder="Gross wt (G.W)"
-                          value={silverExGrossWeight}
-                          onChange={(e) => setSilverExGrossWeight(e.target.value)}
-                          className="w-full rounded-lg border border-white/10 bg-black/60 px-3 py-2 text-center text-xs font-mono text-white focus:border-teal-400 focus:outline-none"
+                          placeholder="Net wt (N.t)"
+                          value={silverExNetWeight}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSilverExNetWeight(val);
+                            const numNet = parseFloat(val) || 0;
+                            const numGross = parseFloat(silverExGrossWeight) || 0;
+                            if (!silverExGrossWeight || (numGross > 0 && numGross < numNet)) {
+                              setSilverExGrossWeight(val);
+                            }
+                          }}
+                          className="w-full rounded-lg border border-teal-500/40 bg-black/60 px-3 py-2 text-center text-xs font-mono font-bold text-slate-200 focus:border-cyan-400 focus:outline-none"
                         />
                       </div>
                     </div>
