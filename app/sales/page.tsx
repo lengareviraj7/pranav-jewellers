@@ -27,6 +27,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
+import CustomerKhataModal, { KhataCustomer } from "@/components/CustomerKhataModal";
 
 interface SaleRecord {
   _id: string;
@@ -102,9 +103,9 @@ export default function SalesPage() {
     customerName: string;
   } | null>(null);
 
-  // Customer Full Lifetime Statement Modal
+  // Customer Full Lifetime Statement Modal (Khatabook view)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [historySale, setHistorySale] = useState<SaleRecord | null>(null);
+  const [selectedKhataCustomer, setSelectedKhataCustomer] = useState<KhataCustomer | null>(null);
 
   const fetchSales = useCallback(async () => {
     try {
@@ -166,9 +167,14 @@ export default function SalesPage() {
     setIsCollectOpen(true);
   };
 
-  // Handle open customer lifetime history modal
+  // Handle open customer lifetime history modal (Khatabook view)
   const openHistoryModal = (sale: SaleRecord) => {
-    setHistorySale(sale);
+    setSelectedKhataCustomer({
+      name: sale.customer.name,
+      phone: sale.customer.phone,
+      address: sale.customer.address,
+      saleId: sale._id,
+    });
     setIsHistoryOpen(true);
   };
 
@@ -568,11 +574,20 @@ export default function SalesPage() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <p className="font-bold text-white">{s.customer.name}</p>
-                        <p className="text-[10px] font-mono text-luxury-gold-champagne">{s.customer.phone}</p>
-                        {s.customer.address && (
-                          <p className="text-[10px] text-luxury-muted truncate max-w-[140px]">{s.customer.address}</p>
-                        )}
+                        <button
+                          onClick={() => openHistoryModal(s)}
+                          className="text-left group"
+                          title="Click to view customer Khata ledger"
+                        >
+                          <p className="font-bold text-white group-hover:text-luxury-gold transition-colors flex items-center gap-1">
+                            <span>{s.customer.name}</span>
+                            <span className="text-[10px] text-luxury-gold-champagne font-mono">↗</span>
+                          </p>
+                          <p className="text-[10px] font-mono text-luxury-gold-champagne">{s.customer.phone}</p>
+                          {s.customer.address && (
+                            <p className="text-[10px] text-luxury-muted truncate max-w-[140px]">{s.customer.address}</p>
+                          )}
+                        </button>
                       </td>
 
                       <td className="px-4 py-3">
@@ -1190,186 +1205,15 @@ export default function SalesPage() {
       )}
 
       {/* ========================================================
-          MODAL 2: DEDICATED CUSTOMER LIFETIME STATEMENT & HISTORY
+          MODAL 2: CUSTOMER KHATABOOK LEDGER & STATEMENT
           ======================================================== */}
-      {isHistoryOpen && historySale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto modal-backdrop">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-luxury-gold/40 bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 sm:space-y-5 modal-content">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-              <div>
-                <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
-                  <History className="h-5 w-5 text-luxury-gold" />
-                  <span>Customer Account Statement &amp; History</span>
-                </h3>
-                <p className="text-xs text-luxury-muted">
-                  Complete chronological ledger of purchases, due dates &amp; payment installments
-                </p>
-              </div>
-              <button
-                onClick={() => setIsHistoryOpen(false)}
-                className="text-luxury-muted hover:text-white transition p-1"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Customer Details Strip */}
-            <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-luxury-gold/20 border border-luxury-gold/40 text-luxury-gold font-serif font-bold text-base">
-                    {historySale.customer.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{historySale.customer.name}</h4>
-                    <p className="text-xs text-luxury-gold font-mono mt-0.5">📞 {historySale.customer.phone}</p>
-                    <p className="text-[11px] text-luxury-muted">📍 {historySale.customer.address || "Visapur"}</p>
-                  </div>
-                </div>
-
-                <a
-                  href={getWhatsAppLink(historySale)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 rounded-xl bg-[#25D366] px-3.5 py-2 text-xs font-bold text-white hover:brightness-105 transition"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>WhatsApp Statement</span>
-                </a>
-              </div>
-
-              {/* Account Financials */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                <div className="rounded-xl bg-white/5 p-2.5 border border-white/10">
-                  <span className="text-[10px] uppercase font-bold text-luxury-muted block">Total Purchase</span>
-                  <p className="font-mono text-xs font-bold text-white mt-1">
-                    ₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-emerald-950/30 p-2.5 border border-emerald-500/20">
-                  <span className="text-[10px] uppercase font-bold text-emerald-300 block">Total Paid</span>
-                  <p className="font-mono text-xs font-bold text-emerald-400 mt-1">
-                    ₹{(historySale.paidAmountPaise / 100).toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div
-                  className={`rounded-xl p-2.5 border ${
-                    historySale.balanceDuePaise > 0
-                      ? "bg-rose-950/30 border-rose-500/30 text-rose-300"
-                      : "bg-emerald-950/30 border-emerald-500/30 text-emerald-300"
-                  }`}
-                >
-                  <span className="text-[10px] uppercase font-bold block">Current Balance</span>
-                  <p className="font-mono text-xs font-bold mt-1">
-                    ₹{(historySale.balanceDuePaise / 100).toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-luxury-gold/15 p-2.5 border border-luxury-gold/30">
-                  <span className="text-[10px] uppercase font-bold text-luxury-gold-champagne block">Status</span>
-                  <p className="font-bold text-xs text-luxury-gold-bright mt-1 uppercase">
-                    {historySale.paymentStatus}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Suitable Khata History: Only Credited / Debited, Amount and Date */}
-            <div className="space-y-2">
-              <h5 className="font-serif text-xs font-bold text-luxury-gold-champagne uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                <FileText className="h-4 w-4 text-luxury-gold" />
-                <span>Account History (Credit / Debit)</span>
-              </h5>
-
-              <div className="divide-y divide-white/[0.08] rounded-xl border border-white/[0.1] bg-black/40 overflow-hidden">
-                {/* 1. Debited Entry (Total Bill / Purchase) */}
-                <div className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-400 border border-rose-500/30">
-                      Debited
-                    </span>
-                    <span className="text-xs text-luxury-muted font-mono">
-                      {new Date(historySale.saleDate).toLocaleString("en-IN", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </div>
-                  <span className="font-mono text-sm font-bold text-rose-400">
-                    - ₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}
-                  </span>
-                </div>
-
-                {/* 2. Credited Entries (Payments / Installments) */}
-                {historySale.payments && historySale.payments.length > 0 ? (
-                  historySale.payments.map((p, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
-                          Credited
-                        </span>
-                        <span className="text-xs text-luxury-muted font-mono">
-                          {new Date(p.date).toLocaleString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <span className="font-mono text-sm font-bold text-emerald-400">
-                        + ₹{(p.amountPaise / 100).toLocaleString("en-IN")}
-                      </span>
-                    </div>
-                  ))
-                ) : historySale.paidAmountPaise > 0 ? (
-                  <div className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
-                        Credited
-                      </span>
-                      <span className="text-xs text-luxury-muted font-mono">
-                        {new Date(historySale.saleDate).toLocaleString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </span>
-                    </div>
-                    <span className="font-mono text-sm font-bold text-emerald-400">
-                      + ₹{(historySale.paidAmountPaise / 100).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="p-4 text-center text-xs text-luxury-muted italic">
-                    No payments credited yet
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-3 border-t border-white/[0.08]">
-              <span className="text-[11px] text-luxury-muted">
-                Sidheshwar Jewellers &amp; Finance • Since 2009 • 📞 Contact: 8329465301
-              </span>
-              <button
-                onClick={() => setIsHistoryOpen(false)}
-                className="rounded-xl bg-white/[0.08] px-5 py-2 text-xs font-bold text-white hover:bg-white/[0.12] transition"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+      {isHistoryOpen && selectedKhataCustomer && (
+        <CustomerKhataModal
+          customer={selectedKhataCustomer}
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          onDataChanged={fetchSales}
+        />
       )}
     </div>
   );
