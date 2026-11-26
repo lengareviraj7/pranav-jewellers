@@ -1273,27 +1273,70 @@ export default function SalesPage() {
               </div>
             </div>
 
-            {/* Complete Chronological History Timeline */}
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-luxury-gold-champagne flex items-center gap-1.5">
+            {/* Suitable Khata History: Only Credited / Debited, Amount and Date */}
+            <div className="space-y-2">
+              <h5 className="font-serif text-xs font-bold text-luxury-gold-champagne uppercase tracking-wider flex items-center gap-1.5 mb-2">
                 <FileText className="h-4 w-4 text-luxury-gold" />
-                <span>Chronological Transaction Ledger</span>
-              </h4>
+                <span>Account History (Credit / Debit)</span>
+              </h5>
 
-              <div className="space-y-2.5">
-                {/* 1. Date of Purchase */}
-                <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/40 p-3.5">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxury-gold/20 text-luxury-gold font-bold text-xs">
-                    🛍️
+              <div className="divide-y divide-white/[0.08] rounded-xl border border-white/[0.1] bg-black/40 overflow-hidden">
+                {/* 1. Debited Entry (Total Bill / Purchase) */}
+                <div className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-lg bg-rose-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-400 border border-rose-500/30">
+                      Debited
+                    </span>
+                    <span className="text-xs text-luxury-muted font-mono">
+                      {new Date(historySale.saleDate).toLocaleString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </div>
-                  <div className="flex-1">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                      <p className="font-bold text-white text-xs">
-                        Purchased: {historySale.itemName} ({historySale.quantitySold} pc, {historySale.netWeightSold.toFixed(3)}g net)
-                      </p>
-                      <span className="text-[10px] text-luxury-muted font-mono">
+                  <span className="font-mono text-sm font-bold text-rose-400">
+                    - ₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {/* 2. Credited Entries (Payments / Installments) */}
+                {historySale.payments && historySale.payments.length > 0 ? (
+                  historySale.payments.map((p, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
+                          Credited
+                        </span>
+                        <span className="text-xs text-luxury-muted font-mono">
+                          {new Date(p.date).toLocaleString("en-IN", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <span className="font-mono text-sm font-bold text-emerald-400">
+                        + ₹{(p.amountPaise / 100).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  ))
+                ) : historySale.paidAmountPaise > 0 ? (
+                  <div className="flex items-center justify-between p-3.5 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
+                        Credited
+                      </span>
+                      <span className="text-xs text-luxury-muted font-mono">
                         {new Date(historySale.saleDate).toLocaleString("en-IN", {
-                          day: "numeric",
+                          day: "2-digit",
                           month: "short",
                           year: "numeric",
                           hour: "2-digit",
@@ -1301,82 +1344,13 @@ export default function SalesPage() {
                         })}
                       </span>
                     </div>
-                    <p className="text-[11px] text-luxury-muted mt-1">
-                      Invoice No: <span className="font-mono text-luxury-gold">{historySale.saleNumber}</span> • Purity: {historySale.purity} • Total Bill: <span className="text-white font-bold">₹{(historySale.sellingPricePaise / 100).toLocaleString("en-IN")}</span>
-                    </p>
-                    {historySale.dueDate && (
-                      <p className="text-[11px] text-amber-300 font-semibold mt-1">
-                        📅 Original Promised Due Date: {new Date(historySale.dueDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                      </p>
-                    )}
+                    <span className="font-mono text-sm font-bold text-emerald-400">
+                      + ₹{(historySale.paidAmountPaise / 100).toLocaleString("en-IN")}
+                    </span>
                   </div>
-                </div>
-
-                {/* 2. Initial Down Payment if any */}
-                {historySale.splitPayments && (historySale.splitPayments.cashPaise > 0 || historySale.splitPayments.onlinePaise > 0 || (historySale.splitPayments.advancePaise && historySale.splitPayments.advancePaise > 0)) && (
-                  <div className="flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3.5">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
-                      💵
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                        <p className="font-bold text-emerald-300 text-xs">
-                          Initial Counter Down Payment
-                        </p>
-                        <span className="text-[10px] text-luxury-muted font-mono">
-                          {new Date(historySale.saleDate).toLocaleDateString("en-IN")}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-white mt-1 font-mono">
-                        {historySale.splitPayments.cashPaise > 0 && (
-                          <span>Cash: ₹{(historySale.splitPayments.cashPaise / 100).toLocaleString("en-IN")} </span>
-                        )}
-                        {historySale.splitPayments.onlinePaise > 0 && (
-                          <span>• Online UPI: ₹{(historySale.splitPayments.onlinePaise / 100).toLocaleString("en-IN")} </span>
-                        )}
-                        {historySale.splitPayments.advancePaise && historySale.splitPayments.advancePaise > 0 && (
-                          <span>• Advance: ₹{(historySale.splitPayments.advancePaise / 100).toLocaleString("en-IN")}</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* 3. Subsequent Installment Payments */}
-                {historySale.payments && historySale.payments.length > 0 ? (
-                  historySale.payments.map((p, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3.5"
-                    >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold text-xs">
-                        💳
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                          <p className="font-bold text-emerald-300 text-xs">
-                            Installment #{idx + 1}: +₹{(p.amountPaise / 100).toLocaleString("en-IN")}
-                          </p>
-                          <span className="text-[10px] text-luxury-muted font-mono">
-                            {new Date(p.date).toLocaleString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-luxury-muted mt-1">
-                          Payment Mode: <strong className="text-white">{p.paymentMode === "advance" ? "Advance Payment (अॅडव्हान्स जमा)" : p.paymentMode === "online" ? "Online / UPI" : "Cash (Counter Rojmel)"}</strong>
-                          {p.notes && ` • Notes: ${p.notes}`}
-                        </p>
-                      </div>
-                    </div>
-                  ))
                 ) : (
-                  <div className="rounded-xl border border-white/5 bg-white/[0.02] p-4 text-center text-xs text-luxury-muted">
-                    No recovery installments paid yet towards this account.
+                  <div className="p-4 text-center text-xs text-luxury-muted italic">
+                    No payments credited yet
                   </div>
                 )}
               </div>
