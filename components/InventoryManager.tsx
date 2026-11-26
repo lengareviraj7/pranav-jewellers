@@ -98,13 +98,15 @@ export default function InventoryManager({
 
   // Modals
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isSellModalOpen, setIsSellModalOpen] = useState(false);
 
-  // Selected item for Adjustment / History / Sell
+  // Selected item for Adjustment / History / Sell / Edit
   const [activeItem, setActiveItem] = useState<InventoryItem | null>(null);
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [sellItem, setSellItem] = useState<InventoryItem | null>(null);
   const [sellSuccessData, setSellSuccessData] = useState<{
     saleNumber: string;
@@ -200,6 +202,7 @@ export default function InventoryManager({
   // Double-submission lock states and ref
   const isSubmittingRef = useRef(false);
   const [submittingStock, setSubmittingStock] = useState(false);
+  const [submittingEdit, setSubmittingEdit] = useState(false);
   const [submittingSell, setSubmittingSell] = useState(false);
   const [submittingAdjust, setSubmittingAdjust] = useState(false);
   const [submittingCategory, setSubmittingCategory] = useState(false);
@@ -221,6 +224,24 @@ export default function InventoryManager({
     purchaseDate: new Date().toISOString().split("T")[0],
     notes: "",
   });
+
+  // Edit Stock Form State
+  const [editForm, setEditForm] = useState({
+    name: "",
+    categoryId: "",
+    sku: "",
+    purity: defaultPurity,
+    size: "",
+    quantity: 1,
+    grossWeight: "",
+    stoneWeight: "0",
+    netWeight: "",
+    hallmarkUid: "",
+    supplierName: "",
+    notes: "",
+  });
+  const [isEditAddingPurity, setIsEditAddingPurity] = useState(false);
+  const [editNewPurityInput, setEditNewPurityInput] = useState("");
 
   // Dynamic Purity Management
   const [customPurities, setCustomPurities] = useState<string[]>([]);
@@ -371,6 +392,10 @@ export default function InventoryManager({
     ? Number(stockForm.netWeight)
     : Number(stockForm.grossWeight || 0) - Number(stockForm.stoneWeight || 0);
 
+  const editFormNetWeight = editForm.netWeight !== ""
+    ? Number(editForm.netWeight)
+    : Math.max(0, Number(editForm.grossWeight || 0) - Number(editForm.stoneWeight || 0));
+
   // 1. Submit Add Stock
   const handleAddStock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -419,6 +444,94 @@ export default function InventoryManager({
     } finally {
       isSubmittingRef.current = false;
       setSubmittingStock(false);
+    }
+  };
+
+  // Open Edit Product Modal
+  const openEditModal = (item: InventoryItem) => {
+    setEditingItem(item);
+    const catId = typeof item.categoryId === "object"
+      ? ((item.categoryId as any)?._id || (item.categoryId as any)?.id || "")
+      : (item.categoryId || "");
+    setEditForm({
+      name: item.name || "",
+      categoryId: catId,
+      sku: item.sku || "",
+      purity: item.purity || defaultPurity,
+      size: item.size || "",
+      quantity: item.quantity || 1,
+      grossWeight: item.grossWeight !== undefined ? String(item.grossWeight) : "",
+      stoneWeight: item.stoneWeight !== undefined ? String(item.stoneWeight) : "0",
+      netWeight: item.netWeight !== undefined ? String(item.netWeight) : "",
+      hallmarkUid: item.hallmarkUid || "",
+      supplierName: item.supplierName || "",
+      notes: item.notes || "",
+    });
+    setIsEditAddingPurity(false);
+    setEditNewPurityInput("");
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditAddNewPurity = () => {
+    const val = editNewPurityInput.trim().toUpperCase();
+    if (!val) return;
+    if (!activePurities.includes(val)) {
+      const updated = [...customPurities, val];
+      setCustomPurities(updated);
+      try {
+        localStorage.setItem(`sj_custom_purities_${metalType}`, JSON.stringify(updated));
+      } catch (_) { }
+    }
+    setEditForm({ ...editForm, purity: val });
+    setEditNewPurityInput("");
+    setIsEditAddingPurity(false);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingItem || isSubmittingRef.current || submittingEdit) return;
+    isSubmittingRef.current = true;
+    setSubmittingEdit(true);
+
+    try {
+      const computedNet = editForm.netWeight !== ""
+        ? Number(editForm.netWeight)
+        : Math.max(0, Number(editForm.grossWeight) - (Number(editForm.stoneWeight) || 0));
+
+      const payload = {
+        name: editForm.name.trim(),
+        categoryId: editForm.categoryId,
+        sku: editForm.sku.trim(),
+        purity: editForm.purity.trim(),
+        size: editForm.size.trim() || undefined,
+        quantity: Number(editForm.quantity),
+        grossWeight: Number(editForm.grossWeight),
+        stoneWeight: Number(editForm.stoneWeight) || 0,
+        netWeight: Number(computedNet.toFixed(3)),
+        hallmarkUid: editForm.hallmarkUid.trim() || undefined,
+        supplierName: editForm.supplierName.trim() || undefined,
+        notes: editForm.notes.trim() || undefined,
+      };
+
+      const res = await fetch(`/api/inventory/items/${editingItem.id || editingItem._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to update item");
+
+      setSuccessMsg(`Product "${payload.name}" updated successfully!`);
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      fetchData();
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      setError(err.message || "Failed to update product");
+    } finally {
+      isSubmittingRef.current = false;
+      setSubmittingEdit(false);
     }
   };
 
@@ -1192,6 +1305,15 @@ export default function InventoryManager({
                             <span>Sell</span>
                           </button>
 
+                          {/* Edit Product Details */}
+                          <button
+                            onClick={() => openEditModal(item)}
+                            title="Edit Product Details"
+                            className="rounded-lg p-1 text-luxury-gold-champagne hover:bg-luxury-gold/20 hover:text-luxury-gold-bright transition-colors"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+
                           <button
                             onClick={() => openAdjustModal(item)}
                             title="Adjust Stock (Non-destructive)"
@@ -1511,6 +1633,307 @@ export default function InventoryManager({
                     </>
                   ) : (
                     <span>Save Stock Item</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 1B: Edit Stock Item Form */}
+      {isEditModalOpen && editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-md overflow-y-auto modal-backdrop">
+          <div className="relative w-full max-w-xl rounded-2xl border border-white/[0.15] bg-luxury-graphite text-white shadow-2xl p-4 sm:p-6 my-2 sm:my-8 max-h-[92dvh] overflow-y-auto space-y-4 modal-content">
+            <div className="flex items-center justify-between border-b border-white/[0.1] pb-3">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-luxury-gold-champagne">
+                  Edit {metalType === "gold" ? "Gold" : "Silver"} Product
+                </h3>
+                <p className="text-xs text-luxury-muted">
+                  Update item parameters, weights, category, or purity for <strong className="text-white font-mono">{editingItem.sku}</strong>
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingItem(null);
+                }}
+                className="rounded-lg p-1 text-luxury-muted hover:bg-white/10 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Item Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={`e.g. ${metalType === "gold" ? "22K Traditional Kada" : "Pure Silver Pooja Thali"}`}
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-neutral-300">Category *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCategoryForm({ name: "" });
+                        setIsCategoryModalOpen(true);
+                      }}
+                      className="text-[10px] font-bold text-luxury-gold-bright hover:underline flex items-center gap-0.5"
+                    >
+                      <Plus className="h-3 w-3" /> + New Category
+                    </button>
+                  </div>
+                  <select
+                    required
+                    value={editForm.categoryId}
+                    onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  >
+                    <option value="" className="bg-luxury-obsidian text-neutral-400">Select Category</option>
+                    {categories.map((c) => (
+                      <option key={c.id || c._id} value={c.id || c._id} className="bg-luxury-obsidian text-white">
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Size / Dimensions (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ring Size 14, 10.5 in, Bangle 2.4"
+                    value={editForm.size}
+                    onChange={(e) => setEditForm({ ...editForm, size: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-neutral-300">Purity *</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditAddingPurity(!isEditAddingPurity)}
+                      className="text-[10px] text-luxury-gold hover:underline font-bold"
+                    >
+                      {isEditAddingPurity ? "Select from list" : "+ + New Purity"}
+                    </button>
+                  </div>
+
+                  {isEditAddingPurity ? (
+                    <div className="flex items-center gap-1.5 animate-fadeIn">
+                      <input
+                        type="text"
+                        placeholder="e.g. 995, 920, 840, 750, 18K"
+                        value={editNewPurityInput}
+                        onChange={(e) => setEditNewPurityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleEditAddNewPurity();
+                          } else if (e.key === "Escape") {
+                            setIsEditAddingPurity(false);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-luxury-gold/50 bg-black/70 px-3 py-2 text-xs font-bold text-white focus:border-luxury-gold focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={handleEditAddNewPurity}
+                        className="rounded-xl bg-luxury-gold px-3 py-2 text-xs font-bold text-black hover:bg-luxury-gold-bright transition shrink-0"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditAddingPurity(false)}
+                        className="rounded-xl bg-white/10 px-2.5 py-2 text-xs font-medium text-white hover:bg-white/20 transition shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={editForm.purity}
+                      onChange={(e) => {
+                        if (e.target.value === "__NEW__") {
+                          setIsEditAddingPurity(true);
+                        } else {
+                          setEditForm({ ...editForm, purity: e.target.value });
+                        }
+                      }}
+                      className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    >
+                      {activePurities.map((p) => (
+                        <option key={p} value={p} className="bg-luxury-obsidian text-white">
+                          {p}
+                        </option>
+                      ))}
+                      <option value="__NEW__" className="bg-luxury-gold/20 text-luxury-gold font-bold">
+                        + Add Custom Purity...
+                      </option>
+                    </select>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Quantity (Pieces) *</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={editForm.quantity}
+                    onChange={(e) => setEditForm({ ...editForm, quantity: Number(e.target.value) })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Gross Weight (grams) *</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    required
+                    placeholder="0.000"
+                    value={editForm.grossWeight}
+                    onChange={(e) => {
+                      const gw = e.target.value;
+                      const sw = editForm.stoneWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(sw)).toFixed(3) : "";
+                      setEditForm({
+                        ...editForm,
+                        grossWeight: gw,
+                        netWeight: autoNet,
+                      });
+                    }}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Stone Weight (grams)</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    placeholder="0.000"
+                    value={editForm.stoneWeight}
+                    onChange={(e) => {
+                      const sw = e.target.value;
+                      const gw = editForm.grossWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(sw)).toFixed(3) : "";
+                      setEditForm({
+                        ...editForm,
+                        stoneWeight: sw,
+                        netWeight: autoNet,
+                      });
+                    }}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-mono font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-amber-300">
+                      Net Metal Weight (grams) *
+                    </label>
+                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      direct entry
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.001"
+                    required
+                    placeholder="0.000"
+                    value={editForm.netWeight}
+                    onChange={(e) => setEditForm({ ...editForm, netWeight: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/50 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-200 placeholder:text-neutral-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-luxury-muted mt-0.5 block">
+                    Actual gold/silver weight in stock
+                  </span>
+                </div>
+              </div>
+
+              {/* Live Net Weight Banner */}
+              <div className="flex items-center justify-between rounded-xl bg-luxury-gold/15 p-3 border border-luxury-gold/30">
+                <span className="text-xs font-semibold text-neutral-200">Current Net Metal Weight:</span>
+                <span className="font-serif text-sm font-bold text-luxury-gold-bright">
+                  {editFormNetWeight > 0 ? editFormNetWeight.toFixed(3) : "0.000"} g
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">SKU / Item Code</label>
+                  <input
+                    type="text"
+                    value={editForm.sku}
+                    onChange={(e) => setEditForm({ ...editForm, sku: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium font-mono text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">HUID / Hallmark (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="6-character alphanumeric"
+                    value={editForm.hallmarkUid}
+                    onChange={(e) => setEditForm({ ...editForm, hallmarkUid: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Supplier Name (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rajkot Bullion Mart, Zaveri Bazaar"
+                    value={editForm.supplierName}
+                    onChange={(e) => setEditForm({ ...editForm, supplierName: e.target.value })}
+                    className="w-full rounded-xl border border-white/20 bg-black/60 px-3 py-2 text-xs font-medium text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-white/[0.1]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingItem(null);
+                  }}
+                  className="rounded-xl border border-white/20 px-5 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingEdit}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-luxury-gold via-luxury-gold-bright to-luxury-gold-dark px-6 py-2 text-xs font-bold text-black shadow-gold-glow hover:scale-[1.02] active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingEdit ? (
+                    <>
+                      <span className="inline-block h-3.5 w-3.5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
                   )}
                 </button>
               </div>
