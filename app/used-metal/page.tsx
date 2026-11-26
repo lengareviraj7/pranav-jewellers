@@ -76,6 +76,7 @@ export default function UsedMetalPage() {
     purity: "22K",
     grossWeight: "",
     deductionsWeight: "0",
+    netWeight: "",
     ratePerGramRupees: "",
     finalAgreedCostRupees: "",
     amountPaidRupees: "",
@@ -137,13 +138,15 @@ export default function UsedMetalPage() {
   }, [fetchPurchases, fetchCategories]);
 
   // Calculations for Add Form
-  const formNetWeight = Math.max(
-    0,
-    (parseFloat(addForm.grossWeight) || 0) - (parseFloat(addForm.deductionsWeight) || 0)
-  );
-  const formCalculatedValue = Math.round(
-    formNetWeight * (parseFloat(addForm.ratePerGramRupees) || 0)
-  );
+  const formNetWeight = addForm.netWeight !== ""
+    ? (parseFloat(addForm.netWeight) || 0)
+    : Math.max(
+        0,
+        (parseFloat(addForm.grossWeight) || 0) - (parseFloat(addForm.deductionsWeight) || 0)
+      );
+  const effectiveRate = formNetWeight > 0 && parseFloat(addForm.finalAgreedCostRupees) > 0
+    ? Math.round((parseFloat(addForm.finalAgreedCostRupees) || 0) / formNetWeight)
+    : 0;
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,11 +154,17 @@ export default function UsedMetalPage() {
     isSubmittingRef.current = true;
     setSubmitting(true);
     try {
+      const netVal = Number(formNetWeight.toFixed(3));
+      const costVal = parseFloat(addForm.finalAgreedCostRupees) || 0;
+      const derivedRate = netVal > 0 && costVal > 0 ? Math.round(costVal / netVal) : 0;
+
       const res = await fetch("/api/used-metal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...addForm,
+          netWeight: netVal,
+          ratePerGramRupees: derivedRate,
           metalType: activeTab,
         }),
       });
@@ -174,6 +183,7 @@ export default function UsedMetalPage() {
         purity: activeTab === "gold" ? "22K" : "999",
         grossWeight: "",
         deductionsWeight: "0",
+        netWeight: "",
         ratePerGramRupees: "",
         finalAgreedCostRupees: "",
         amountPaidRupees: "",
@@ -600,7 +610,12 @@ export default function UsedMetalPage() {
                     required
                     placeholder="0.000"
                     value={addForm.grossWeight}
-                    onChange={(e) => setAddForm({ ...addForm, grossWeight: e.target.value })}
+                    onChange={(e) => {
+                      const gw = e.target.value;
+                      const dw = addForm.deductionsWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(dw)).toFixed(3) : "";
+                      setAddForm({ ...addForm, grossWeight: gw, netWeight: autoNet });
+                    }}
                     className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
@@ -612,22 +627,32 @@ export default function UsedMetalPage() {
                     step="0.001"
                     min="0"
                     value={addForm.deductionsWeight}
-                    onChange={(e) => setAddForm({ ...addForm, deductionsWeight: e.target.value })}
+                    onChange={(e) => {
+                      const dw = e.target.value;
+                      const gw = addForm.grossWeight || "0";
+                      const autoNet = gw ? Math.max(0, Number(gw) - Number(dw)).toFixed(3) : "";
+                      setAddForm({ ...addForm, deductionsWeight: dw, netWeight: autoNet });
+                    }}
                     className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-luxury-muted mb-1">Rate / gram (₹) *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-amber-300">Net Weight (g) *</label>
+                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      direct entry
+                    </span>
+                  </div>
                   <input
                     type="number"
-                    step="1"
-                    min="1"
+                    step="0.001"
+                    min="0.001"
                     required
-                    placeholder="Current scrap buying rate"
-                    value={addForm.ratePerGramRupees}
-                    onChange={(e) => setAddForm({ ...addForm, ratePerGramRupees: e.target.value })}
-                    className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    placeholder="0.000"
+                    value={addForm.netWeight}
+                    onChange={(e) => setAddForm({ ...addForm, netWeight: e.target.value })}
+                    className="w-full rounded-xl border border-amber-500/50 bg-luxury-obsidian/70 px-3 py-2 text-xs font-mono font-bold text-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
                   />
                 </div>
               </div>
@@ -640,10 +665,10 @@ export default function UsedMetalPage() {
                     {formNetWeight.toFixed(3)}g
                   </p>
                 </div>
-                <div>
-                  <span className="text-luxury-muted">Calculated Value:</span>
+                <div className="text-right">
+                  <span className="text-luxury-muted">Effective Rate:</span>
                   <p className="font-bold text-white font-mono text-sm">
-                    ₹{formCalculatedValue.toLocaleString("en-IN")}
+                    {effectiveRate > 0 ? `₹${effectiveRate.toLocaleString("en-IN")}/g` : "—"}
                   </p>
                 </div>
               </div>
@@ -656,7 +681,7 @@ export default function UsedMetalPage() {
                     step="1"
                     min="1"
                     required
-                    placeholder={`e.g. ${formCalculatedValue || "5000"}`}
+                    placeholder="e.g. 5000"
                     value={addForm.finalAgreedCostRupees}
                     onChange={(e) => setAddForm({ ...addForm, finalAgreedCostRupees: e.target.value })}
                     className="w-full rounded-xl border border-white/[0.12] bg-luxury-obsidian/70 px-3 py-2 text-xs font-bold text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"

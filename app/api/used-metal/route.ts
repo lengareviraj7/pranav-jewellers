@@ -90,7 +90,6 @@ export async function POST(req: NextRequest) {
 
     const numGross = Number(grossWeight);
     const numDeductions = Number(deductionsWeight) || 0;
-    const numRate = Number(ratePerGramRupees);
 
     if (isNaN(numGross) || numGross <= 0) {
       return NextResponse.json({ success: false, error: "Gross weight must be greater than 0" }, { status: 400 });
@@ -101,16 +100,19 @@ export async function POST(req: NextRequest) {
     if (numDeductions >= numGross) {
       return NextResponse.json({ success: false, error: "Deductions cannot exceed or equal gross weight" }, { status: 400 });
     }
-    if (isNaN(numRate) || numRate <= 0) {
-      return NextResponse.json({ success: false, error: "Rate per gram must be greater than 0" }, { status: 400 });
-    }
 
-    const netWeight = Number((numGross - numDeductions).toFixed(3));
-    const ratePerGramPaise = Math.round(numRate * 100);
-    const calculatedValuePaise = Math.round(netWeight * ratePerGramPaise);
+    const netWeight = body.netWeight !== undefined && !isNaN(Number(body.netWeight)) && Number(body.netWeight) > 0
+      ? Number(Number(body.netWeight).toFixed(3))
+      : Number((numGross - numDeductions).toFixed(3));
 
-    const agreedCostRupees = finalAgreedCostRupees !== undefined ? Number(finalAgreedCostRupees) : calculatedValuePaise / 100;
+    const agreedCostRupees = finalAgreedCostRupees !== undefined ? Number(finalAgreedCostRupees) : 0;
     const finalAgreedCostPaise = Math.round(agreedCostRupees * 100);
+
+    const numRate = Number(ratePerGramRupees) > 0
+      ? Number(ratePerGramRupees)
+      : (netWeight > 0 && agreedCostRupees > 0 ? Math.round(agreedCostRupees / netWeight) : 0);
+    const ratePerGramPaise = Math.round(numRate * 100);
+    const calculatedValuePaise = Math.round(netWeight * ratePerGramPaise) || finalAgreedCostPaise;
     const amountPaidPaise = Math.round((Number(amountPaidRupees) || 0) * 100);
 
     if (amountPaidPaise > finalAgreedCostPaise) {

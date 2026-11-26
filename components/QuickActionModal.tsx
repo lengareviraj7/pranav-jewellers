@@ -65,6 +65,7 @@ export default function QuickActionModal({
     purity: "22K",
     grossWeight: "",
     deductionsWeight: "0",
+    netWeight: "",
     ratePerGramRupees: "",
     finalAgreedCostRupees: "",
     amountPaidRupees: "",
@@ -193,10 +194,20 @@ export default function QuickActionModal({
     setLoading(true);
     setError(null);
     try {
+      const freshNet = usedForm.netWeight !== ""
+        ? Number(usedForm.netWeight)
+        : Math.max(0, Number(usedForm.grossWeight || 0) - Number(usedForm.deductionsWeight || 0));
+      const costVal = Number(usedForm.finalAgreedCostRupees || 0);
+      const derivedRate = freshNet > 0 && costVal > 0 ? Math.round(costVal / freshNet) : 0;
+
       const res = await fetch("/api/used-metal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usedForm),
+        body: JSON.stringify({
+          ...usedForm,
+          netWeight: freshNet,
+          ratePerGramRupees: derivedRate,
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Failed to record used metal purchase");
@@ -712,7 +723,12 @@ export default function QuickActionModal({
                   step="0.001"
                   required
                   value={usedForm.grossWeight}
-                  onChange={(e) => setUsedForm({ ...usedForm, grossWeight: e.target.value })}
+                  onChange={(e) => {
+                    const gw = e.target.value;
+                    const dw = usedForm.deductionsWeight || "0";
+                    const autoNet = gw ? Math.max(0, Number(gw) - Number(dw)).toFixed(3) : "";
+                    setUsedForm({ ...usedForm, grossWeight: gw, netWeight: autoNet });
+                  }}
                   className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
@@ -723,31 +739,31 @@ export default function QuickActionModal({
                   type="number"
                   step="0.001"
                   value={usedForm.deductionsWeight}
-                  onChange={(e) => setUsedForm({ ...usedForm, deductionsWeight: e.target.value })}
+                  onChange={(e) => {
+                    const dw = e.target.value;
+                    const gw = usedForm.grossWeight || "0";
+                    const autoNet = gw ? Math.max(0, Number(gw) - Number(dw)).toFixed(3) : "";
+                    setUsedForm({ ...usedForm, deductionsWeight: dw, netWeight: autoNet });
+                  }}
                   className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Rate per Gram (₹) *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-luxury-charcoal">Net Weight (grams) *</label>
+                  <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-luxury-gold/20 text-luxury-charcoal border border-luxury-gold/30">
+                    direct entry
+                  </span>
+                </div>
                 <input
                   type="number"
+                  step="0.001"
                   required
-                  placeholder="₹/g"
-                  value={usedForm.ratePerGramRupees}
-                  onChange={(e) => {
-                    const r = e.target.value;
-                    // Use freshly computed net from current usedForm values (fix stale closure)
-                    const freshNet = Number(usedForm.grossWeight || 0) - Number(usedForm.deductionsWeight || 0);
-                    const c = (freshNet > 0 ? freshNet : 0) * (Number(r) || 0);
-                    setUsedForm({
-                      ...usedForm,
-                      ratePerGramRupees: r,
-                      finalAgreedCostRupees: c.toFixed(2),
-                      amountPaidRupees: c.toFixed(2),
-                    });
-                  }}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  placeholder="0.000"
+                  value={usedForm.netWeight}
+                  onChange={(e) => setUsedForm({ ...usedForm, netWeight: e.target.value })}
+                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-mono font-bold focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
               </div>
 
