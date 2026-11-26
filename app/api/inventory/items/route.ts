@@ -126,6 +126,10 @@ export async function POST(req: NextRequest) {
       ? Number(Number(body.netWeight).toFixed(3))
       : Number((numGross - numStone).toFixed(3));
 
+    if (calculatedNet > numGross) {
+      return NextResponse.json({ success: false, error: `Net weight (${calculatedNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.` }, { status: 400 });
+    }
+
     // Category check
     const cat = await Category.findById(categoryId);
     if (!cat) {

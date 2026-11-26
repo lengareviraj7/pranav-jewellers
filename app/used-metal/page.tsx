@@ -154,7 +154,15 @@ export default function UsedMetalPage() {
     isSubmittingRef.current = true;
     setSubmitting(true);
     try {
+      const grossVal = parseFloat(addForm.grossWeight) || 0;
       const netVal = Number(formNetWeight.toFixed(3));
+      if (netVal > grossVal) {
+        setError(`Net weight (${netVal}g) cannot exceed gross weight (${grossVal}g). Gross weight must be greater than or equal to net weight.`);
+        isSubmittingRef.current = false;
+        setSubmitting(false);
+        return;
+      }
+
       const costVal = parseFloat(addForm.finalAgreedCostRupees) || 0;
       const derivedRate = netVal > 0 && costVal > 0 ? Math.round(costVal / netVal) : 0;
 
@@ -651,9 +659,27 @@ export default function UsedMetalPage() {
                     required
                     placeholder="0.000"
                     value={addForm.netWeight}
-                    onChange={(e) => setAddForm({ ...addForm, netWeight: e.target.value })}
+                    onChange={(e) => {
+                      const nw = e.target.value;
+                      const numNw = parseFloat(nw);
+                      const numGw = parseFloat(addForm.grossWeight);
+                      let newDed = addForm.deductionsWeight;
+                      if (!isNaN(numNw) && !isNaN(numGw) && numGw >= numNw) {
+                        newDed = (numGw - numNw).toFixed(3);
+                      }
+                      setAddForm({
+                        ...addForm,
+                        netWeight: nw,
+                        deductionsWeight: newDed,
+                      });
+                    }}
                     className="w-full rounded-xl border border-amber-500/50 bg-luxury-obsidian/70 px-3 py-2 text-xs font-mono font-bold text-amber-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
                   />
+                  {Number(addForm.grossWeight || 0) > 0 && Number(addForm.netWeight || 0) > Number(addForm.grossWeight || 0) && (
+                    <p className="text-[10px] text-red-400 font-bold mt-1">
+                      ⚠️ Net weight ({addForm.netWeight}g) cannot exceed gross weight ({addForm.grossWeight}g)!
+                    </p>
+                  )}
                 </div>
               </div>
 

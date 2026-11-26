@@ -132,6 +132,12 @@ export default function QuickActionModal({
   const handleGoldSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingRef.current || loading) return;
+    const numGross = Number(goldForm.grossWeight || 0);
+    const numNet = Number(goldNet);
+    if (numNet > numGross) {
+      setError(`Net weight (${numNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.`);
+      return;
+    }
     isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
@@ -161,6 +167,12 @@ export default function QuickActionModal({
   const handleSilverSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingRef.current || loading) return;
+    const numGross = Number(silverForm.grossWeight || 0);
+    const numNet = Number(silverNet);
+    if (numNet > numGross) {
+      setError(`Net weight (${numNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.`);
+      return;
+    }
     isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
@@ -190,13 +202,18 @@ export default function QuickActionModal({
   const handleUsedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingRef.current || loading) return;
+    const numGross = Number(usedForm.grossWeight || 0);
+    const freshNet = usedForm.netWeight !== ""
+      ? Number(usedForm.netWeight)
+      : Math.max(0, numGross - Number(usedForm.deductionsWeight || 0));
+    if (freshNet > numGross) {
+      setError(`Net weight (${freshNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.`);
+      return;
+    }
     isSubmittingRef.current = true;
     setLoading(true);
     setError(null);
     try {
-      const freshNet = usedForm.netWeight !== ""
-        ? Number(usedForm.netWeight)
-        : Math.max(0, Number(usedForm.grossWeight || 0) - Number(usedForm.deductionsWeight || 0));
       const costVal = Number(usedForm.finalAgreedCostRupees || 0);
       const derivedRate = freshNet > 0 && costVal > 0 ? Math.round(costVal / freshNet) : 0;
 
@@ -762,9 +779,27 @@ export default function QuickActionModal({
                   required
                   placeholder="0.000"
                   value={usedForm.netWeight}
-                  onChange={(e) => setUsedForm({ ...usedForm, netWeight: e.target.value })}
+                  onChange={(e) => {
+                    const nw = e.target.value;
+                    const numNw = parseFloat(nw);
+                    const numGw = parseFloat(usedForm.grossWeight);
+                    let newDed = usedForm.deductionsWeight;
+                    if (!isNaN(numNw) && !isNaN(numGw) && numGw >= numNw) {
+                      newDed = (numGw - numNw).toFixed(3);
+                    }
+                    setUsedForm({
+                      ...usedForm,
+                      netWeight: nw,
+                      deductionsWeight: newDed,
+                    });
+                  }}
                   className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs font-mono font-bold focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
                 />
+                {Number(usedForm.grossWeight || 0) > 0 && Number(usedForm.netWeight || 0) > Number(usedForm.grossWeight || 0) && (
+                  <p className="text-[10px] text-red-500 font-bold mt-1">
+                    ⚠️ Net weight ({usedForm.netWeight}g) cannot exceed gross weight ({usedForm.grossWeight}g)!
+                  </p>
+                )}
               </div>
 
               <div>

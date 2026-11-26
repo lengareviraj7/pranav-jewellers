@@ -136,6 +136,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     } else if (grossWeight !== undefined || stoneWeight !== undefined) {
       calculatedNet = Number(Math.max(0, numGross - numStone).toFixed(3));
     }
+
+    if (calculatedNet > numGross) {
+      return NextResponse.json({ success: false, error: `Net weight (${calculatedNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.` }, { status: 400 });
+    }
+
     item.netWeight = calculatedNet;
 
     await item.save();

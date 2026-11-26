@@ -403,9 +403,17 @@ export default function InventoryManager({
     isSubmittingRef.current = true;
     setSubmittingStock(true);
     try {
+      const numGross = Number(stockForm.grossWeight);
       const computedNet = stockForm.netWeight !== ""
         ? Number(stockForm.netWeight)
-        : Number(stockForm.grossWeight || 0) - Number(stockForm.stoneWeight || 0);
+        : Math.max(0, numGross - Number(stockForm.stoneWeight || 0));
+
+      if (computedNet > numGross) {
+        setError(`Net weight (${computedNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.`);
+        isSubmittingRef.current = false;
+        setSubmittingStock(false);
+        return;
+      }
 
       const res = await fetch("/api/inventory/items", {
         method: "POST",
@@ -494,9 +502,17 @@ export default function InventoryManager({
     setSubmittingEdit(true);
 
     try {
+      const numGross = Number(editForm.grossWeight);
       const computedNet = editForm.netWeight !== ""
         ? Number(editForm.netWeight)
-        : Math.max(0, Number(editForm.grossWeight) - (Number(editForm.stoneWeight) || 0));
+        : Math.max(0, numGross - (Number(editForm.stoneWeight) || 0));
+
+      if (computedNet > numGross) {
+        setError(`Net weight (${computedNet}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.`);
+        isSubmittingRef.current = false;
+        setSubmittingEdit(false);
+        return;
+      }
 
       const payload = {
         name: editForm.name.trim(),
@@ -1561,9 +1577,27 @@ export default function InventoryManager({
                     required
                     placeholder="0.000"
                     value={stockForm.netWeight}
-                    onChange={(e) => setStockForm({ ...stockForm, netWeight: e.target.value })}
+                    onChange={(e) => {
+                      const nw = e.target.value;
+                      const numNw = parseFloat(nw);
+                      const numGw = parseFloat(stockForm.grossWeight);
+                      let newStone = stockForm.stoneWeight;
+                      if (!isNaN(numNw) && !isNaN(numGw) && numGw >= numNw) {
+                        newStone = (numGw - numNw).toFixed(3);
+                      }
+                      setStockForm({
+                        ...stockForm,
+                        netWeight: nw,
+                        stoneWeight: newStone,
+                      });
+                    }}
                     className="w-full rounded-xl border border-amber-500/50 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-200 placeholder:text-neutral-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
                   />
+                  {Number(stockForm.grossWeight || 0) > 0 && Number(stockForm.netWeight || 0) > Number(stockForm.grossWeight || 0) && (
+                    <p className="text-[10px] text-red-400 font-bold mt-1">
+                      ⚠️ Net weight ({stockForm.netWeight}g) cannot exceed gross weight ({stockForm.grossWeight}g)!
+                    </p>
+                  )}
                   <span className="text-[10px] text-luxury-muted mt-0.5 block">
                     Actual gold/silver weight in stock
                   </span>
@@ -1860,9 +1894,27 @@ export default function InventoryManager({
                     required
                     placeholder="0.000"
                     value={editForm.netWeight}
-                    onChange={(e) => setEditForm({ ...editForm, netWeight: e.target.value })}
+                    onChange={(e) => {
+                      const nw = e.target.value;
+                      const numNw = parseFloat(nw);
+                      const numGw = parseFloat(editForm.grossWeight);
+                      let newStone = editForm.stoneWeight;
+                      if (!isNaN(numNw) && !isNaN(numGw) && numGw >= numNw) {
+                        newStone = (numGw - numNw).toFixed(3);
+                      }
+                      setEditForm({
+                        ...editForm,
+                        netWeight: nw,
+                        stoneWeight: newStone,
+                      });
+                    }}
                     className="w-full rounded-xl border border-amber-500/50 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-amber-200 placeholder:text-neutral-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 focus:outline-none"
                   />
+                  {Number(editForm.grossWeight || 0) > 0 && Number(editForm.netWeight || 0) > Number(editForm.grossWeight || 0) && (
+                    <p className="text-[10px] text-red-400 font-bold mt-1">
+                      ⚠️ Net weight ({editForm.netWeight}g) cannot exceed gross weight ({editForm.grossWeight}g)!
+                    </p>
+                  )}
                   <span className="text-[10px] text-luxury-muted mt-0.5 block">
                     Actual gold/silver weight in stock
                   </span>

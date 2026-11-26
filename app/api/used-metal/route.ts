@@ -105,6 +105,10 @@ export async function POST(req: NextRequest) {
       ? Number(Number(body.netWeight).toFixed(3))
       : Number((numGross - numDeductions).toFixed(3));
 
+    if (netWeight > numGross) {
+      return NextResponse.json({ success: false, error: `Net weight (${netWeight}g) cannot exceed gross weight (${numGross}g). Gross weight must be greater than or equal to net weight.` }, { status: 400 });
+    }
+
     const agreedCostRupees = finalAgreedCostRupees !== undefined ? Number(finalAgreedCostRupees) : 0;
     const finalAgreedCostPaise = Math.round(agreedCostRupees * 100);
 
