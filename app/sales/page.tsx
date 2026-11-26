@@ -24,6 +24,7 @@ import {
   Download,
   History,
   FileText,
+  BookOpen,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
 
@@ -82,7 +83,7 @@ export default function SalesPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Filters
-  const [tab, setTab] = useState<"all" | "pending_udhari" | "paid" | "3_days" | "overdue">("all");
+  const [tab, setTab] = useState<"all" | "gold" | "silver" | "paid" | "partial" | "cash" | "online" | "advance">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [metalFilter, setMetalFilter] = useState<string>("all");
 
@@ -109,17 +110,26 @@ export default function SalesPage() {
       setError(null);
 
       let url = "/api/sales?";
-      if (metalFilter !== "all") url += `&metalType=${metalFilter}`;
+      if (metalFilter !== "all") {
+        url += `&metalType=${metalFilter}`;
+      } else if (tab === "gold") {
+        url += "&metalType=gold";
+      } else if (tab === "silver") {
+        url += "&metalType=silver";
+      }
+
       if (searchQuery.trim()) url += `&search=${encodeURIComponent(searchQuery.trim())}`;
 
-      if (tab === "pending_udhari") {
+      if (tab === "partial") {
         url += "&paymentStatus=partial";
       } else if (tab === "paid") {
         url += "&paymentStatus=paid";
-      } else if (tab === "3_days") {
-        url += "&dueFilter=3_days";
-      } else if (tab === "overdue") {
-        url += "&dueFilter=overdue";
+      } else if (tab === "cash") {
+        url += "&paymentMode=cash";
+      } else if (tab === "online") {
+        url += "&paymentMode=online";
+      } else if (tab === "advance") {
+        url += "&paymentMode=advance";
       }
 
       const res = await fetch(url);
@@ -232,25 +242,55 @@ export default function SalesPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Section Switcher Tabs (Sales vs Udhari) ── */}
+      <div className="flex items-center gap-1.5 p-1 bg-luxury-obsidian/90 border border-white/10 rounded-2xl w-fit">
+        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-luxury-gold/20 border border-luxury-gold text-luxury-gold-bright text-xs font-bold shadow-sm">
+          <ShoppingBag className="h-3.5 w-3.5 text-luxury-gold" />
+          <span>Showroom Sales</span>
+        </div>
+        <Link
+          href="/udhari"
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-neutral-400 hover:text-white hover:bg-white/[0.05] text-xs font-medium transition-all"
+        >
+          <BookOpen className="h-3.5 w-3.5 text-luxury-muted" />
+          <span>Customer Udhari Khata</span>
+          {metrics.totalOutstandingUdhariRupees > 0 && (
+            <span className="rounded-full bg-amber-500/25 px-1.5 py-0.2 text-[10px] font-bold text-amber-300 border border-amber-500/40">
+              ₹{metrics.totalOutstandingUdhariRupees.toLocaleString("en-IN")}
+            </span>
+          )}
+        </Link>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center animate-fadeInUp">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-luxury-gold-champagne">
-            Customer Ledger &amp; Counter Billing
+            Showroom Billing &amp; Counter Register • विक्री खाते
           </span>
           <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            Sales &amp; Customer Udhari Khata
+            Showroom Sales &amp; Invoices
           </h1>
           <p className="mt-1 text-xs text-luxury-muted">
-            Live showroom sales tracking, owner profit analysis, and due date WhatsApp reminders
+            Live showroom counter sales tracking, customer billing records, payment methods &amp; realized profits
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Direct Link to Udhari Khata */}
+          <Link
+            href="/udhari"
+            className="btn-3d flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-950/30 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-950/60 hover:border-amber-400 transition"
+          >
+            <BookOpen className="h-4 w-4 text-amber-400" />
+            <span>Open Udhari Khata →</span>
+          </Link>
+
+          {/* Export Sales Excel */}
           <a
             href="/api/export/sales"
             download
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] transition-all border border-emerald-400/30"
           >
             <FileSpreadsheet className="h-4 w-4" />
             <span>Download Sales Report (Excel)</span>
@@ -286,7 +326,7 @@ export default function SalesPage() {
             <AnimatedNumber value={metrics.totalRevenueRupees} prefix="₹" />
           </p>
           <span className="text-[11px] text-luxury-muted/80 mt-1 block">
-            {metrics.totalSalesCount} transactions completed
+            {metrics.totalSalesCount} invoices completed
           </span>
         </TiltCard>
 
@@ -302,44 +342,46 @@ export default function SalesPage() {
             +<AnimatedNumber value={metrics.totalProfitRupees} prefix="₹" />
           </p>
           <span className="text-[11px] text-emerald-300/80 mt-1 block">
-            Manual owner margin recorded
+            Direct showroom margin earned
           </span>
         </TiltCard>
 
         <TiltCard
           maxTilt={8}
           glare={true}
-          className="rounded-2xl border border-amber-500/30 bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
+          className="rounded-2xl border border-sky-500/30 bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
         >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
-            Total Outstanding Udhari
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-sky-400">
+            Total Inflow Collected
           </span>
-          <p className="mt-2 font-serif text-2xl font-bold text-amber-300">
-            <AnimatedNumber value={metrics.totalOutstandingUdhariRupees} prefix="₹" />
+          <p className="mt-2 font-serif text-2xl font-bold text-sky-300">
+            <AnimatedNumber value={Math.max(0, metrics.totalRevenueRupees - metrics.totalOutstandingUdhariRupees)} prefix="₹" />
           </p>
-          <span className="text-[11px] text-amber-400/80 mt-1 block font-medium">
-            Customer dues to be collected
+          <span className="text-[11px] text-sky-300/80 mt-1 block">
+            Cash, Online &amp; Advance realized
           </span>
         </TiltCard>
 
-        <TiltCard
-          maxTilt={8}
-          glare={true}
-          className="rounded-2xl border border-white/[0.08] bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury"
-        >
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-luxury-muted">
-            Due Date Alerts
-          </span>
-          <div className="mt-2 flex items-center gap-2">
-            <span className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-xs font-bold text-amber-300">
-              {metrics.due3DaysCount} in 3 Days
+        <Link href="/udhari" className="block group">
+          <TiltCard
+            maxTilt={8}
+            glare={true}
+            className="rounded-2xl border border-amber-500/30 bg-luxury-graphite/85 backdrop-blur-xl p-5 shadow-luxury group-hover:border-amber-400/60 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+                Customer Udhari Linked
+              </span>
+              <ArrowUpRight className="h-4 w-4 text-amber-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </div>
+            <p className="mt-2 font-serif text-2xl font-bold text-amber-300">
+              <AnimatedNumber value={metrics.totalOutstandingUdhariRupees} prefix="₹" />
+            </p>
+            <span className="text-[11px] text-amber-400/80 mt-1 block font-medium">
+              Click to manage &amp; recover in Udhari Khata →
             </span>
-            <span className="rounded-lg bg-red-500/20 border border-red-500/40 px-2 py-0.5 text-xs font-bold text-red-300">
-              {metrics.overdueCount} Overdue
-            </span>
-          </div>
-          <span className="text-[11px] text-luxury-muted/80 mt-1 block">Scheduled reminders</span>
-        </TiltCard>
+          </TiltCard>
+        </Link>
       </div>
 
       {/* Filter Navigation Tabs */}
@@ -356,43 +398,25 @@ export default function SalesPage() {
         </button>
 
         <button
-          onClick={() => setTab("pending_udhari")}
-          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-            tab === "pending_udhari"
-              ? "bg-amber-500 text-black shadow-[0_0_12px_rgba(245,158,11,0.5)] font-bold"
-              : "border border-amber-500/30 bg-amber-950/20 text-amber-300 hover:bg-amber-950/40"
+          onClick={() => setTab("gold")}
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "gold"
+              ? "bg-luxury-gold text-black font-bold shadow-xs"
+              : "border border-white/[0.08] bg-white/[0.03] text-luxury-gold hover:bg-white/[0.06]"
           }`}
         >
-          <Clock className="h-3.5 w-3.5" />
-          <span>Pending Udhari Dues</span>
+          🪙 Gold Items
         </button>
 
         <button
-          onClick={() => setTab("3_days")}
-          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-            tab === "3_days"
-              ? "bg-amber-400 text-black shadow-xs font-bold"
-              : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
+          onClick={() => setTab("silver")}
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "silver"
+              ? "bg-slate-300 text-black font-bold shadow-xs"
+              : "border border-white/[0.08] bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]"
           }`}
         >
-          <span>🟡 Due in 3 Days</span>
-          <span className="rounded-full bg-amber-500/30 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
-            {metrics.due3DaysCount}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setTab("overdue")}
-          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
-            tab === "overdue"
-              ? "bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.5)] font-bold"
-              : "border border-red-500/30 bg-red-950/20 text-red-300 hover:bg-red-950/40"
-          }`}
-        >
-          <span>🔴 Overdue Accounts</span>
-          <span className="rounded-full bg-red-500/30 px-1.5 py-0.2 text-[10px] font-bold text-red-200">
-            {metrics.overdueCount}
-          </span>
+          🥈 Silver Items
         </button>
 
         <button
@@ -400,10 +424,55 @@ export default function SalesPage() {
           className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
             tab === "paid"
               ? "bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.5)] font-bold"
+              : "border border-emerald-500/30 bg-emerald-950/20 text-emerald-400 hover:bg-emerald-950/40"
+          }`}
+        >
+          ✅ Fully Settled
+        </button>
+
+        <button
+          onClick={() => setTab("partial")}
+          className={`flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "partial"
+              ? "bg-amber-500 text-black shadow-[0_0_12px_rgba(245,158,11,0.5)] font-bold"
+              : "border border-amber-500/30 bg-amber-950/20 text-amber-300 hover:bg-amber-950/40"
+          }`}
+        >
+          <Clock className="h-3.5 w-3.5" />
+          <span>⏳ With Udhari Dues</span>
+        </button>
+
+        <button
+          onClick={() => setTab("cash")}
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "cash"
+              ? "bg-emerald-400 text-black font-bold shadow-xs"
               : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
           }`}
         >
-          Fully Settled
+          💵 Cash
+        </button>
+
+        <button
+          onClick={() => setTab("online")}
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "online"
+              ? "bg-sky-400 text-black font-bold shadow-xs"
+              : "border border-white/[0.08] bg-white/[0.03] text-luxury-muted hover:text-white hover:bg-white/[0.06]"
+          }`}
+        >
+          📲 Online UPI
+        </button>
+
+        <button
+          onClick={() => setTab("advance")}
+          className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+            tab === "advance"
+              ? "bg-purple-400 text-black font-bold shadow-xs"
+              : "border border-white/[0.08] bg-white/[0.03] text-purple-300 hover:bg-white/[0.06]"
+          }`}
+        >
+          💎 Advance Used
         </button>
       </div>
 
@@ -433,42 +502,41 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Sales & Udhari Ledger Table */}
+      {/* Sales Register Table */}
       <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-luxury-graphite/80 backdrop-blur-xl shadow-luxury">
         <div className="flex items-center justify-between px-3 py-1.5 text-[11px] text-luxury-gold-champagne bg-luxury-gold/10 border-b border-white/[0.08] md:hidden">
-          <span>👈 Swipe horizontally to view all sales &amp; udhari 👉</span>
+          <span>👈 Swipe horizontally to view all sales invoices 👉</span>
           <span className="font-mono text-[10px] text-luxury-muted">Actions</span>
         </div>
         <div className="overflow-x-auto touch-scroll">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-white/[0.08] bg-white/[0.03] text-luxury-gold-champagne uppercase font-semibold">
               <tr>
-                <th className="px-4 py-3.5">Sale # / Date</th>
+                <th className="px-4 py-3.5">Invoice # / Date</th>
                 <th className="px-4 py-3.5">Customer Details</th>
                 <th className="px-4 py-3.5">Item &amp; Spec</th>
-                <th className="px-4 py-3.5 text-right">Sold Qty / Wt</th>
-                <th className="px-4 py-3.5 text-right">Sale Price</th>
+                <th className="px-4 py-3.5 text-right">Sold Qty / Net Wt</th>
+                <th className="px-4 py-3.5 text-right">Invoice Amount</th>
                 <th className="px-4 py-3.5 text-right">Profit Earned</th>
-                <th className="px-4 py-3.5 text-right">Paid</th>
-                <th className="px-4 py-3.5 text-right">Udhari Due</th>
-                <th className="px-4 py-3.5 text-center">Due Date / Status</th>
+                <th className="px-4 py-3.5 text-center">Payment Method</th>
+                <th className="px-4 py-3.5 text-center">Settlement Status</th>
                 <th className="px-4 py-3.5 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.06]">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={9} className="py-12 text-center text-luxury-muted">
                     <div className="inline-block h-6 w-6 rounded-full border-2 border-luxury-gold border-t-transparent animate-spin mb-2"></div>
-                    <p>Loading sales records...</p>
+                    <p>Loading showroom sales records...</p>
                   </td>
                 </tr>
               ) : sales.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-luxury-muted">
+                  <td colSpan={9} className="py-12 text-center text-luxury-muted">
                     <p className="font-serif text-sm font-semibold text-white">No sales records found</p>
                     <p className="text-[11px] mt-1 text-luxury-muted">
-                      Use the &apos;Sell&apos; button in Gold or Silver inventory to record customer sales.
+                      Use the &apos;Sell&apos; button in Gold or Silver inventory to record showroom sales.
                     </p>
                   </td>
                 </tr>
@@ -478,14 +546,6 @@ export default function SalesPage() {
                   const profit = s.profitPaise / 100;
                   const paid = s.paidAmountPaise / 100;
                   const balance = s.balanceDuePaise / 100;
-
-                  const now = new Date();
-                  const isOverdue = balance > 0 && s.dueDate && new Date(s.dueDate) < new Date(now.setHours(0, 0, 0, 0));
-                  const isDueSoon =
-                    balance > 0 &&
-                    s.dueDate &&
-                    !isOverdue &&
-                    new Date(s.dueDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
 
                   return (
                     <tr key={s._id} className="hover:bg-white/[0.04] transition-colors">
@@ -511,7 +571,11 @@ export default function SalesPage() {
                       <td className="px-4 py-3">
                         <p className="font-semibold text-white/90">{s.itemName}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="rounded bg-luxury-gold/15 px-1.5 py-0.2 text-[10px] font-bold text-luxury-gold-bright border border-luxury-gold/30">
+                          <span className={`rounded px-1.5 py-0.2 text-[10px] font-bold border ${
+                            s.metalType === "gold"
+                              ? "bg-luxury-gold/15 text-luxury-gold-bright border-luxury-gold/30"
+                              : "bg-slate-400/15 text-slate-300 border-slate-400/30"
+                          }`}>
                             {s.purity}
                           </span>
                           {s.size && (
@@ -540,47 +604,47 @@ export default function SalesPage() {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3 text-right text-white/80 font-medium font-mono tabular-nums">
-                        ₹{paid.toLocaleString("en-IN")}
-                      </td>
-
-                      <td className="px-4 py-3 text-right">
-                        {balance > 0 ? (
-                          <span className="font-mono tabular-nums font-bold text-amber-400">
-                            ₹{balance.toLocaleString("en-IN")}
+                      <td className="px-4 py-3 text-center">
+                        {s.paymentMode === "split" ? (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-300 border border-indigo-500/40">
+                              Split
+                            </span>
+                            <span className="text-[9px] text-luxury-muted font-mono">
+                              {s.splitPayments?.cashPaise ? `C:₹${(s.splitPayments.cashPaise / 100).toLocaleString("en-IN")} ` : ""}
+                              {s.splitPayments?.onlinePaise ? `O:₹${(s.splitPayments.onlinePaise / 100).toLocaleString("en-IN")} ` : ""}
+                              {s.splitPayments?.advancePaise ? `Adv:₹${(s.splitPayments.advancePaise / 100).toLocaleString("en-IN")}` : ""}
+                            </span>
+                          </div>
+                        ) : s.paymentMode === "advance" ? (
+                          <span className="rounded-md bg-purple-500/20 px-2 py-0.5 text-[10px] font-bold text-purple-300 border border-purple-500/40">
+                            💎 Advance
+                          </span>
+                        ) : s.paymentMode === "online" ? (
+                          <span className="rounded-md bg-sky-500/20 px-2 py-0.5 text-[10px] font-bold text-sky-300 border border-sky-500/40">
+                            📲 Online UPI
                           </span>
                         ) : (
-                          <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/30">
-                            Cleared ✅
+                          <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/40">
+                            💵 Cash (Rojmel)
                           </span>
                         )}
                       </td>
 
                       <td className="px-4 py-3 text-center">
                         {balance > 0 ? (
-                          <div>
-                            {s.dueDate ? (
-                              <span
-                                className={`rounded-md px-2 py-0.5 text-[10px] font-bold border ${
-                                  isOverdue
-                                    ? "bg-red-500/20 text-red-300 border-red-500/40"
-                                    : isDueSoon
-                                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                                    : "bg-white/[0.05] text-luxury-muted border-white/[0.08]"
-                                }`}
-                              >
-                                {isOverdue ? "⚠️ Overdue: " : isDueSoon ? "⏳ Due Soon: " : "Due: "}
-                                {new Date(s.dueDate).toLocaleDateString("en-IN", {
-                                  day: "numeric",
-                                  month: "short",
-                                })}
-                              </span>
-                            ) : (
-                              <span className="text-luxury-muted text-[10px]">No due date set</span>
-                            )}
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="rounded-md bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/40">
+                              Udhari: ₹{balance.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-[9px] text-emerald-400 font-mono">
+                              Paid: ₹{paid.toLocaleString("en-IN")}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-emerald-400">Settled</span>
+                          <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/30">
+                            Cleared ✅
+                          </span>
                         )}
                       </td>
 
@@ -616,16 +680,16 @@ export default function SalesPage() {
                             <span>History</span>
                           </button>
 
-                          {/* Collect Payment Button */}
+                          {/* Open in Udhari Khata if balance > 0 */}
                           {balance > 0 && (
-                            <button
-                              onClick={() => openCollectModal(s)}
-                              title="Collect Udhari Payment"
+                            <Link
+                              href={`/udhari?search=${encodeURIComponent(s.customer.name)}`}
+                              title="Open Customer in Udhari Khata"
                               className="flex items-center gap-1 rounded-lg bg-amber-500/20 border border-amber-500/40 px-2.5 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition-all btn-3d"
                             >
-                              <CreditCard className="h-3 w-3" />
-                              <span>Collect</span>
-                            </button>
+                              <BookOpen className="h-3 w-3" />
+                              <span>Udhari Khata →</span>
+                            </Link>
                           )}
                         </div>
                       </td>

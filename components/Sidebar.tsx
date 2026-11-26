@@ -18,6 +18,7 @@ import {
   ClipboardCheck,
   ReceiptText,
   Scale,
+  BookOpen,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -29,7 +30,8 @@ const navigationItems = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Gold Stock", href: "/gold", icon: Coins, tag: "24K / 22K" },
   { name: "Silver Stock", href: "/silver", icon: Gem, tag: "999 / 925" },
-  { name: "Sales & Udhari", href: "/sales", icon: ShoppingBag, badge: "Billing" },
+  { name: "Sales", href: "/sales", icon: ShoppingBag, badge: "Billing" },
+  { name: "Udhari Khata", href: "/udhari", icon: BookOpen, badge: "Dues" },
   { name: "Monthly Stock", href: "/inventory/monthly-stock", icon: ClipboardCheck, badge: "Audit" },
   { name: "Cash Book", href: "/cash-book", icon: Wallet, tag: "Rojmel" },
   { name: "Profit & Loss", href: "/profit-loss", icon: TrendingUp },

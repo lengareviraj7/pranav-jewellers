@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Clock,
   Activity,
+  BookOpen,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber, GlassCard, PulseDot } from "@/components/Motion";
 
@@ -329,9 +330,9 @@ export default function DashboardPage() {
             label="Pending Udhari"
             value={<span className="text-amber-400"><AnimatedNumber value={counter?.outstandingUdhariRupees || 0} prefix="₹" /></span>}
             sub="Customer balance to collect"
-            link="/sales?tab=pending_udhari"
+            link="/udhari?tab=pending_udhari"
             linkLabel="Open Udhari Khata"
-            icon={ShoppingBag}
+            icon={BookOpen}
             iconBg="bg-amber-500/15 border border-amber-500/30 text-amber-400"
           />
           <KpiCard
@@ -340,7 +341,7 @@ export default function DashboardPage() {
             label="Due Alerts (3 Days)"
             value={<><AnimatedNumber value={counter?.dueAlertCount || 0} /> <span className="text-sm font-sans font-normal text-luxury-muted">due soon</span></>}
             sub="WhatsApp reminder queue"
-            link="/sales?tab=3_days"
+            link="/udhari?tab=3_days"
             linkLabel="Send Due Alerts"
             icon={Clock}
             iconBg="bg-amber-500/15 border border-amber-500/30 text-amber-400"
@@ -391,8 +392,10 @@ export default function DashboardPage() {
             {[
               { href: "/gold", icon: Coins, label: "Gold Inventory", desc: "Stock by category, HUID, purity" },
               { href: "/silver", icon: Gem, label: "Silver Inventory", desc: "Anklets, coins, utensils" },
-              { href: "/sales", icon: ShoppingBag, label: "Sales & Udhari", desc: "Counter billing, Udhari khata" },
-              { href: "/cash-book", icon: Wallet, label: "Cash Book", desc: "Daily Jama & Kharach" },
+              { href: "/sales", icon: ShoppingBag, label: "Sales & Invoices", desc: "Showroom billing, counter invoices" },
+              { href: "/udhari", icon: BookOpen, label: "Udhari Khata", desc: "Customer credit, recovery & WhatsApp" },
+              { href: "/cash-book", icon: Wallet, label: "Cash Book", desc: "Daily Jama & Kharach (Rojmel)" },
+              { href: "/profit-loss", icon: TrendingUp, label: "Profit & Loss", desc: "Realized showroom margins" },
               { href: "/used-metal", icon: RefreshCw, label: "Used Metal", desc: "Exchange & scrap purchases" },
               { href: "/finance", icon: Landmark, label: "Gold Finance", desc: "Khata Book mortgage v2" },
             ].map((item, i) => {

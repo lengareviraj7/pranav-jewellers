@@ -70,11 +70,44 @@ export async function GET(req: NextRequest, { params }: { params: { type: string
           "Old Metal Trade-In Credit (INR)": exchangeCreditRs,
           "Cash Received (INR)": cashRs,
           "Online UPI/Bank (INR)": onlineRs,
+          "Advance Applied (INR)": (s.splitPayments?.advancePaise || 0) / 100,
           "Total Paid (INR)": totalPaidRs,
           "Udhari Balance Due (INR)": balDueRs,
           "Promise Due Date": dueD,
           "Payment Status": (s.paymentStatus || "paid").toUpperCase(),
           "Realized Margin / Profit (INR)": profitRs,
+        };
+      });
+    } else if (type === "udhari") {
+      sheetName = "Customer Udhari Ledger";
+      filename = `sidheshwar_udhari_ledger_${todayStr}.xlsx`;
+
+      const udhariRecords = await SaleRecord.find({ balanceDuePaise: { $gt: 0 } })
+        .sort({ dueDate: 1, saleDate: -1 })
+        .lean();
+
+      rows = udhariRecords.map((s: any) => {
+        const d = s.saleDate ? new Date(s.saleDate).toLocaleDateString("en-IN") : "";
+        const dueD = s.dueDate ? new Date(s.dueDate).toLocaleDateString("en-IN") : "Not Set";
+        const balDueRs = (s.balanceDuePaise || 0) / 100;
+        const totalPaidRs = (s.paidAmountPaise || 0) / 100;
+        const billTotalRs = (s.sellingPricePaise || 0) / 100;
+        const isOverdue = s.dueDate && new Date(s.dueDate) < new Date();
+
+        return {
+          "Customer Name": s.customer?.name || "",
+          "Mobile Number": s.customer?.phone || "",
+          "Village / Address": s.customer?.address || "Visapur",
+          "Pending Udhari (INR)": balDueRs,
+          "Total Bill (INR)": billTotalRs,
+          "Paid Amount (INR)": totalPaidRs,
+          "Promised Due Date": dueD,
+          "Overdue Status": isOverdue ? "OVERDUE (मुदत उलटली)" : "PENDING (मुदतीत)",
+          "Purchased Item": s.itemName || "",
+          "Item SKU": s.sku || "",
+          "Sale / Invoice No": s.saleNumber || "",
+          "Sale Date": d,
+          "Total Installments Paid": s.payments?.length || 0,
         };
       });
     } else if (type === "inventory") {

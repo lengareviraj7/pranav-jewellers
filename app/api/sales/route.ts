@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
 
     const metalType = searchParams.get("metalType");
     const paymentStatus = searchParams.get("paymentStatus");
+    const paymentMode = searchParams.get("paymentMode");
     const search = searchParams.get("search");
     const dueAlert = searchParams.get("dueAlert");
 
@@ -31,6 +32,10 @@ export async function GET(req: NextRequest) {
 
     if (paymentStatus && ["paid", "partial", "unpaid"].includes(paymentStatus)) {
       query.paymentStatus = paymentStatus;
+    }
+
+    if (paymentMode && ["cash", "online", "advance", "mixed"].includes(paymentMode)) {
+      query.paymentMode = paymentMode;
     }
 
     if (search) {
