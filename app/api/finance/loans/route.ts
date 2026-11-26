@@ -5,6 +5,7 @@ import FinanceLoan from "@/models/FinanceLoan";
 import FinancePayment from "@/models/FinancePayment";
 import Customer from "@/models/Customer";
 import AuditLog from "@/models/AuditLog";
+import CashTransaction from "@/models/CashTransaction";
 import { calculateMortgageInterest, getTodayIST } from "@/lib/mortgage-engine";
 
 export async function GET(req: NextRequest) {
@@ -108,6 +109,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       customerId,
+      customerName,
+      customerPhone,
+      customerAddress,
       mortgageDate,
       principalRupees,
       monthlyRate = 2.0,
@@ -115,15 +119,32 @@ export async function POST(req: NextRequest) {
       dueDate,
       pledgedItems = [],
       notes,
+      disburseCash = true,
     } = body;
 
-    if (!customerId) {
-      return NextResponse.json({ success: false, error: "Customer selection is required" }, { status: 400 });
+    let customer: any = null;
+    if (customerId) {
+      customer = await Customer.findById(customerId);
+    } else if (customerPhone) {
+      const cleanDigits = customerPhone.replace(/\D/g, "");
+      const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+      customer = await Customer.findOne({
+        $or: [{ mobileNumber: formattedPhone }, { mobileNumber: customerPhone }],
+      });
+      if (!customer) {
+        const custCount = await Customer.countDocuments();
+        customer = await Customer.create({
+          customerId: `CUST-${formattedPhone.slice(-6) || String(custCount + 1).padStart(4, "0")}`,
+          fullName: (customerName || "").trim() || "Customer",
+          mobileNumber: formattedPhone,
+          address: (customerAddress || "").trim() || "Visapur",
+          isActive: true,
+        });
+      }
     }
 
-    const customer = await Customer.findById(customerId);
     if (!customer) {
-      return NextResponse.json({ success: false, error: "Customer not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Customer selection or phone number is required" }, { status: 400 });
     }
 
     const numPrincipal = Number(principalRupees);
@@ -175,7 +196,7 @@ export async function POST(req: NextRequest) {
 
     const loan = await FinanceLoan.create({
       loanNumber,
-      customerId,
+      customerId: customer._id,
       mortgageDate: mDate,
       originalPrincipalPaise: principalPaise,
       currentOutstandingPrincipalPaise: principalPaise,
@@ -192,6 +213,23 @@ export async function POST(req: NextRequest) {
       status: "active",
       notes: notes?.trim(),
     });
+
+    // Auto-record in Cash Counter Book (Rojmel Kharch - Loan Disbursement)
+    if (disburseCash) {
+      try {
+        await CashTransaction.create({
+          transactionType: "debit",
+          category: "loan_disbursement",
+          amountPaise: principalPaise,
+          purpose: `Gold Loan Cash Disbursed: ${customer.fullName} [${loan.loanNumber}]`,
+          referenceId: loan.loanNumber,
+          date: new Date(mDate),
+          notes: notes?.trim() || `Disbursed for loan ${loan.loanNumber} (${numRate}%/mo)`,
+        });
+      } catch (cashErr) {
+        console.warn("Could not log loan disbursement to CashTransaction:", cashErr);
+      }
+    }
 
     await AuditLog.create({
       action: "LOAN_CREATED",
