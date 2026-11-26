@@ -53,6 +53,9 @@ export default function QuickActionModal({
     notes: "",
   });
 
+  const [isCustomGoldPurity, setIsCustomGoldPurity] = useState(false);
+  const [isCustomSilverPurity, setIsCustomSilverPurity] = useState(false);
+
   const [usedForm, setUsedForm] = useState({
     metalType: "gold",
     sellerName: "",
@@ -375,17 +378,45 @@ export default function QuickActionModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Purity</label>
-                <select
-                  value={goldForm.purity}
-                  onChange={(e) => setGoldForm({ ...goldForm, purity: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                >
-                  <option value="24K">24K (99.9% Fine)</option>
-                  <option value="22K">22K (91.6% Hallmark)</option>
-                  <option value="20K">20K (83.3%)</option>
-                  <option value="18K">18K (75.0%)</option>
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-luxury-charcoal">Purity</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomGoldPurity(!isCustomGoldPurity)}
+                    className="text-[10px] text-luxury-gold-dark hover:underline font-bold"
+                  >
+                    {isCustomGoldPurity ? "Select List" : "+ Custom Purity"}
+                  </button>
+                </div>
+                {isCustomGoldPurity ? (
+                  <input
+                    type="text"
+                    placeholder="e.g. 23K, 916, 750"
+                    value={goldForm.purity}
+                    onChange={(e) => setGoldForm({ ...goldForm, purity: e.target.value.toUpperCase() })}
+                    className="w-full rounded-xl border border-luxury-gold px-3 py-2 text-xs font-bold focus:border-luxury-gold focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <select
+                    value={goldForm.purity}
+                    onChange={(e) => {
+                      if (e.target.value === "__CUSTOM__") {
+                        setIsCustomGoldPurity(true);
+                      } else {
+                        setGoldForm({ ...goldForm, purity: e.target.value });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  >
+                    <option value="24K">24K (99.9% Fine)</option>
+                    <option value="22K">22K (91.6% Hallmark)</option>
+                    <option value="20K">20K (83.3%)</option>
+                    <option value="18K">18K (75.0%)</option>
+                    <option value="14K">14K (58.5%)</option>
+                    <option value="__CUSTOM__">+ Enter Custom Purity...</option>
+                  </select>
+                )}
               </div>
 
               <div>
@@ -497,16 +528,46 @@ export default function QuickActionModal({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-luxury-charcoal mb-1">Purity</label>
-                <select
-                  value={silverForm.purity}
-                  onChange={(e) => setSilverForm({ ...silverForm, purity: e.target.value })}
-                  className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                >
-                  <option value="999">999 (Fine Silver)</option>
-                  <option value="925">925 (Sterling Silver)</option>
-                  <option value="800">800 (Standard Silver)</option>
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-luxury-charcoal">Purity</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomSilverPurity(!isCustomSilverPurity)}
+                    className="text-[10px] text-luxury-gold-dark hover:underline font-bold"
+                  >
+                    {isCustomSilverPurity ? "Select List" : "+ Custom Purity"}
+                  </button>
+                </div>
+                {isCustomSilverPurity ? (
+                  <input
+                    type="text"
+                    placeholder="e.g. 995, 920, 840, 700"
+                    value={silverForm.purity}
+                    onChange={(e) => setSilverForm({ ...silverForm, purity: e.target.value.toUpperCase() })}
+                    className="w-full rounded-xl border border-luxury-gold px-3 py-2 text-xs font-bold focus:border-luxury-gold focus:outline-none"
+                    autoFocus
+                  />
+                ) : (
+                  <select
+                    value={silverForm.purity}
+                    onChange={(e) => {
+                      if (e.target.value === "__CUSTOM__") {
+                        setIsCustomSilverPurity(true);
+                      } else {
+                        setSilverForm({ ...silverForm, purity: e.target.value });
+                      }
+                    }}
+                    className="w-full rounded-xl border border-luxury-beige px-3 py-2 text-xs focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                  >
+                    <option value="999">999 (Fine Silver)</option>
+                    <option value="925">925 (Sterling Silver)</option>
+                    <option value="900">900 (Silver Coin/Articles)</option>
+                    <option value="840">840 (Traditional Silver)</option>
+                    <option value="800">800 (Standard Silver)</option>
+                    <option value="700">700 (Silver Utensils)</option>
+                    <option value="__CUSTOM__">+ Enter Custom Purity...</option>
+                  </select>
+                )}
               </div>
 
               <div>

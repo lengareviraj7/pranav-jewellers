@@ -213,6 +213,46 @@ export default function InventoryManager({
     notes: "",
   });
 
+  // Dynamic Purity Management
+  const [customPurities, setCustomPurities] = useState<string[]>([]);
+  const [isAddingPurity, setIsAddingPurity] = useState(false);
+  const [newPurityInput, setNewPurityInput] = useState("");
+
+  // Load saved custom purities from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`sj_custom_purities_${metalType}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setCustomPurities(parsed);
+      }
+    } catch (_) {}
+  }, [metalType]);
+
+  // Combined purities from default props, custom added, and existing inventory items
+  const activePurities = React.useMemo(() => {
+    const fromItems = items.map((i) => i.purity).filter(Boolean);
+    const combined = Array.from(new Set([...purityOptions, ...customPurities, ...fromItems]));
+    return combined;
+  }, [purityOptions, customPurities, items]);
+
+  const handleAddNewPurity = () => {
+    const val = newPurityInput.trim().toUpperCase();
+    if (!val) return;
+    if (!activePurities.includes(val)) {
+      const updated = [...customPurities, val];
+      setCustomPurities(updated);
+      try {
+        localStorage.setItem(`sj_custom_purities_${metalType}`, JSON.stringify(updated));
+      } catch (_) {}
+    }
+    setStockForm((prev) => ({ ...prev, purity: val }));
+    setNewPurityInput("");
+    setIsAddingPurity(false);
+    setSuccessMsg(`Purity "${val}" added successfully!`);
+    setTimeout(() => setSuccessMsg(null), 2500);
+  };
+
   // Adjust Form State
   const [adjustForm, setAdjustForm] = useState({
     newQuantity: 1,
@@ -966,7 +1006,7 @@ export default function InventoryManager({
             className="rounded-xl border border-white/[0.1] bg-luxury-obsidian/70 px-3 py-2 text-xs text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
           >
             <option value="all" className="bg-luxury-obsidian text-white">All Purities</option>
-            {purityOptions.map((p) => (
+            {activePurities.map((p) => (
               <option key={p} value={p} className="bg-luxury-obsidian text-white">
                 {p}
               </option>
@@ -1230,18 +1270,72 @@ export default function InventoryManager({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-300 mb-1">Purity *</label>
-                  <select
-                    value={stockForm.purity}
-                    onChange={(e) => setStockForm({ ...stockForm, purity: e.target.value })}
-                    className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
-                  >
-                    {purityOptions.map((p) => (
-                      <option key={p} value={p} className="bg-luxury-obsidian text-white">
-                        {p}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-neutral-300">Purity *</label>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingPurity(!isAddingPurity)}
+                      className="text-[10px] text-luxury-gold hover:underline font-bold"
+                    >
+                      {isAddingPurity ? "Select from list" : "+ + New Purity"}
+                    </button>
+                  </div>
+
+                  {isAddingPurity ? (
+                    <div className="flex items-center gap-1.5 animate-fadeIn">
+                      <input
+                        type="text"
+                        placeholder="e.g. 995, 920, 840, 750, 18K"
+                        value={newPurityInput}
+                        onChange={(e) => setNewPurityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddNewPurity();
+                          } else if (e.key === "Escape") {
+                            setIsAddingPurity(false);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-luxury-gold/50 bg-black/70 px-3 py-2 text-xs font-bold text-white focus:border-luxury-gold focus:outline-none"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddNewPurity}
+                        className="rounded-xl bg-luxury-gold px-3 py-2 text-xs font-bold text-black hover:bg-luxury-gold-bright transition shrink-0"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingPurity(false)}
+                        className="rounded-xl bg-white/10 px-2.5 py-2 text-xs font-medium text-white hover:bg-white/20 transition shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      value={stockForm.purity}
+                      onChange={(e) => {
+                        if (e.target.value === "__NEW__") {
+                          setIsAddingPurity(true);
+                        } else {
+                          setStockForm({ ...stockForm, purity: e.target.value });
+                        }
+                      }}
+                      className="w-full rounded-xl border border-white/20 bg-black/70 px-3 py-2 text-xs font-medium text-white focus:border-luxury-gold focus:ring-1 focus:ring-luxury-gold focus:outline-none"
+                    >
+                      {activePurities.map((p) => (
+                        <option key={p} value={p} className="bg-luxury-obsidian text-white">
+                          {p}
+                        </option>
+                      ))}
+                      <option value="__NEW__" className="bg-luxury-gold/20 text-luxury-gold font-bold">
+                        + Add Custom Purity...
                       </option>
-                    ))}
-                  </select>
+                    </select>
+                  )}
                 </div>
 
                 <div>
