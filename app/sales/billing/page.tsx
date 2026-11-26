@@ -22,6 +22,7 @@ import {
   FileText,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber, GlassCard, PulseDot } from "@/components/Motion";
+import CustomerAutocomplete from "@/components/CustomerAutocomplete";
 
 interface InventoryItemOption {
   _id: string;
@@ -932,61 +933,41 @@ export default function CounterBillingPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* LEFT COLUMN: Name, Address, Calculated Outstanding */}
+        <CustomerAutocomplete
+          customerName={customerName}
+          customerPhone={customerPhone}
+          customerAddress={customerAddress}
+          onNameChange={setCustomerName}
+          onPhoneChange={setCustomerPhone}
+          onAddressChange={setCustomerAddress}
+          defaultAddress="Visapur"
+        />
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mt-4 pt-4 border-t border-white/[0.08]">
+          {/* LEFT COLUMN: Calculated Outstanding Udhari */}
           <div className="space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-gold-champagne">
-              Customer Details
+              Udhari Balance
             </span>
 
-            <div>
-              <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">Customer Full Name *</label>
-              <input
-                type="text"
-                placeholder="e.g. Ramesh Patil"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-luxury-obsidian p-2 text-xs text-white"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">Showroom Address / Village</label>
-              <input
-                type="text"
-                placeholder="e.g. Market Yard, Karad"
-                value={customerAddress}
-                onChange={(e) => setCustomerAddress(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-luxury-obsidian p-2 text-xs text-white"
-              />
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-luxury-obsidian p-3">
+            <div className="rounded-xl border border-white/10 bg-luxury-obsidian p-3.5">
               <span className="text-[10px] uppercase text-luxury-muted">Calculated Udhari Balance</span>
-              <p className="font-mono text-lg font-bold text-rose-400">
+              <p className="font-mono text-xl font-bold text-rose-400 mt-1">
                 ₹{outstandingUdhariRupees.toLocaleString("en-IN")}
               </p>
+              <span className="text-[10px] text-luxury-muted mt-1 block">
+                {outstandingUdhariRupees > 0
+                  ? "Requires promised payment date for 3-stage WhatsApp reminders"
+                  : "Bill is fully settled. No Udhari pending."}
+              </span>
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Mobile Number, Promised Due Date, Optional Manual Profit */}
+          {/* RIGHT COLUMN: Promised Due Date & Optional Manual Profit */}
           <div className="space-y-3">
             <span className="text-[10px] font-bold uppercase tracking-wider text-luxury-gold-champagne">
-              Contact &amp; Credit Schedule
+              Credit Due Schedule &amp; Margin
             </span>
-
-            <div>
-              <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">
-                Customer Mobile (10 Digits) *
-              </label>
-              <input
-                type="tel"
-                placeholder="e.g. 9876543210"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-luxury-obsidian p-2 text-xs font-mono text-white"
-              />
-            </div>
 
             <div>
               <label className="block text-[11px] font-bold text-luxury-muted uppercase mb-1">

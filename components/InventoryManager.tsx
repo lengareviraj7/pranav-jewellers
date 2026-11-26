@@ -22,12 +22,15 @@ import {
   Send,
   MessageCircle,
   User,
+  Users,
   Phone,
   Calendar,
   DollarSign,
   Filter,
+  ChevronDown,
 } from "lucide-react";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
+import CustomerHistoryModal from "@/components/CustomerHistoryModal";
 
 interface Category {
   id: string;
@@ -161,6 +164,37 @@ export default function InventoryManager({
     paymentMode: "cash" as "cash" | "online" | "mixed",
     notes: "",
   });
+
+  // Repeat Customer State & Autocomplete
+  const [customerSuggestions, setCustomerSuggestions] = useState<any[]>([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [selectedCustomerData, setSelectedCustomerData] = useState<any | null>(null);
+  const [isCustomerHistoryOpen, setIsCustomerHistoryOpen] = useState(false);
+
+  const searchCustomers = async (q: string) => {
+    try {
+      const res = await fetch(`/api/sales/customers?q=${encodeURIComponent(q.trim())}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.customers)) {
+        setCustomerSuggestions(data.customers);
+      } else {
+        setCustomerSuggestions([]);
+      }
+    } catch {
+      setCustomerSuggestions([]);
+    }
+  };
+
+  const handleSelectCustomer = (cust: any) => {
+    setSellForm((prev) => ({
+      ...prev,
+      customerName: cust.fullName,
+      customerPhone: cust.mobileNumber,
+      customerAddress: cust.address || "Visapur",
+    }));
+    setSelectedCustomerData(cust);
+    setShowCustomerDropdown(false);
+  };
 
   // Add Stock Form State
   const [stockForm, setStockForm] = useState({
@@ -1948,24 +1982,178 @@ export default function InventoryManager({
 
                 {/* ========================================================
                     BOTTOM 2-COLUMN SECTION: Exactly as drawn in notebook
-                    Left Column: Customer Name, Address (By default Visapur), Promise Date
+                    With Intelligent Repeat Customer Auto-complete & Lifetime History
+                    Left Column: Customer Name (Auto-search), Address (By default Visapur), Promise Date
                     Right Column: Mobile No, Udhari (MANUAL input), Manual Profit (optional)
                     ======================================================== */}
                 <div className="rounded-2xl border border-white/10 bg-luxury-obsidian/95 p-4 space-y-3">
+                  {/* Repeat Customer Identified Banner */}
+                  {selectedCustomerData && (
+                    <div className="rounded-xl border border-luxury-gold/50 bg-luxury-gold/10 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-luxury-gold/20 border border-luxury-gold/40 text-luxury-gold font-bold text-sm">
+                          {selectedCustomerData.fullName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-white">{selectedCustomerData.fullName}</span>
+                            <span className="rounded bg-luxury-gold/30 px-1.5 py-0.5 text-[9px] font-bold text-luxury-gold-bright uppercase tracking-wide">
+                              🔁 Repeat Customer ({selectedCustomerData.totalPurchasesCount} purchases)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-luxury-muted mt-0.5 font-mono">
+                            📞 {selectedCustomerData.mobileNumber} • 📍 {selectedCustomerData.address || "Visapur"}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-[10px]">
+                            <span className="text-emerald-400 font-mono">
+                              Paid: ₹{selectedCustomerData.totalPaidRupees.toLocaleString("en-IN")}
+                            </span>
+                            {selectedCustomerData.outstandingUdhariRupees > 0 && (
+                              <>
+                                <span className="text-luxury-muted">•</span>
+                                <span className="text-rose-400 font-mono font-bold">
+                                  ⚠️ Previous Udhari: ₹{selectedCustomerData.outstandingUdhariRupees.toLocaleString("en-IN")}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setIsCustomerHistoryOpen(true)}
+                          className="flex items-center gap-1 rounded-lg bg-luxury-gold/20 hover:bg-luxury-gold/30 border border-luxury-gold/40 px-2.5 py-1 text-[11px] font-bold text-luxury-gold-bright transition shadow-sm"
+                          title="View complete purchase timeline and past bills"
+                        >
+                          <History className="h-3.5 w-3.5 text-luxury-gold" />
+                          <span>View History</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCustomerData(null);
+                            setSellForm((prev) => ({
+                              ...prev,
+                              customerName: "",
+                              customerPhone: "",
+                              customerAddress: "Visapur",
+                            }));
+                          }}
+                          className="text-luxury-muted hover:text-white p-1 rounded-md hover:bg-white/10"
+                          title="Clear customer"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Row 1, Col 1: Customer Name */}
-                    <div>
-                      <label className="block text-[11px] font-bold text-white uppercase tracking-wider mb-1">
-                        Customer Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Ramesh Patil"
-                        value={sellForm.customerName}
-                        onChange={(e) => setSellForm({ ...sellForm, customerName: e.target.value })}
-                        className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
-                      />
+                    {/* Row 1, Col 1: Customer Name with Autocomplete */}
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-white uppercase tracking-wider">
+                          Customer Name *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowCustomerDropdown(!showCustomerDropdown);
+                            searchCustomers("");
+                          }}
+                          className="flex items-center gap-1 text-[10px] font-bold text-luxury-gold hover:text-luxury-gold-bright transition"
+                          title="Browse saved repeat customers"
+                        >
+                          <Users className="h-3 w-3" />
+                          <span>Repeat Customers</span>
+                          <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Ramesh Patil (or select repeat customer)"
+                          value={sellForm.customerName}
+                          onChange={(e) => {
+                            setSellForm({ ...sellForm, customerName: e.target.value });
+                            setShowCustomerDropdown(true);
+                            searchCustomers(e.target.value);
+                          }}
+                          onFocus={() => {
+                            setShowCustomerDropdown(true);
+                            if (!sellForm.customerName) searchCustomers("");
+                          }}
+                          className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs text-white focus:border-luxury-gold focus:outline-none"
+                        />
+                        {sellForm.customerName && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSellForm({ ...sellForm, customerName: "", customerPhone: "", customerAddress: "Visapur" });
+                              setSelectedCustomerData(null);
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-luxury-muted hover:text-white"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Dropdown Suggestions */}
+                      {showCustomerDropdown && customerSuggestions.length > 0 && (
+                        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-60 overflow-y-auto rounded-xl border border-luxury-gold/40 bg-luxury-graphite shadow-2xl divide-y divide-white/[0.06] animate-slideDown">
+                          <div className="px-3 py-1.5 bg-black/50 text-[10px] uppercase font-bold text-luxury-gold flex items-center justify-between">
+                            <span>Repeat Customers (Auto-fills)</span>
+                            <span>{customerSuggestions.length} found</span>
+                          </div>
+                          {customerSuggestions.map((c) => (
+                            <button
+                              key={c.customerId || c.mobileNumber}
+                              type="button"
+                              onClick={() => handleSelectCustomer(c)}
+                              className="w-full text-left p-3 hover:bg-white/[0.06] transition flex items-center justify-between gap-3 group"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-luxury-gold/15 text-luxury-gold font-bold text-xs group-hover:bg-luxury-gold group-hover:text-black transition">
+                                  {c.fullName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-white group-hover:text-luxury-gold-bright truncate">
+                                    {c.fullName}
+                                  </p>
+                                  <p className="text-[11px] text-luxury-muted font-mono flex items-center gap-2">
+                                    <span>📞 {c.mobileNumber}</span>
+                                    <span>•</span>
+                                    <span>📍 {c.address || "Visapur"}</span>
+                                  </p>
+                                  {c.recentItems && c.recentItems.length > 0 && (
+                                    <p className="text-[10px] text-luxury-gold-champagne/80 truncate">
+                                      Bought: {c.recentItems.join(", ")}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <span className="inline-block rounded bg-luxury-gold/15 px-1.5 py-0.5 text-[9px] font-bold text-luxury-gold uppercase">
+                                  {c.totalPurchasesCount} bill{c.totalPurchasesCount > 1 ? "s" : ""}
+                                </span>
+                                {c.outstandingUdhariRupees > 0 ? (
+                                  <p className="text-[10px] font-mono font-bold text-rose-400 mt-0.5">
+                                    Due: ₹{c.outstandingUdhariRupees.toLocaleString("en-IN")}
+                                  </p>
+                                ) : (
+                                  <p className="text-[10px] font-mono text-emerald-400 mt-0.5">Clear</p>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Row 1, Col 2: Mobile No */}
@@ -1978,7 +2166,13 @@ export default function InventoryManager({
                         required
                         placeholder="10-digit mobile number"
                         value={sellForm.customerPhone}
-                        onChange={(e) => setSellForm({ ...sellForm, customerPhone: e.target.value })}
+                        onChange={(e) => {
+                          setSellForm({ ...sellForm, customerPhone: e.target.value });
+                          if (e.target.value.length >= 3) {
+                            setShowCustomerDropdown(true);
+                            searchCustomers(e.target.value);
+                          }
+                        }}
                         className="w-full rounded-xl border border-white/10 bg-black/50 px-3.5 py-2.5 text-xs font-mono text-white focus:border-luxury-gold focus:outline-none"
                       />
                     </div>
@@ -2097,6 +2291,13 @@ export default function InventoryManager({
           </div>
         </div>
       )}
+      {/* Customer Lifetime Statement & History Modal */}
+      <CustomerHistoryModal
+        isOpen={isCustomerHistoryOpen}
+        onClose={() => setIsCustomerHistoryOpen(false)}
+        customerPhone={selectedCustomerData?.mobileNumber || sellForm.customerPhone}
+        customerName={selectedCustomerData?.fullName || sellForm.customerName}
+      />
     </div>
   );
 }

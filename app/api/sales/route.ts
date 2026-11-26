@@ -474,6 +474,27 @@ export async function POST(req: NextRequest) {
       saleDate: new Date(),
     });
 
+    // Ensure Customer is saved / updated in the unified customer master directory
+    try {
+      const cleanPhoneDigits = cleanCustPhone.replace(/\D/g, "");
+      await Customer.findOneAndUpdate(
+        { mobileNumber: cleanCustPhone },
+        {
+          $set: {
+            fullName: cleanCustName,
+            address: (customerAddress && customerAddress.trim()) || "Visapur",
+            isActive: true,
+          },
+          $setOnInsert: {
+            customerId: `CUST-${cleanPhoneDigits.slice(-6) || String(count + 1).padStart(4, "0")}`,
+          },
+        },
+        { upsert: true, new: true }
+      );
+    } catch (custErr) {
+      console.warn("Auto-saving customer directory error:", custErr);
+    }
+
     // Rojmel Cash Book synchronization: ONLY cash portion is credited into counter drawer
     if (cashPaise > 0) {
       await CashTransaction.create({
