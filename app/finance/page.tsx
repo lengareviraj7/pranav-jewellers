@@ -38,6 +38,7 @@ import {
   formatINR,
 } from "@/lib/mortgage-engine";
 import { TiltCard, AnimatedNumber } from "@/components/Motion";
+import CustomerKhataModal, { KhataCustomer } from "@/components/CustomerKhataModal";
 
 interface Customer {
   id: string;
@@ -108,7 +109,7 @@ function FinanceDashboardContent() {
 
   // Main Right Panel Form: Issue New Loan (from Image 2 sketch)
   const [issuePrincipal, setIssuePrincipal] = useState("");
-  const [issueRate, setIssueRate] = useState<number>(2.0);
+  const [issueRate, setIssueRate] = useState<number>(2);
   const [issueDate, setIssueDate] = useState(getTodayIST());
   const [issueItemName, setIssueItemName] = useState("");
   const [issueMetal, setIssueMetal] = useState<"gold" | "silver">("gold");
@@ -116,6 +117,25 @@ function FinanceDashboardContent() {
   const [issuePromiseDate, setIssuePromiseDate] = useState("");
   const [issueNotes, setIssueNotes] = useState("");
   const [isIssuingLoan, setIsIssuingLoan] = useState(false);
+
+  // Customer Full Lifetime Statement Modal (Khatabook view - You Gave / You Got)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [selectedKhataCustomer, setSelectedKhataCustomer] = useState<KhataCustomer | null>(null);
+
+  const openHistoryModal = (customer: {
+    fullName?: string;
+    name?: string;
+    mobileNumber?: string;
+    phone?: string;
+    address?: string;
+  }) => {
+    setSelectedKhataCustomer({
+      name: customer.fullName || customer.name || "Customer",
+      phone: customer.mobileNumber || customer.phone || "",
+      address: customer.address || "Visapur",
+    });
+    setIsHistoryOpen(true);
+  };
 
   // Payment Modal (व्याज / मुद्दल जमा)
   const [isPayOpen, setIsPayOpen] = useState(false);
@@ -350,6 +370,7 @@ function FinanceDashboardContent() {
 
       showToast(`Loan of ₹${numPrincipal.toLocaleString("en-IN")} issued successfully ✅`);
       setIssuePrincipal("");
+      setIssueRate(2);
       setIssueItemName("");
       setIssueGrossWeight("");
       setIssuePromiseDate("");
@@ -672,16 +693,16 @@ function FinanceDashboardContent() {
                   );
 
                   return (
-                    <button
+                    <div
                       key={custId}
                       onClick={() => setSelectedCustomerId(custId)}
-                      className={`w-full text-left rounded-xl p-3 border transition-all flex items-center justify-between ${
+                      className={`w-full text-left rounded-xl p-3 border transition-all flex items-center justify-between cursor-pointer ${
                         isSelected
                           ? "bg-luxury-gold/15 border-luxury-gold text-white shadow-gold-glow"
                           : "bg-black/40 border-white/[0.06] hover:bg-white/[0.04] text-neutral-300"
                       }`}
                     >
-                      <div className="min-w-0 pr-2">
+                      <div className="min-w-0 pr-2 flex-1">
                         <p className="font-bold text-xs text-white truncate flex items-center gap-1.5">
                           <span>{cust.fullName}</span>
                           {hasGold && <span title="Gold Loan">🪙</span>}
@@ -695,15 +716,29 @@ function FinanceDashboardContent() {
                         </p>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="font-mono text-xs font-bold text-amber-300 block">
-                          ₹{Math.round(totalLoanAmt).toLocaleString("en-IN")}
-                        </span>
-                        <span className="text-[10px] text-neutral-400">
-                          {cLoans.length} loan(s)
-                        </span>
+                      <div className="text-right shrink-0 flex items-center gap-2">
+                        <div>
+                          <span className="font-mono text-xs font-bold text-amber-300 block">
+                            ₹{Math.round(totalLoanAmt).toLocaleString("en-IN")}
+                          </span>
+                          <span className="text-[10px] text-neutral-400">
+                            {cLoans.length} loan(s)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCustomerId(custId);
+                            openHistoryModal(cust);
+                          }}
+                          className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-neutral-300 hover:text-amber-300 hover:border-amber-400/50 hover:bg-white/10 transition shadow-xs"
+                          title="View Khatabook Ledger Statement"
+                        >
+                          <History className="h-3.5 w-3.5 text-amber-400" />
+                        </button>
                       </div>
-                    </button>
+                    </div>
                   );
                 })
               )}
@@ -742,6 +777,17 @@ function FinanceDashboardContent() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Full Khata History Button */}
+                  <button
+                    type="button"
+                    onClick={() => openHistoryModal(selectedCustomer)}
+                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 px-3.5 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                    title="View Full Customer Khata History & Statement (You Gave / You Got)"
+                  >
+                    <History className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Khata History</span>
+                  </button>
+
                   <a
                     href={`tel:${selectedCustomer.mobileNumber.replace(/\D/g, "")}`}
                     className="flex items-center gap-1 rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white hover:bg-white/20 transition"
@@ -832,15 +878,15 @@ function FinanceDashboardContent() {
                       </label>
                       <div className="flex items-center gap-1.5">
                         <select
-                          value={issueRate}
+                          value={issueRate.toString()}
                           onChange={(e) => setIssueRate(parseFloat(e.target.value))}
                           className="w-full rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-white focus:border-luxury-gold focus:outline-none"
                         >
                           <option value="1.5">1.5% / month</option>
                           <option value="1.75">1.75% / month</option>
-                          <option value="2.0">2.0% / month</option>
+                          <option value="2">2.0% / month</option>
                           <option value="2.5">2.5% / month</option>
-                          <option value="3.0">3.0% / month</option>
+                          <option value="3">3.0% / month</option>
                         </select>
                       </div>
                     </div>
@@ -963,9 +1009,20 @@ function FinanceDashboardContent() {
                     <BookOpen className="h-4 w-4 text-luxury-gold" />
                     <span>Customer Khata Ledger (कर्ज खातेवही)</span>
                   </h3>
-                  <span className="text-xs text-neutral-400 font-mono">
-                    {customerLoans.length} total loan record(s)
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => openHistoryModal(selectedCustomer)}
+                      className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition shadow-xs"
+                      title="Open Customer Khatabook Ledger Statement (You Gave / You Got)"
+                    >
+                      <History className="h-3.5 w-3.5 text-amber-400" />
+                      <span>History Statement</span>
+                    </button>
+                    <span className="text-xs text-neutral-400 font-mono">
+                      {customerLoans.length} total loan record(s)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto touch-scroll">
@@ -1096,6 +1153,16 @@ function FinanceDashboardContent() {
                                     title="Print Girvi Mortgage Voucher"
                                   >
                                     <Printer className="h-3.5 w-3.5" />
+                                  </button>
+
+                                  {/* Full Khata History Button */}
+                                  <button
+                                    type="button"
+                                    onClick={() => openHistoryModal(selectedCustomer)}
+                                    className="rounded-lg border border-white/10 bg-white/5 p-1 text-neutral-300 hover:text-amber-300 hover:border-amber-400/40 hover:bg-white/10 transition"
+                                    title="View Customer Khata Statement (You Gave / You Got)"
+                                  >
+                                    <History className="h-3.5 w-3.5 text-amber-400" />
                                   </button>
 
                                   {/* WhatsApp */}
@@ -1398,6 +1465,18 @@ function FinanceDashboardContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ========================================================
+          MODAL: CUSTOMER KHATABOOK LEDGER & STATEMENT (You Gave / You Got)
+          ======================================================== */}
+      {isHistoryOpen && selectedKhataCustomer && (
+        <CustomerKhataModal
+          customer={selectedKhataCustomer}
+          isOpen={isHistoryOpen}
+          onClose={() => setIsHistoryOpen(false)}
+          onDataChanged={fetchData}
+        />
       )}
     </div>
   );

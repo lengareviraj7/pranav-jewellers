@@ -4,6 +4,8 @@ import connectToDatabase from "@/lib/mongodb";
 import SaleRecord from "@/models/SaleRecord";
 import Customer from "@/models/Customer";
 import CashTransaction from "@/models/CashTransaction";
+import FinanceLoan from "@/models/FinanceLoan";
+import FinancePayment from "@/models/FinancePayment";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +116,70 @@ export async function GET(req: NextRequest) {
           paymentMode: s.paymentMode || "cash",
         });
       }
+    }
+
+    // Also look up any Customer profile and associated Girvi/Finance Loans & Payments
+    try {
+      const custFilter = cleanPhoneDigits
+        ? {
+            $or: [
+              { mobileNumber: { $regex: cleanPhoneDigits.slice(-10) } },
+              { mobileNumber: phone },
+            ],
+          }
+        : { fullName: { $regex: name, $options: "i" } };
+
+      const matchingCustomer = await Customer.findOne(custFilter).lean();
+      if (matchingCustomer) {
+        if (!primaryCust.name || primaryCust.name === "Customer") primaryCust.name = matchingCustomer.fullName;
+        if (!primaryCust.phone) primaryCust.phone = matchingCustomer.mobileNumber;
+        if (matchingCustomer.address) primaryCust.address = matchingCustomer.address;
+
+        const loans = await FinanceLoan.find({ customerId: matchingCustomer._id }).lean();
+        const loanIds = loans.map((l: any) => l._id);
+        const payments = await FinancePayment.find({ loanId: { $in: loanIds } }).lean();
+
+        // 1. Loans issued (YOU GAVE)
+        for (const loan of loans) {
+          const lDate = new Date(loan.mortgageDate || (loan as any).createdAt);
+          const lNum = loan.loanNumber || "LOAN";
+          const desc = loan.pledgedItems?.[0]?.description
+            ? `Girvi Loan (${lNum}) • ${loan.pledgedItems[0].description}`
+            : `Girvi Loan (${lNum})`;
+
+          rawEvents.push({
+            id: `loan_${loan._id.toString()}`,
+            type: "gave",
+            amountPaise: loan.originalPrincipalPaise || 0,
+            date: lDate,
+            description: desc,
+            saleNumber: lNum,
+            saleId: loan._id.toString(),
+          });
+        }
+
+        // 2. Payments received on loans (YOU GOT)
+        for (const pay of payments) {
+          const pDate = new Date(pay.paymentDate || (pay as any).createdAt);
+          const pNum = pay.receiptNumber || "RCP";
+          const desc = pay.notes
+            ? `Girvi Pay (${pNum}): ${pay.notes}`
+            : `Girvi Pay (${pNum}) • ${pay.paymentMethod || "Cash"}`;
+
+          rawEvents.push({
+            id: `fpay_${pay._id.toString()}`,
+            type: "got",
+            amountPaise: pay.totalAmountPaise || 0,
+            date: pDate,
+            description: desc,
+            saleNumber: pNum,
+            saleId: pay.loanId?.toString() || pay._id.toString(),
+            paymentMode: pay.paymentMethod || "cash",
+          });
+        }
+      }
+    } catch (financeErr) {
+      console.warn("Could not query finance loans for khata:", financeErr);
     }
 
     // Sort all events chronologically (oldest first)
