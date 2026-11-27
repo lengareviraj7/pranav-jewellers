@@ -461,9 +461,16 @@ function FinanceDashboardContent() {
   const openPayModal = (loan: FinanceLoan) => {
     setActiveLoanForPay(loan);
     const accruedInterest = Math.round(loan.accruedInterestRupees || 0);
-    setPayInterestPortion(accruedInterest.toString());
-    setPayPrincipalPortion("0");
-    setPayAmount(accruedInterest > 0 ? accruedInterest.toString() : "1000");
+    const currentPrincipal = loan.currentOutstandingPrincipalRupees ?? loan.originalPrincipalRupees ?? 0;
+    const initialAmount = accruedInterest > 0 ? accruedInterest : Math.min(1000, currentPrincipal);
+    setPayAmount(initialAmount.toString());
+    if (initialAmount <= accruedInterest) {
+      setPayInterestPortion(initialAmount.toString());
+      setPayPrincipalPortion("0");
+    } else {
+      setPayInterestPortion(accruedInterest.toString());
+      setPayPrincipalPortion(Math.min(initialAmount - accruedInterest, currentPrincipal).toString());
+    }
     setPayMode("cash");
     setPayDate(getTodayIST());
     setPayNotes("");
@@ -1416,17 +1423,26 @@ function FinanceDashboardContent() {
                     setPayAmount(val);
                     const n = parseFloat(val) || 0;
                     const accrued = Math.round(activeLoanForPay.accruedInterestRupees || 0);
+                    const currentPrincipal =
+                      activeLoanForPay.currentOutstandingPrincipalRupees ?? activeLoanForPay.originalPrincipalRupees ?? 0;
                     if (n <= accrued) {
                       setPayInterestPortion(n.toString());
                       setPayPrincipalPortion("0");
                     } else {
                       setPayInterestPortion(accrued.toString());
-                      setPayPrincipalPortion((n - accrued).toString());
+                      setPayPrincipalPortion(Math.min(n - accrued, currentPrincipal).toString());
                     }
                   }}
                   className="w-full rounded-xl border border-emerald-500/40 bg-black/60 px-4 py-2.5 text-base font-mono font-bold text-emerald-300 focus:border-emerald-400 focus:outline-none"
                   autoFocus
                 />
+              </div>
+
+              {/* Priority explanation badge */}
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/40 px-3 py-2 text-[11px] text-emerald-300 flex items-center justify-between">
+                <span>पहिली वजावट व्याज (₹{payInterestPortion || 0})</span>
+                <span className="text-neutral-500 font-bold">→</span>
+                <span>उरलेली रक्कम मुद्दल (₹{payPrincipalPortion || 0})</span>
               </div>
 
               {/* Allocation Split (Interest vs Principal) */}

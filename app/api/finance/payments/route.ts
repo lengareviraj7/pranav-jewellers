@@ -5,7 +5,7 @@ import FinanceLoan from "@/models/FinanceLoan";
 import FinancePayment from "@/models/FinancePayment";
 import Customer from "@/models/Customer";
 import AuditLog from "@/models/AuditLog";
-import { getTodayIST } from "@/lib/mortgage-engine";
+import { getTodayIST, calculateMortgageInterest } from "@/lib/mortgage-engine";
 
 export async function POST(req: NextRequest) {
   const sessionUser = await authenticateRequest(req);
@@ -42,12 +42,52 @@ export async function POST(req: NextRequest) {
     }
 
     const numTotal = Number(totalAmountRupees);
-    const numPrincipal = Number(principalAppliedRupees) || 0;
-    const numInterest = Number(interestAppliedRupees) || 0;
-
     if (isNaN(numTotal) || numTotal <= 0) {
       return NextResponse.json({ success: false, error: "Total payment amount must be greater than ₹0" }, { status: 400 });
     }
+
+    const currentPrincipalPaise = loan.currentOutstandingPrincipalPaise ?? loan.originalPrincipalPaise;
+    const currentPrincipalRupees = currentPrincipalPaise / 100;
+    const totalInterestPaidRupees = (loan.totalInterestPaidPaise || 0) / 100;
+
+    // Calculate accrued interest as of paymentDate using Mortgage Engine
+    let totalAccruedInterestRupees = 0;
+    try {
+      const calc = calculateMortgageInterest({
+        mortgageDate: loan.mortgageDate,
+        principalRupees: currentPrincipalRupees,
+        asOfDate: paymentDate || getTodayIST(),
+        monthlyRate: loan.monthlyRate || 2,
+        interestMode: loan.interestMode || "yearly_compound",
+      });
+      totalAccruedInterestRupees = calc.interestRupees;
+    } catch {
+      totalAccruedInterestRupees = (loan.accruedInterestPaise || 0) / 100;
+    }
+
+    const unpaidInterestRupees = Math.max(0, totalAccruedInterestRupees - totalInterestPaidRupees);
+
+    // RULE: Return amount first deducts interest (व्याज), then remaining deducts mudal (मुद्दल)
+    let autoInterestRupees = 0;
+    let autoPrincipalRupees = 0;
+
+    if (numTotal <= unpaidInterestRupees) {
+      autoInterestRupees = numTotal;
+      autoPrincipalRupees = 0;
+    } else {
+      autoInterestRupees = unpaidInterestRupees;
+      autoPrincipalRupees = Math.min(numTotal - unpaidInterestRupees, currentPrincipalRupees);
+    }
+
+    // Determine final split: use client provided values if explicitly supplied, else use auto rule
+    const hasExplicitSplit =
+      principalAppliedRupees !== undefined &&
+      interestAppliedRupees !== undefined &&
+      (Number(principalAppliedRupees) > 0 || Number(interestAppliedRupees) > 0);
+
+    const numPrincipal = hasExplicitSplit ? Number(principalAppliedRupees) : autoPrincipalRupees;
+    const numInterest = hasExplicitSplit ? Number(interestAppliedRupees) : autoInterestRupees;
+
     if (isNaN(numPrincipal) || numPrincipal < 0) {
       return NextResponse.json({ success: false, error: "Principal applied cannot be negative" }, { status: 400 });
     }
@@ -59,7 +99,7 @@ export async function POST(req: NextRequest) {
     const principalPaise = Math.round(numPrincipal * 100);
     const interestPaise = Math.round(numInterest * 100);
 
-    if (principalPaise + interestPaise !== totalPaise) {
+    if (Math.abs(principalPaise + interestPaise - totalPaise) > 1) {
       return NextResponse.json(
         {
           success: false,
@@ -69,7 +109,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const currentPrincipalPaise = loan.currentOutstandingPrincipalPaise ?? loan.originalPrincipalPaise;
     if (principalPaise > currentPrincipalPaise) {
       return NextResponse.json(
         {

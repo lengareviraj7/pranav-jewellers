@@ -48,14 +48,16 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             monthlyRate: loan.monthlyRate,
             interestMode: loan.interestMode,
           });
-          accruedInterestRupees = calc.interestRupees;
-          totalDueRupees = calc.totalDueRupees;
+          const totalInterestPaidRupees = (loan.totalInterestPaidPaise || 0) / 100;
+          accruedInterestRupees = Math.max(0, Math.round(calc.interestRupees - totalInterestPaidRupees));
+          totalDueRupees = (currentPrincipal / 100) + accruedInterestRupees;
           calcEngineDetails = calc;
-          totalAccruedInterestPaise += calc.interestPaise;
+          totalAccruedInterestPaise += Math.round(accruedInterestRupees * 100);
         } catch {
-          accruedInterestRupees = (loan.accruedInterestPaise || 0) / 100;
-          totalDueRupees = (currentPrincipal + (loan.accruedInterestPaise || 0)) / 100;
-          totalAccruedInterestPaise += loan.accruedInterestPaise || 0;
+          const totalInterestPaidRupees = (loan.totalInterestPaidPaise || 0) / 100;
+          accruedInterestRupees = Math.max(0, ((loan.accruedInterestPaise || 0) / 100) - totalInterestPaidRupees);
+          totalDueRupees = (currentPrincipal / 100) + accruedInterestRupees;
+          totalAccruedInterestPaise += Math.round(accruedInterestRupees * 100);
         }
       }
 
