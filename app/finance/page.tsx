@@ -93,8 +93,8 @@ function FinanceDashboardContent() {
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Filter Tabs: 'all' | 'gold' | 'silver' (from Image 3 sketch)
-  const [metalTab, setMetalTab] = useState<"all" | "gold" | "silver">("all");
+  // Filter Tabs: 'all' | 'overdue' | '3_days' | 'gold' | 'silver' | 'closed' (same concept as Udhari section)
+  const [tab, setTab] = useState<"all" | "overdue" | "3_days" | "gold" | "silver" | "closed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Selected customer for Image 2 view
@@ -117,6 +117,51 @@ function FinanceDashboardContent() {
   const [issuePromiseDate, setIssuePromiseDate] = useState("");
   const [issueNotes, setIssueNotes] = useState("");
   const [isIssuingLoan, setIsIssuingLoan] = useState(false);
+
+  // Today and 3 days horizon in IST
+  const todayIST = getTodayIST();
+  const tDate = new Date();
+  const threeDaysDate = new Date(tDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const threeDaysLaterStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(threeDaysDate);
+
+  const isLoanOverdue = useCallback((l: FinanceLoan) => {
+    if (l.status === "closed") return false;
+    if (l.status === "overdue") return true;
+    if (!l.dueDate) return false;
+    return l.dueDate < todayIST;
+  }, [todayIST]);
+
+  const isLoanDueIn3Days = useCallback((l: FinanceLoan) => {
+    if (l.status === "closed") return false;
+    if (!l.dueDate) return false;
+    return l.dueDate >= todayIST && l.dueDate <= threeDaysLaterStr;
+  }, [todayIST, threeDaysLaterStr]);
+
+  const isCustomerOverdue = useCallback((cust: Customer) => {
+    const custId = (cust.id || cust._id).toString();
+    const cLoans = loans.filter((l) => {
+      const id = l.customerId?._id || l.customerId?.id || l.customerId;
+      return id?.toString() === custId;
+    });
+    return cLoans.some(isLoanOverdue);
+  }, [loans, isLoanOverdue]);
+
+  const isCustomerDueIn3Days = useCallback((cust: Customer) => {
+    const custId = (cust.id || cust._id).toString();
+    const cLoans = loans.filter((l) => {
+      const id = l.customerId?._id || l.customerId?.id || l.customerId;
+      return id?.toString() === custId;
+    });
+    return cLoans.some(isLoanDueIn3Days);
+  }, [loans, isLoanDueIn3Days]);
+
+  const overdueAccountsCount = customers.filter(isCustomerOverdue).length;
+  const due3DaysAccountsCount = customers.filter(isCustomerDueIn3Days).length;
 
   // Customer Full Lifetime Statement Modal (Khatabook view - You Gave / You Got)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -244,26 +289,34 @@ function FinanceDashboardContent() {
     { label: "1.75% Cash", rate: 1.75, amount: getRateTotal(1.75), count: getRateCount(1.75) },
   ];
 
-  // Filter customers based on Metal Tab and Search Query
-  const filteredCustomers = customers.filter((cust) => {
+  // Filter customers matching tab
+  const matchesCustomerFilter = useCallback((cust: Customer, activeTab: string) => {
     const custId = (cust.id || cust._id).toString();
     const custLoans = loans.filter((l) => {
       const cId = l.customerId?._id || l.customerId?.id || l.customerId;
       return cId?.toString() === custId;
     });
 
-    // Metal tab filter
-    if (metalTab === "gold") {
-      const hasGold = custLoans.some((l) =>
-        l.pledgedItems?.some((p) => p.metalType === "gold")
-      );
-      if (!hasGold && custLoans.length > 0) return false;
-    } else if (metalTab === "silver") {
-      const hasSilver = custLoans.some((l) =>
-        l.pledgedItems?.some((p) => p.metalType === "silver")
-      );
-      if (!hasSilver) return false;
+    if (activeTab === "overdue") {
+      return custLoans.some(isLoanOverdue);
     }
+    if (activeTab === "3_days") {
+      return custLoans.some(isLoanDueIn3Days);
+    }
+    if (activeTab === "gold") {
+      return custLoans.some((l) => l.pledgedItems?.some((p) => p.metalType === "gold"));
+    }
+    if (activeTab === "silver") {
+      return custLoans.some((l) => l.pledgedItems?.some((p) => p.metalType === "silver"));
+    }
+    if (activeTab === "closed") {
+      return custLoans.some((l) => l.status === "closed");
+    }
+    return true;
+  }, [loans, isLoanOverdue, isLoanDueIn3Days]);
+
+  const filteredCustomers = customers.filter((cust) => {
+    if (!matchesCustomerFilter(cust, tab)) return false;
 
     // Search query
     if (searchQuery.trim()) {
@@ -276,6 +329,25 @@ function FinanceDashboardContent() {
 
     return true;
   });
+
+  const handleTabChange = (newTab: "all" | "overdue" | "3_days" | "gold" | "silver" | "closed") => {
+    setTab(newTab);
+    const matched = customers.filter((cust) => {
+      if (!matchesCustomerFilter(cust, newTab)) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          cust.fullName?.toLowerCase().includes(q) ||
+          cust.mobileNumber?.includes(q) ||
+          cust.address?.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+    if (matched.length > 0) {
+      setSelectedCustomerId(matched[0].id || matched[0]._id);
+    }
+  };
 
   // Handle Add Customer (Left Panel)
   const handleAddCustomerSubmit = async (e: React.FormEvent) => {
@@ -457,10 +529,19 @@ function FinanceDashboardContent() {
     if (!cust || !cust.mobileNumber) return "#";
     const cleanPhone = cust.mobileNumber.replace(/\D/g, "");
     const totalDue = Math.round(loan.totalDueRupees || 0);
+    const isOverdue = isLoanOverdue(loan);
+    const isDueSoon = isLoanDueIn3Days(loan);
+
+    let statusAlert = "";
+    if (isOverdue) {
+      statusAlert = `\n⚠️ *PAYMENT OVERDUE NOTICE*: Your agreed mortgage promise date (${loan.dueDate || "overdue"}) has passed. Kindly visit shop or clear dues.`;
+    } else if (isDueSoon) {
+      statusAlert = `\n⏰ *UPCOMING DUE REMINDER*: Your agreed mortgage promise date is on ${loan.dueDate} (Due within 3 days).`;
+    }
 
     const text = `Namaste ${cust.fullName} ji! 🙏\nGreetings from Siddheshwar Jewellers & Finance.\nYour Gold Loan *${loan.loanNumber}* has a pending due of *₹${totalDue.toLocaleString(
       "en-IN"
-    )}*.\nPledged Item: ${loan.pledgedItems?.[0]?.description || "Ornaments"} (${loan.totalPledgedGrossWeight}g).\n\nKindly visit shop or contact us to make payment.\n\n📍 Siddheshwar Jewellers, Visapur\n📞 +91 918329465301`;
+    )}*.${statusAlert}\nPledged Item: ${loan.pledgedItems?.[0]?.description || "Ornaments"} (${loan.totalPledgedGrossWeight}g).\n\n📍 Siddheshwar Jewellers, Visapur\n📞 +91 918329465301`;
 
     return `https://wa.me/${cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone}?text=${encodeURIComponent(text)}`;
   };
@@ -525,39 +606,64 @@ function FinanceDashboardContent() {
         ))}
       </div>
 
-      {/* ── FILTER TABS (All customer, Gold cust, Silver cust) ── */}
-      <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
-        <span className="text-xs font-bold uppercase text-neutral-400 mr-2">Filter:</span>
-        <button
-          onClick={() => setMetalTab("all")}
-          className={`rounded-xl px-4 py-1.5 text-xs font-bold transition ${
-            metalTab === "all"
-              ? "bg-luxury-gold text-black shadow-gold-glow"
-              : "bg-white/[0.05] text-neutral-300 hover:bg-white/[0.08]"
-          }`}
-        >
-          All Customer ({customers.length})
-        </button>
-        <button
-          onClick={() => setMetalTab("gold")}
-          className={`flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-xs font-bold transition ${
-            metalTab === "gold"
-              ? "bg-amber-400 text-black shadow-gold-glow"
-              : "bg-white/[0.05] text-amber-300 hover:bg-white/[0.08]"
-          }`}
-        >
-          <span>🪙 Gold Cust</span>
-        </button>
-        <button
-          onClick={() => setMetalTab("silver")}
-          className={`flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-xs font-bold transition ${
-            metalTab === "silver"
-              ? "bg-slate-200 text-black shadow-md"
-              : "bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
-          }`}
-        >
-          <span>🥈 Silver Cust</span>
-        </button>
+      {/* ── FILTER TABS (Same category sections as Udhari) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-thin">
+          {[
+            { id: "all", label: "All Customers", count: customers.length, color: "gold" },
+            { id: "overdue", label: "🚨 Overdue Accs", count: overdueAccountsCount, color: "red", highlight: true },
+            { id: "3_days", label: "⏰ Due in 3 Days", count: due3DaysAccountsCount, color: "amber", highlight: true },
+            { id: "gold", label: "🪙 Gold Cust", count: null },
+            { id: "silver", label: "🥈 Silver Cust", count: null },
+            { id: "closed", label: "✅ Cleared / Closed", count: null },
+          ].map((item) => {
+            const isActive = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleTabChange(item.id as any)}
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all ${
+                  isActive
+                    ? item.color === "red"
+                      ? "bg-rose-500 text-white shadow-lg shadow-rose-950/50"
+                      : item.color === "amber"
+                      ? "bg-amber-400 text-black shadow-gold-glow"
+                      : "bg-luxury-gold text-black shadow-gold-glow"
+                    : "bg-white/[0.05] text-neutral-300 hover:text-white hover:bg-white/[0.08]"
+                }`}
+              >
+                <span>{item.label}</span>
+                {item.count !== null && item.count > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                      isActive
+                        ? "bg-black text-white"
+                        : item.color === "red"
+                        ? "bg-rose-500 text-white"
+                        : item.color === "amber"
+                        ? "bg-amber-500 text-black"
+                        : "bg-luxury-gold/30 text-luxury-gold"
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Quick Search */}
+        <div className="relative min-w-[200px] sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+          <input
+            type="text"
+            placeholder="Search customer, phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-black/60 pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-neutral-500 focus:border-luxury-gold focus:outline-none"
+          />
+        </div>
       </div>
 
       {/* ── MAIN TWO-PANEL LAYOUT (LEFT: CUSTOMER ADD & DIRECTORY | RIGHT: LOAN FORM & KHATA) ── */}
@@ -670,8 +776,21 @@ function FinanceDashboardContent() {
             {/* Customer List */}
             <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
               {filteredCustomers.length === 0 ? (
-                <div className="py-8 text-center text-xs text-neutral-500">
-                  No matching customers found.
+                <div className="py-8 text-center text-xs text-neutral-400 space-y-1">
+                  <p className="font-semibold text-white">
+                    {tab === "overdue"
+                      ? "No overdue customer accounts! 🎉"
+                      : tab === "3_days"
+                      ? "No accounts due in the next 3 days."
+                      : tab === "closed"
+                      ? "No cleared/closed accounts found."
+                      : "No matching customers found."}
+                  </p>
+                  <p className="text-[11px] text-neutral-500">
+                    {tab === "overdue"
+                      ? "All active mortgaged customers are currently on schedule."
+                      : "Try switching filter to 'All Customers' to view full directory."}
+                  </p>
                 </div>
               ) : (
                 filteredCustomers.map((cust) => {
@@ -691,6 +810,8 @@ function FinanceDashboardContent() {
                   const hasSilver = cLoans.some((l) =>
                     l.pledgedItems?.some((p) => p.metalType === "silver")
                   );
+                  const isOverdue = isCustomerOverdue(cust);
+                  const isDueSoon = isCustomerDueIn3Days(cust);
 
                   return (
                     <div
@@ -703,10 +824,20 @@ function FinanceDashboardContent() {
                       }`}
                     >
                       <div className="min-w-0 pr-2 flex-1">
-                        <p className="font-bold text-xs text-white truncate flex items-center gap-1.5">
+                        <p className="font-bold text-xs text-white truncate flex items-center gap-1.5 flex-wrap">
                           <span>{cust.fullName}</span>
                           {hasGold && <span title="Gold Loan">🪙</span>}
                           {hasSilver && <span title="Silver Loan">🥈</span>}
+                          {isOverdue && (
+                            <span className="rounded bg-rose-500/25 border border-rose-500/50 px-1.5 py-0.2 text-[9px] font-bold text-rose-300 animate-pulse">
+                              🚨 Overdue
+                            </span>
+                          )}
+                          {isDueSoon && !isOverdue && (
+                            <span className="rounded bg-amber-500/25 border border-amber-500/50 px-1.5 py-0.2 text-[9px] font-bold text-amber-300">
+                              ⏰ Due in 3d
+                            </span>
+                          )}
                         </p>
                         <p className="text-[11px] font-mono text-neutral-400 truncate mt-0.5">
                           📞 {cust.mobileNumber}
@@ -882,9 +1013,9 @@ function FinanceDashboardContent() {
                           onChange={(e) => setIssueRate(parseFloat(e.target.value))}
                           className="w-full rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-xs font-mono font-bold text-white focus:border-luxury-gold focus:outline-none"
                         >
+                          <option value="2">2.0% / month (Default)</option>
                           <option value="1.5">1.5% / month</option>
                           <option value="1.75">1.75% / month</option>
-                          <option value="2">2.0% / month</option>
                           <option value="2.5">2.5% / month</option>
                           <option value="3">3.0% / month</option>
                         </select>
@@ -988,6 +1119,23 @@ function FinanceDashboardContent() {
                     </div>
                   </div>
 
+                  {/* Live Calculation Preview (Concept from Siddheshwar Mortgage Calculator) */}
+                  {parseFloat(issuePrincipal) > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-luxury-gold/40 bg-gradient-to-r from-amber-950/30 via-luxury-gold/10 to-transparent p-3 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-bold text-luxury-gold-champagne">Monthly Interest:</span>
+                        <span className="font-mono text-sm font-bold text-amber-300">
+                          ₹{Math.round((parseFloat(issuePrincipal) * (issueRate || 2)) / 100).toLocaleString("en-IN")} / month
+                        </span>
+                        <span className="text-[10px] text-neutral-400 font-mono">(@ {issueRate || 2}% / month)</span>
+                      </div>
+                      <div className="text-[11px] text-neutral-400 flex items-center gap-1 font-mono">
+                        <Sparkles className="h-3.5 w-3.5 text-luxury-gold" />
+                        <span>Siddheshwar Mortgage Engine (12 mo compounding)</span>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Submit Button */}
                   <div className="flex justify-end pt-2 border-t border-white/[0.08]">
                     <button
@@ -1050,14 +1198,35 @@ function FinanceDashboardContent() {
                       ) : (
                         customerLoans.map((loan) => {
                           const principal = loan.currentOutstandingPrincipalRupees ?? loan.originalPrincipalRupees;
-                          const interest = Math.round(loan.accruedInterestRupees || 0);
-                          const total = Math.round(loan.totalDueRupees || principal + interest);
+                          let interest = Math.round(loan.accruedInterestRupees || 0);
+                          let total = Math.round(loan.totalDueRupees || principal + interest);
+                          let elapsedDesc = "";
+
+                          // Dynamic calculation per Siddheshwar Mortgage Calculator concept
+                          if (loan.status !== "closed" && principal > 0) {
+                            try {
+                              const calc = calculateMortgageInterest({
+                                mortgageDate: loan.mortgageDate,
+                                principalRupees: principal,
+                                asOfDate: todayIST,
+                                monthlyRate: loan.monthlyRate || 2,
+                                interestMode: loan.interestMode || "yearly_compound",
+                              });
+                              interest = Math.round(calc.interestRupees);
+                              total = Math.round(calc.totalDueRupees);
+                              elapsedDesc = calc.elapsedDescription;
+                            } catch {
+                              // fallback
+                            }
+                          }
+
                           const paid = Math.round(
                             (loan.totalInterestPaidRupees || 0) + (loan.totalPrincipalPaidRupees || 0)
                           );
                           const remainingBalance = loan.status === "closed" ? 0 : total;
-
                           const primaryItem = loan.pledgedItems?.[0];
+                          const isOverdue = isLoanOverdue(loan);
+                          const isDueSoon = isLoanDueIn3Days(loan);
 
                           return (
                             <tr key={loan.id || loan._id} className="hover:bg-white/[0.03] transition-colors">
@@ -1071,17 +1240,23 @@ function FinanceDashboardContent() {
                                     year: "2-digit",
                                   })}
                                 </p>
-                                <span
-                                  className={`inline-block rounded px-1.5 py-0.2 text-[9px] font-bold uppercase mt-0.5 border ${
-                                    loan.status === "closed"
-                                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                                      : loan.status === "overdue"
-                                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse"
-                                      : "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                                  }`}
-                                >
-                                  {loan.status === "closed" ? "Closed ✅" : `${loan.monthlyRate}% Active`}
-                                </span>
+                                {loan.status === "closed" ? (
+                                  <span className="inline-block rounded px-1.5 py-0.2 text-[9px] font-bold uppercase mt-0.5 border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                                    Closed ✅
+                                  </span>
+                                ) : isOverdue ? (
+                                  <span className="inline-block rounded px-1.5 py-0.2 text-[9px] font-bold uppercase mt-0.5 border bg-rose-500/20 text-rose-300 border-rose-500/40 animate-pulse">
+                                    🚨 Overdue {loan.dueDate ? `(${loan.dueDate})` : ""}
+                                  </span>
+                                ) : isDueSoon ? (
+                                  <span className="inline-block rounded px-1.5 py-0.2 text-[9px] font-bold uppercase mt-0.5 border bg-amber-500/20 text-amber-300 border-amber-500/40">
+                                    ⏰ Due: {loan.dueDate}
+                                  </span>
+                                ) : (
+                                  <span className="inline-block rounded px-1.5 py-0.2 text-[9px] font-bold uppercase mt-0.5 border bg-amber-500/20 text-amber-300 border-amber-500/40">
+                                    {loan.monthlyRate}% Active
+                                  </span>
+                                )}
                               </td>
 
                               {/* वस्तू (Item Name) */}
@@ -1105,8 +1280,15 @@ function FinanceDashboardContent() {
                               </td>
 
                               {/* व्याज (Interest) */}
-                              <td className="px-3.5 py-3 text-right font-mono font-bold text-rose-300">
-                                ₹{interest.toLocaleString("en-IN")}
+                              <td className="px-3.5 py-3 text-right">
+                                <span className="font-mono font-bold text-rose-300 block">
+                                  ₹{interest.toLocaleString("en-IN")}
+                                </span>
+                                {elapsedDesc && (
+                                  <span className="text-[9px] font-mono text-neutral-400 block truncate max-w-[120px] ml-auto" title={elapsedDesc}>
+                                    {elapsedDesc}
+                                  </span>
+                                )}
                               </td>
 
                               {/* Total (मुद्दल + व्याज) */}
