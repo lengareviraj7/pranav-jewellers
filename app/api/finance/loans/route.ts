@@ -129,19 +129,29 @@ export async function POST(req: NextRequest) {
       customer = await Customer.findById(customerId);
     } else if (customerPhone) {
       const cleanDigits = customerPhone.replace(/\D/g, "");
-      const formattedPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+      const last10 = cleanDigits.slice(-10);
       customer = await Customer.findOne({
-        $or: [{ mobileNumber: formattedPhone }, { mobileNumber: customerPhone }],
+        $or: [
+          { mobileNumber: { $regex: last10 + "$" } },
+          { mobileNumber: cleanDigits },
+          { mobileNumber: customerPhone.trim() },
+        ],
+        isActive: true,
       });
       if (!customer) {
         const custCount = await Customer.countDocuments();
         customer = await Customer.create({
-          customerId: `CUST-${formattedPhone.slice(-6) || String(custCount + 1).padStart(4, "0")}`,
+          customerId: `SJ-CUST-${String(custCount + 1).padStart(4, "0")}`,
           fullName: (customerName || "").trim() || "Customer",
-          mobileNumber: formattedPhone,
+          mobileNumber: last10 || customerPhone.trim(),
           address: (customerAddress || "").trim() || "Visapur",
           isActive: true,
         });
+      } else {
+        if (customerName?.trim() && customer.fullName === "Customer") {
+          customer.fullName = customerName.trim();
+          await customer.save();
+        }
       }
     }
 

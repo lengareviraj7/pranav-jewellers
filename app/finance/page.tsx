@@ -236,7 +236,7 @@ function FinanceDashboardContent() {
   useEffect(() => {
     if (urlPhone && customers.length > 0) {
       const match = customers.find(
-        (c) => c.mobileNumber.replace(/\D/g, "") === urlPhone.replace(/\D/g, "")
+        (c) => (c.mobileNumber || "").replace(/\D/g, "").slice(-10) === (urlPhone || "").replace(/\D/g, "").slice(-10)
       );
       if (match) setSelectedCustomerId(match.id || match._id);
     }

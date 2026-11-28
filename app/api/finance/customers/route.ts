@@ -55,9 +55,13 @@ export async function GET(req: NextRequest) {
           monthlyRate: loan.monthlyRate,
           interestMode: loan.interestMode,
         });
-        current.totalAccruedInterestPaise += calc.interestPaise;
+        const totalInterestPaidRupees = (loan.totalInterestPaidPaise || 0) / 100;
+        const unpaidInterestRupees = Math.max(0, Math.round(calc.interestRupees - totalInterestPaidRupees));
+        current.totalAccruedInterestPaise += Math.round(unpaidInterestRupees * 100);
       } catch {
-        current.totalAccruedInterestPaise += loan.accruedInterestPaise || 0;
+        const totalInterestPaidRupees = (loan.totalInterestPaidPaise || 0) / 100;
+        const unpaidInterestRupees = Math.max(0, Math.round(((loan.accruedInterestPaise || 0) / 100) - totalInterestPaidRupees));
+        current.totalAccruedInterestPaise += Math.round(unpaidInterestRupees * 100);
       }
 
       current.totalDuePaise = current.totalOutstandingPrincipalPaise + current.totalAccruedInterestPaise;
@@ -111,13 +115,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Mobile number is required" }, { status: 400 });
     }
 
+    const cleanPhone = mobileNumber.replace(/\D/g, "");
+    const last10 = cleanPhone.slice(-10);
+
+    // Prevent duplicate customer profiles by checking last 10 digits or exact name
+    const existingCust = await Customer.findOne({
+      $or: [
+        { mobileNumber: { $regex: last10 + "$" } },
+        { mobileNumber: mobileNumber.trim() },
+        { fullName: { $regex: `^${fullName.trim()}$`, $options: "i" } },
+      ],
+      isActive: true,
+    });
+
+    if (existingCust) {
+      if (address?.trim() && !existingCust.address) existingCust.address = address.trim();
+      if (fullName?.trim() && existingCust.fullName !== fullName.trim()) existingCust.fullName = fullName.trim();
+      await existingCust.save();
+      return NextResponse.json({ success: true, customer: existingCust, alreadyExisted: true });
+    }
+
     const count = await Customer.countDocuments();
     const customerId = `SJ-CUST-${(count + 1).toString().padStart(4, "0")}`;
 
     const customer = await Customer.create({
       customerId,
       fullName: fullName.trim(),
-      mobileNumber: mobileNumber.trim(),
+      mobileNumber: last10 || mobileNumber.trim(),
       secondaryPhone: secondaryPhone?.trim(),
       address: address?.trim(),
       identificationType,

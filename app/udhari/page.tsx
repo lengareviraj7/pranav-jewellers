@@ -113,11 +113,11 @@ export default function UdhariPage() {
       if (searchQuery.trim()) url += `&search=${encodeURIComponent(searchQuery.trim())}`;
 
       if (tab === "pending_udhari") {
-        url += "&paymentStatus=partial";
+        url += "&paymentStatus=pending";
       } else if (tab === "overdue") {
-        url += "&dueFilter=overdue";
+        url += "&dueAlert=overdue";
       } else if (tab === "3_days") {
-        url += "&dueFilter=3_days";
+        url += "&dueAlert=3_days";
       } else if (tab === "paid") {
         url += "&paymentStatus=paid";
       }

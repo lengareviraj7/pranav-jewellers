@@ -17,6 +17,15 @@ export async function GET(req: NextRequest) {
     const phone = (searchParams.get("phone") || "").trim();
     const details = searchParams.get("details") === "true";
 
+    // Helper to extract canonical customer key (last 10 digits of phone, or lowercased name)
+    const getCustomerKey = (phone?: string, name?: string): string => {
+      const digits = (phone || "").replace(/\D/g, "");
+      if (digits.length >= 10) {
+        return digits.slice(-10);
+      }
+      return (name || "").trim().toLowerCase();
+    };
+
     // 1. Fetch all sales to aggregate customer history
     const allSales = await SaleRecord.find({}).sort({ saleDate: -1, createdAt: -1 }).lean();
 
@@ -24,7 +33,7 @@ export async function GET(req: NextRequest) {
     const salesByCustomerKey = new Map<string, any[]>();
     for (const sale of allSales) {
       if (!sale.customer || !sale.customer.name) continue;
-      const key = (sale.customer.phone || sale.customer.name).trim().toLowerCase();
+      const key = getCustomerKey(sale.customer.phone, sale.customer.name);
       const existing = salesByCustomerKey.get(key) || [];
       existing.push(sale);
       salesByCustomerKey.set(key, existing);
@@ -38,7 +47,7 @@ export async function GET(req: NextRequest) {
 
     // Add from Customer collection
     for (const cust of registeredCustomers) {
-      const key = (cust.mobileNumber || cust.fullName).trim().toLowerCase();
+      const key = getCustomerKey(cust.mobileNumber, cust.fullName);
       customerMap.set(key, {
         customerId: cust.customerId || cust._id.toString(),
         fullName: cust.fullName,
@@ -60,7 +69,7 @@ export async function GET(req: NextRequest) {
     Array.from(salesByCustomerKey.entries()).forEach(([key, sales]) => {
       const primaryCust = sales[0].customer;
       const existing = customerMap.get(key) || {
-        customerId: `CUST-${(primaryCust.phone || "000000").slice(-6)}`,
+        customerId: `CUST-${(primaryCust.phone || "000000").replace(/\D/g, "").slice(-6)}`,
         fullName: primaryCust.name,
         mobileNumber: primaryCust.phone || "",
         address: primaryCust.address || "Visapur",

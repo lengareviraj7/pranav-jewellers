@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const paymentStatus = searchParams.get("paymentStatus");
     const paymentMode = searchParams.get("paymentMode");
     const search = searchParams.get("search");
-    const dueAlert = searchParams.get("dueAlert");
+    const dueAlert = searchParams.get("dueAlert") || searchParams.get("dueFilter");
 
     const query: any = {};
 
@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
       query.metalType = metalType;
     }
 
-    if (paymentStatus && ["paid", "partial", "unpaid"].includes(paymentStatus)) {
+    if (paymentStatus === "pending" || paymentStatus === "partial") {
+      query.$or = [{ paymentStatus: { $in: ["partial", "unpaid"] } }, { balanceDuePaise: { $gt: 0 } }];
+    } else if (paymentStatus && ["paid", "unpaid"].includes(paymentStatus)) {
       query.paymentStatus = paymentStatus;
     }
 
@@ -154,22 +156,37 @@ export async function POST(req: NextRequest) {
     if (cleanCustPhone.length < 10) {
       return NextResponse.json({ error: "Please enter a valid 10-digit mobile number." }, { status: 400 });
     }
-    if (cleanCustPhone.length === 10) {
-      cleanCustPhone = `91${cleanCustPhone}`;
-    }
+    const last10Digits = cleanCustPhone.slice(-10);
 
-    // Upsert Customer
-    let customerDoc = await Customer.findOne({ mobileNumber: cleanCustPhone });
+    // Upsert Customer: match by last 10 digits to prevent duplicate customer profiles
+    let customerDoc = await Customer.findOne({
+      $or: [
+        { mobileNumber: cleanCustPhone },
+        { mobileNumber: last10Digits },
+        { mobileNumber: `91${last10Digits}` },
+        { mobileNumber: `+91${last10Digits}` },
+        { mobileNumber: { $regex: last10Digits + "$" } },
+      ],
+      isActive: true,
+    });
     if (!customerDoc) {
       const custCount = await Customer.countDocuments();
       const customerId = `CUST-${String(custCount + 1).padStart(4, "0")}`;
       customerDoc = await Customer.create({
         customerId,
         fullName: cleanCustName,
-        mobileNumber: cleanCustPhone,
+        mobileNumber: last10Digits,
         address: customerAddress ? customerAddress.trim() : undefined,
         isActive: true,
       });
+    } else {
+      if (cleanCustName && customerDoc.fullName !== cleanCustName) {
+        customerDoc.fullName = cleanCustName;
+      }
+      if (customerAddress?.trim() && !customerDoc.address) {
+        customerDoc.address = customerAddress.trim();
+      }
+      await customerDoc.save();
     }
 
     // Derive selling price if omitted (Cash + Online + Advance + Udhari)
