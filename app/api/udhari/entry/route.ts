@@ -6,6 +6,7 @@ import Customer from "@/models/Customer";
 import CashTransaction from "@/models/CashTransaction";
 import FinanceLoan from "@/models/FinanceLoan";
 import FinancePayment from "@/models/FinancePayment";
+import { calculateMortgageInterest } from "@/lib/mortgage-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -129,13 +130,15 @@ export async function GET(req: NextRequest) {
           }
         : { fullName: { $regex: name, $options: "i" } };
 
-      const matchingCustomer = await Customer.findOne(custFilter).lean();
-      if (matchingCustomer) {
-        if (!primaryCust.name || primaryCust.name === "Customer") primaryCust.name = matchingCustomer.fullName;
-        if (!primaryCust.phone) primaryCust.phone = matchingCustomer.mobileNumber;
-        if (matchingCustomer.address) primaryCust.address = matchingCustomer.address;
+      const matchingCustomers = await Customer.find(custFilter).lean();
+      if (matchingCustomers.length > 0) {
+        const firstCust = matchingCustomers[0];
+        if (!primaryCust.name || primaryCust.name === "Customer") primaryCust.name = firstCust.fullName;
+        if (!primaryCust.phone) primaryCust.phone = firstCust.mobileNumber;
+        if (firstCust.address) primaryCust.address = firstCust.address;
 
-        const loans = await FinanceLoan.find({ customerId: matchingCustomer._id }).lean();
+        const custIds = matchingCustomers.map((c: any) => c._id);
+        const loans = await FinanceLoan.find({ customerId: { $in: custIds } }).lean();
         const loanIds = loans.map((l: any) => l._id);
         const payments = await FinancePayment.find({ loanId: { $in: loanIds } }).lean();
 
@@ -384,7 +387,101 @@ export async function POST(req: NextRequest) {
           await customerDoc.save();
         }
       } else {
-        // No open sale with balance due: record as advance deposit on customer
+        // Check if customer has an open Finance Loan with principal > 0
+        const custDocs = await Customer.find({
+          $or: [{ mobileNumber: formattedPhone }, { mobileNumber: customerPhone }],
+        }).lean();
+        const custIds = custDocs.map((c: any) => c._id);
+
+        let targetLoan: any = null;
+        if (saleId) {
+          targetLoan = await FinanceLoan.findOne({
+            _id: saleId,
+            status: { $ne: "closed" },
+          });
+        }
+        if (!targetLoan && custIds.length > 0) {
+          targetLoan = await FinanceLoan.findOne({
+            customerId: { $in: custIds },
+            status: { $ne: "closed" },
+          }).sort({ mortgageDate: 1 });
+        }
+
+        if (targetLoan) {
+          // Record payment against Finance Loan (Interest First, then Principal!)
+          const currentPrincipalRupees = (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) / 100;
+          const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+          let accruedInterestRupees = 0;
+          try {
+            const calc = calculateMortgageInterest({
+              mortgageDate: targetLoan.mortgageDate,
+              principalRupees: currentPrincipalRupees,
+              asOfDate: todayIST,
+              monthlyRate: targetLoan.monthlyRate || 2,
+              interestMode: targetLoan.interestMode || "yearly_compound",
+            });
+            const interestPaidRupees = (targetLoan.totalInterestPaidPaise || 0) / 100;
+            accruedInterestRupees = Math.max(0, calc.interestRupees - interestPaidRupees);
+          } catch {
+            accruedInterestRupees = Math.max(0, ((targetLoan.accruedInterestPaise || 0) / 100) - ((targetLoan.totalInterestPaidPaise || 0) / 100));
+          }
+
+          let interestAppliedRupees = 0;
+          let principalAppliedRupees = 0;
+          if (numAmount <= accruedInterestRupees) {
+            interestAppliedRupees = numAmount;
+            principalAppliedRupees = 0;
+          } else {
+            interestAppliedRupees = accruedInterestRupees;
+            principalAppliedRupees = Math.min(numAmount - accruedInterestRupees, currentPrincipalRupees);
+          }
+
+          const intPaise = Math.round(interestAppliedRupees * 100);
+          const prinPaise = Math.round(principalAppliedRupees * 100);
+
+          targetLoan.totalInterestPaidPaise = (targetLoan.totalInterestPaidPaise || 0) + intPaise;
+          targetLoan.totalPrincipalPaidPaise = (targetLoan.totalPrincipalPaidPaise || 0) + prinPaise;
+          const remainingPrincipalPaise = Math.max(0, (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) - prinPaise);
+          targetLoan.currentOutstandingPrincipalPaise = remainingPrincipalPaise;
+          targetLoan.status = remainingPrincipalPaise <= 0 ? "closed" : "partially_paid";
+          if (remainingPrincipalPaise <= 0) targetLoan.closedDate = todayIST;
+          await targetLoan.save();
+
+          // Create FinancePayment
+          const payCount = await FinancePayment.countDocuments();
+          const receiptNumber = `SJ-RCP-${new Date().getFullYear()}-${String(payCount + 1).padStart(4, "0")}`;
+          await FinancePayment.create({
+            loanId: targetLoan._id,
+            receiptNumber,
+            paymentDate: todayIST,
+            totalAmountPaise: amountPaise,
+            interestAppliedPaise: intPaise,
+            principalAppliedPaise: prinPaise,
+            paymentMethod: resolvedMode,
+            notes: notes || "Payment received via Customer Khatabook",
+            receivedBy: (sessionUser as any).username || (sessionUser as any).id,
+          });
+
+          // Record in CashTransaction
+          if (resolvedMode === "cash") {
+            await CashTransaction.create({
+              transactionType: "credit",
+              category: "finance_recovery",
+              amountPaise,
+              purpose: `Girvi Collection (YOU GOT): ${finalCustName} [${customerPhone}]`,
+              referenceId: receiptNumber,
+              date: txnDate,
+              notes: notes || "Payment collected via Customer Khata Ledger",
+            });
+          }
+
+          return NextResponse.json({
+            success: true,
+            message: `Payment of ₹${numAmount.toLocaleString("en-IN")} recorded successfully on loan ${targetLoan.loanNumber} (YOU GOT).`,
+          });
+        }
+
+        // No open sale or finance loan with balance due: record as advance deposit on customer
         if (customerDoc) {
           customerDoc.advanceBalancePaise = (customerDoc.advanceBalancePaise || 0) + amountPaise;
           await customerDoc.save();

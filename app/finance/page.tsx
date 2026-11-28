@@ -183,11 +183,13 @@ function FinanceDashboardContent() {
     mobileNumber?: string;
     phone?: string;
     address?: string;
+    saleId?: string;
   }) => {
     setSelectedKhataCustomer({
       name: customer.fullName || customer.name || "Customer",
       phone: customer.mobileNumber || customer.phone || "",
       address: customer.address || "Visapur",
+      saleId: customer.saleId,
     });
     setIsHistoryOpen(true);
   };
@@ -915,15 +917,10 @@ function FinanceDashboardContent() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedCustomerId(custId);
-                            const active = cLoans.filter((l) => l.status !== "closed");
-                            if (active.length > 0) {
-                              openPayModal(active[0]);
-                            } else {
-                              alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
-                            }
+                            openHistoryModal(cust);
                           }}
                           className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300 hover:bg-emerald-500 hover:text-white transition shadow-xs whitespace-nowrap"
-                          title="Record payment received"
+                          title="Open Customer Khatabook Ledger (जमा करा / You Got)"
                         >
                           जमा करा
                         </button>
@@ -1202,12 +1199,20 @@ function FinanceDashboardContent() {
                               {/* Actions */}
                               <td className="px-3.5 py-3 text-center">
                                 <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                                  {/* Direct Jama Kara button */}
+                                  {/* Direct Jama Kara button -> opens Khatabook Ledger */}
                                   <button
                                     type="button"
-                                    onClick={() => openPayModal(loan)}
+                                    onClick={() => {
+                                      const c = loan.customerId || selectedCustomer;
+                                      if (c) {
+                                        openHistoryModal({
+                                          ...c,
+                                          saleId: loan.id || loan._id,
+                                        });
+                                      }
+                                    }}
                                     className="rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1 text-[11px] transition shadow-xs flex items-center gap-1"
-                                    title="या वस्तूवर पैसे जमा करा (Record Payment)"
+                                    title="Open Customer Khatabook Ledger (जमा करा / You Got)"
                                   >
                                     <span>💵</span>
                                     <span>जमा करा</span>
@@ -1289,19 +1294,16 @@ function FinanceDashboardContent() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Direct Jama Kara Button */}
+                  {/* Direct Jama Kara Button -> opens Khatabook Ledger */}
                   <button
                     type="button"
                     onClick={() => {
-                      const active = customerLoans.filter((l) => l.status !== "closed");
-                      if (active.length > 0) {
-                        openPayModal(active[0]);
-                      } else {
-                        alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
+                      if (selectedCustomer) {
+                        openHistoryModal(selectedCustomer);
                       }
                     }}
                     className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 border border-emerald-400/60 px-3.5 py-1.5 text-xs font-bold text-white hover:brightness-105 active:scale-95 transition shadow-md shadow-emerald-950/40"
-                    title="Record payment received (जमा करा)"
+                    title="Open Customer Khatabook Ledger (जमा करा / You Got)"
                   >
                     <span>💵</span>
                     <span>जमा करा</span>
@@ -1549,15 +1551,12 @@ function FinanceDashboardContent() {
                     <button
                       type="button"
                       onClick={() => {
-                        const active = customerLoans.filter((l) => l.status !== "closed");
-                        if (active.length > 0) {
-                          openPayModal(active[0]);
-                        } else {
-                          alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
+                        if (selectedCustomer) {
+                          openHistoryModal(selectedCustomer);
                         }
                       }}
                       className="flex items-center gap-1.5 rounded-xl border border-emerald-400 bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm"
-                      title="Record payment received"
+                      title="Open Customer Khatabook Ledger (जमा करा / You Got)"
                     >
                       <span>💵</span>
                       <span>जमा करा</span>
@@ -1726,9 +1725,17 @@ function FinanceDashboardContent() {
                                   {/* Receive Payment */}
                                   {loan.status !== "closed" && (
                                     <button
-                                      onClick={() => openPayModal(loan)}
+                                      onClick={() => {
+                                        const c = loan.customerId || selectedCustomer;
+                                        if (c) {
+                                          openHistoryModal({
+                                            ...c,
+                                            saleId: loan.id || loan._id,
+                                          });
+                                        }
+                                      }}
                                       className="btn-3d rounded-lg bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm hover:bg-emerald-500 transition"
-                                      title="Record payment received"
+                                      title="Open Customer Khatabook Ledger (जमा करा / You Got)"
                                     >
                                       जमा करा
                                     </button>
