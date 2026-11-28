@@ -96,6 +96,8 @@ function FinanceDashboardContent() {
   // Filter Tabs: 'all' | 'overdue' | '3_days' | 'gold' | 'silver' | 'closed' (same concept as Udhari section)
   const [tab, setTab] = useState<"all" | "overdue" | "3_days" | "gold" | "silver" | "closed">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  // Rate filter: null = no filter, number = filter by that monthly rate (e.g. 2.0, 2.5, 3.0)
+  const [rateFilter, setRateFilter] = useState<number | null>(null);
 
   // Selected customer for Image 2 view
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
@@ -254,26 +256,36 @@ function FinanceDashboardContent() {
     }
   }, [urlPhone, customers]);
 
-  // Select first customer if in 'all' and none selected, or ensure selection matches active category tab
+  // Select first customer if in 'all' and none selected, or ensure selection matches active category tab & rate filter
   useEffect(() => {
-    if (tab === "all") {
-      if (!selectedCustomerId && customers.length > 0) {
-        setSelectedCustomerId(customers[0].id || customers[0]._id);
+    const isCustMatching = (c: Customer) => {
+      if (!matchesCustomerFilter(c, tab)) return false;
+      if (rateFilter !== null) {
+        const custId = (c.id || c._id).toString();
+        const cleanPhone = (c.mobileNumber || "").replace(/\D/g, "").slice(-10);
+        return loans.some((l) => {
+          if (l.status === "closed") return false;
+          const cId = (l.customerId?._id || l.customerId?.id || l.customerId)?.toString();
+          const lPhone = (l.customerId?.mobileNumber || "").replace(/\D/g, "").slice(-10);
+          const isMatch = cId === custId || (cleanPhone && cleanPhone === lPhone);
+          return isMatch && Math.abs(l.monthlyRate - rateFilter) < 0.05;
+        });
+      }
+      return true;
+    };
+
+    const matching = customers.filter(isCustMatching);
+    if (matching.length > 0) {
+      const stillSelected = matching.some(
+        (c) => (c.id || c._id)?.toString() === selectedCustomerId?.toString()
+      );
+      if (!stillSelected) {
+        setSelectedCustomerId(matching[0].id || matching[0]._id);
       }
     } else {
-      const matching = customers.filter((c) => matchesCustomerFilter(c, tab));
-      if (matching.length > 0) {
-        const stillSelected = matching.some(
-          (c) => (c.id || c._id)?.toString() === selectedCustomerId?.toString()
-        );
-        if (!stillSelected) {
-          setSelectedCustomerId(matching[0].id || matching[0]._id);
-        }
-      } else {
-        setSelectedCustomerId(null);
-      }
+      setSelectedCustomerId(null);
     }
-  }, [tab, customers, selectedCustomerId, matchesCustomerFilter]);
+  }, [tab, rateFilter, customers, loans, selectedCustomerId, matchesCustomerFilter]);
 
   // Selected Customer details & loans
   const selectedCustomer = customers.find(
@@ -285,22 +297,28 @@ function FinanceDashboardContent() {
     return custId?.toString() === selectedCustomerId?.toString();
   });
 
-  const displayCustomerLoans = tab === "overdue"
-    ? customerLoans.filter(isLoanOverdue)
-    : tab === "3_days"
-    ? customerLoans.filter(isLoanDueIn3Days)
-    : tab === "gold"
-    ? customerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "gold"))
-    : tab === "silver"
-    ? customerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "silver"))
-    : tab === "closed"
-    ? customerLoans.filter((l) => l.status === "closed")
+  const rateFilteredCustomerLoans = rateFilter !== null
+    ? customerLoans.filter((l) => Math.abs(l.monthlyRate - rateFilter) < 0.05)
     : customerLoans;
+
+  const displayCustomerLoans = tab === "overdue"
+    ? rateFilteredCustomerLoans.filter(isLoanOverdue)
+    : tab === "3_days"
+    ? rateFilteredCustomerLoans.filter(isLoanDueIn3Days)
+    : tab === "gold"
+    ? rateFilteredCustomerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "gold"))
+    : tab === "silver"
+    ? rateFilteredCustomerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "silver"))
+    : tab === "closed"
+    ? rateFilteredCustomerLoans.filter((l) => l.status === "closed")
+    : rateFilteredCustomerLoans;
 
   // Filtered loans for dedicated Category Tab Table (Overdue, Due in 3 Days, Gold, Silver, Closed)
   const filteredCategoryLoans = useMemo(() => {
     return loans.filter((l) => {
       if (!isLoanMatchTab(l, tab)) return false;
+      // Rate filter
+      if (rateFilter !== null && Math.abs(l.monthlyRate - rateFilter) >= 0.05) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const custName = (l.customerId?.fullName || "").toLowerCase();
@@ -311,7 +329,7 @@ function FinanceDashboardContent() {
       }
       return true;
     });
-  }, [loans, tab, searchQuery, isLoanMatchTab]);
+  }, [loans, tab, rateFilter, searchQuery, isLoanMatchTab]);
 
   // Calculate Rate Breakdown Metrics (from Image 3 sketch)
   // Cards: Total cash Financed, 2%, 2.5%, 3%, 1.5%, 1.75%
@@ -345,6 +363,20 @@ function FinanceDashboardContent() {
 
   const filteredCustomers = customers.filter((cust) => {
     if (!matchesCustomerFilter(cust, tab)) return false;
+
+    // Rate filter — only show customers who have a loan at this monthly rate
+    if (rateFilter !== null) {
+      const custId = (cust.id || cust._id).toString();
+      const cleanPhone = (cust.mobileNumber || "").replace(/\D/g, "").slice(-10);
+      const hasMatchingRate = loans.some((l) => {
+        if (l.status === "closed") return false;
+        const cId = (l.customerId?._id || l.customerId?.id || l.customerId)?.toString();
+        const lPhone = (l.customerId?.mobileNumber || "").replace(/\D/g, "").slice(-10);
+        const isMatch = cId === custId || (cleanPhone && cleanPhone === lPhone);
+        return isMatch && Math.abs(l.monthlyRate - rateFilter) < 0.05;
+      });
+      if (!hasMatchingRate) return false;
+    }
 
     // Search query
     if (searchQuery.trim()) {
@@ -621,36 +653,70 @@ function FinanceDashboardContent() {
 
       {/* ── 6 RATE BREAKDOWN CARDS (Total Cash Financed, 2%, 2.5%, 3%, 1.5%, 1.75%) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {rateCards.map((c, idx) => (
-          <div
-            key={idx}
-            className={`rounded-2xl p-3 sm:p-3.5 border transition-all ${
-              c.highlight
-                ? "bg-gradient-to-br from-amber-500/20 via-luxury-gold/15 to-transparent border-luxury-gold/50 shadow-gold-glow"
-                : "bg-luxury-graphite/70 border-white/[0.08] hover:border-white/20"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-neutral-300 truncate">
-                {c.label}
-              </span>
-              <span className="text-[10px] font-mono text-luxury-gold font-bold">
-                {c.count} acc
-              </span>
-            </div>
-            <p
-              className={`font-mono text-base sm:text-lg font-bold mt-1.5 truncate ${
-                c.highlight ? "text-luxury-gold-bright" : "text-white"
+        {rateCards.map((c, idx) => {
+          const isRateActive = c.rate !== undefined && rateFilter !== null && Math.abs(rateFilter - c.rate) < 0.05;
+          return (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                if (c.rate !== undefined) {
+                  // Toggle: click same card again to clear filter
+                  setRateFilter(isRateActive ? null : c.rate);
+                } else {
+                  // "Total Cash Financed" card → clear any rate filter
+                  setRateFilter(null);
+                }
+              }}
+              className={`w-full text-left rounded-2xl p-3 sm:p-3.5 border transition-all focus:outline-none ${
+                c.highlight
+                  ? "bg-gradient-to-br from-amber-500/20 via-luxury-gold/15 to-transparent border-luxury-gold/50 shadow-gold-glow"
+                  : isRateActive
+                  ? "bg-luxury-gold/25 border-luxury-gold shadow-gold-glow ring-2 ring-luxury-gold/50 scale-[1.02]"
+                  : "bg-luxury-graphite/70 border-white/[0.08] hover:border-luxury-gold/40 hover:bg-luxury-gold/10 cursor-pointer"
               }`}
             >
-              ₹{Math.round(c.amount).toLocaleString("en-IN")}
-            </p>
-            <p className="text-[9px] text-neutral-400 mt-0.5">
-              {c.rate ? `${c.rate}% per month` : "Overall active capital"}
-            </p>
-          </div>
-        ))}
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-neutral-300 truncate">
+                  {c.label}
+                </span>
+                <span className={`text-[10px] font-mono font-bold ${isRateActive ? "text-luxury-gold animate-pulse" : "text-luxury-gold"}`}>
+                  {c.count} acc
+                </span>
+              </div>
+              <p
+                className={`font-mono text-base sm:text-lg font-bold mt-1.5 truncate ${
+                  c.highlight ? "text-luxury-gold-bright" : isRateActive ? "text-luxury-gold" : "text-white"
+                }`}
+              >
+                ₹{Math.round(c.amount).toLocaleString("en-IN")}
+              </p>
+              <p className="text-[9px] text-neutral-400 mt-0.5">
+                {c.rate ? `${c.rate}% per month` : "Overall active capital"}
+              </p>
+              {isRateActive && (
+                <span className="mt-1.5 inline-block rounded bg-luxury-gold/20 border border-luxury-gold/50 px-1.5 py-0.5 text-[9px] font-bold text-luxury-gold">
+                  ✓ Filtered
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
+
+      {/* ── RATE FILTER ACTIVE BANNER ── */}
+      {rateFilter !== null && (
+        <div className="flex items-center justify-between rounded-xl border border-luxury-gold/40 bg-luxury-gold/10 px-4 py-2 text-xs font-bold text-luxury-gold shadow-gold-glow animate-fadeIn">
+          <span>🔍 Showing accounts at <strong>{rateFilter}% / month</strong> interest rate</span>
+          <button
+            type="button"
+            onClick={() => setRateFilter(null)}
+            className="ml-3 rounded-lg bg-luxury-gold/20 hover:bg-luxury-gold hover:text-black px-2.5 py-1 text-[10px] font-bold transition"
+          >
+            ✕ Clear Filter
+          </button>
+        </div>
+      )}
 
       {/* ── FILTER TABS (Same category sections as Udhari) ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-2">
