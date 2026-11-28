@@ -133,13 +133,13 @@ function FinanceDashboardContent() {
     if (l.status === "closed") return false;
     if (l.status === "overdue") return true;
     if (!l.dueDate) return false;
-    return l.dueDate < todayIST;
+    return l.dueDate <= todayIST;
   }, [todayIST]);
 
   const isLoanDueIn3Days = useCallback((l: FinanceLoan) => {
     if (l.status === "closed") return false;
     if (!l.dueDate) return false;
-    return l.dueDate >= todayIST && l.dueDate <= threeDaysLaterStr;
+    return l.dueDate > todayIST && l.dueDate <= threeDaysLaterStr;
   }, [todayIST, threeDaysLaterStr]);
 
   const isCustomerOverdue = useCallback((cust: Customer) => {
@@ -162,6 +162,9 @@ function FinanceDashboardContent() {
 
   const overdueAccountsCount = customers.filter(isCustomerOverdue).length;
   const due3DaysAccountsCount = customers.filter(isCustomerDueIn3Days).length;
+
+  // Specific Object Girvi Payment History & Receipts Modal
+  const [viewHistoryLoan, setViewHistoryLoan] = useState<FinanceLoan | null>(null);
 
   // Customer Full Lifetime Statement Modal (Khatabook view - You Gave / You Got)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -259,6 +262,18 @@ function FinanceDashboardContent() {
     return custId?.toString() === selectedCustomerId?.toString();
   });
 
+  const displayCustomerLoans = tab === "overdue"
+    ? customerLoans.filter(isLoanOverdue)
+    : tab === "3_days"
+    ? customerLoans.filter(isLoanDueIn3Days)
+    : tab === "gold"
+    ? customerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "gold"))
+    : tab === "silver"
+    ? customerLoans.filter((l) => l.pledgedItems?.some((p) => p.metalType === "silver"))
+    : tab === "closed"
+    ? customerLoans.filter((l) => l.status === "closed")
+    : customerLoans;
+
   // Calculate Rate Breakdown Metrics (from Image 3 sketch)
   // Cards: Total cash Financed, 2%, 2.5%, 3%, 1.5%, 1.75%
   const activeLoans = loans.filter((l) => l.status !== "closed");
@@ -346,6 +361,8 @@ function FinanceDashboardContent() {
     });
     if (matched.length > 0) {
       setSelectedCustomerId(matched[0].id || matched[0]._id);
+    } else {
+      setSelectedCustomerId(null);
     }
   };
 
@@ -564,8 +581,17 @@ function FinanceDashboardContent() {
           </h1>
         </div>
 
-        {/* Global Action Status */}
-        <div className="flex items-center gap-2">
+        {/* Global Action Status & Excel Report Download */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <a
+            href="/api/export/finance-loans"
+            download
+            className="flex items-center gap-1.5 rounded-xl border border-luxury-gold/50 bg-luxury-gold/15 px-3 py-1.5 text-xs font-bold text-luxury-gold hover:bg-luxury-gold hover:text-black transition shadow-gold-glow"
+            title="Download complete Gold Finance Portfolio Excel spreadsheet"
+          >
+            <Download className="h-4 w-4" />
+            <span>Excel Report (डाउनलोड)</span>
+          </a>
           <div className="rounded-xl border border-luxury-gold/30 bg-luxury-gold/10 px-3.5 py-1.5 text-xs font-mono font-bold text-luxury-gold-champagne">
             {activeLoans.length} Active Loans • {customers.length} Grahaks
           </div>
@@ -868,12 +894,17 @@ function FinanceDashboardContent() {
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedCustomerId(custId);
-                            openHistoryModal(cust);
+                            const active = cLoans.filter((l) => l.status !== "closed");
+                            if (active.length > 0) {
+                              openPayModal(active[0]);
+                            } else {
+                              alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
+                            }
                           }}
-                          className="rounded-lg border border-white/10 bg-white/5 p-1.5 text-neutral-300 hover:text-amber-300 hover:border-amber-400/50 hover:bg-white/10 transition shadow-xs"
-                          title="View Khatabook Ledger Statement"
+                          className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-300 hover:bg-emerald-500 hover:text-white transition shadow-xs whitespace-nowrap"
+                          title="Record payment received"
                         >
-                          <History className="h-3.5 w-3.5 text-amber-400" />
+                          जमा करा
                         </button>
                       </div>
                     </div>
@@ -889,12 +920,33 @@ function FinanceDashboardContent() {
             ───────────────────────────────────────────────────────────── */}
         <div className="lg:col-span-8 space-y-4">
           {!selectedCustomer ? (
-            <div className="rounded-2xl border border-white/10 bg-luxury-graphite/60 p-12 text-center text-neutral-400 space-y-2">
-              <Landmark className="h-10 w-10 text-luxury-gold mx-auto opacity-40" />
-              <p className="font-serif text-sm font-bold text-white">No Customer Selected</p>
-              <p className="text-xs">
-                Select a customer from the left directory or add a new customer to open their Khata &amp; Loan ledger.
+            <div className="rounded-2xl border border-white/10 bg-luxury-graphite/60 p-12 text-center text-neutral-400 space-y-3">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-2xl">
+                {tab === "overdue" ? "🚨" : tab === "3_days" ? "⏰" : "👑"}
+              </div>
+              <p className="font-serif text-base font-bold text-white">
+                {tab === "overdue"
+                  ? "कोणतीही थकबाकी (Overdue) खाती नाहीत"
+                  : tab === "3_days"
+                  ? "येत्या ३ दिवसांत कोणतीही मुदत संपणारी खाती नाहीत"
+                  : "कोणताही ग्राहक निवडलेला नाही"}
               </p>
+              <p className="text-xs max-w-md mx-auto text-neutral-400">
+                {tab === "overdue"
+                  ? "सध्या सर्व ग्राहकांची कर्जे वेळेवर चालू आहेत. कोणतीही मुदत संपलेली खाती नाहीत."
+                  : tab === "3_days"
+                  ? "येत्या ३ दिवसांत कोणाचीही मुदत संपत नाही."
+                  : "डाव्या बाजूच्या यादीमधून ग्राहक निवडा किंवा नवीन ग्राहक जोडा."}
+              </p>
+              {tab !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => handleTabChange("all")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-luxury-gold px-4 py-2 text-xs font-bold text-black shadow-gold-glow hover:brightness-105 transition"
+                >
+                  सर्व ग्राहक पहा (View All Customers)
+                </button>
+              )}
             </div>
           ) : (
             <>
@@ -915,15 +967,22 @@ function FinanceDashboardContent() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Full Khata History Button */}
+                  {/* Direct Jama Kara Button */}
                   <button
                     type="button"
-                    onClick={() => openHistoryModal(selectedCustomer)}
-                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/40 px-3.5 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                    title="View Full Customer Khata History & Statement (You Gave / You Got)"
+                    onClick={() => {
+                      const active = customerLoans.filter((l) => l.status !== "closed");
+                      if (active.length > 0) {
+                        openPayModal(active[0]);
+                      } else {
+                        alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
+                      }
+                    }}
+                    className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 border border-emerald-400/60 px-3.5 py-1.5 text-xs font-bold text-white hover:brightness-105 active:scale-95 transition shadow-md shadow-emerald-950/40"
+                    title="Record payment received (जमा करा)"
                   >
-                    <History className="h-3.5 w-3.5 text-amber-400" />
-                    <span>Khata History</span>
+                    <span>💵</span>
+                    <span>जमा करा</span>
                   </button>
 
                   <a
@@ -1167,15 +1226,22 @@ function FinanceDashboardContent() {
                   <div className="flex items-center gap-2.5">
                     <button
                       type="button"
-                      onClick={() => openHistoryModal(selectedCustomer)}
-                      className="flex items-center gap-1.5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition shadow-xs"
-                      title="Open Customer Khatabook Ledger Statement (You Gave / You Got)"
+                      onClick={() => {
+                        const active = customerLoans.filter((l) => l.status !== "closed");
+                        if (active.length > 0) {
+                          openPayModal(active[0]);
+                        } else {
+                          alert("या ग्राहकाचे कोणतेही चालू कर्ज शिल्लक नाही.");
+                        }
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl border border-emerald-400 bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-sm"
+                      title="Record payment received"
                     >
-                      <History className="h-3.5 w-3.5 text-amber-400" />
-                      <span>History Statement</span>
+                      <span>💵</span>
+                      <span>जमा करा</span>
                     </button>
                     <span className="text-xs text-neutral-400 font-mono">
-                      {customerLoans.length} total loan record(s)
+                      {displayCustomerLoans.length} {tab !== "all" ? `(${tab})` : ""} loan record(s)
                     </span>
                   </div>
                 </div>
@@ -1196,14 +1262,29 @@ function FinanceDashboardContent() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/[0.06]">
-                      {customerLoans.length === 0 ? (
+                      {displayCustomerLoans.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="py-12 text-center text-neutral-500">
-                            No loan accounts recorded for this customer yet.
+                          <td colSpan={9} className="py-12 text-center text-neutral-400 space-y-2">
+                            <p className="font-semibold text-white">
+                              {tab === "overdue"
+                                ? "या ग्राहकाचे कोणतेही कर्ज मुदत संपलेले (Overdue) नाही."
+                                : tab === "3_days"
+                                ? "या ग्राहकाचे पुढील ३ दिवसांत कोणतेही कर्ज देय नाही."
+                                : "या फिल्टरसाठी कोणतीही कर्जे आढळली नाहीत."}
+                            </p>
+                            {tab !== "all" && (
+                              <button
+                                type="button"
+                                onClick={() => handleTabChange("all")}
+                                className="mt-2 text-xs font-bold text-luxury-gold underline hover:text-white block mx-auto"
+                              >
+                                या ग्राहकाची सर्व कर्जे पहा ({customerLoans.length})
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ) : (
-                        customerLoans.map((loan) => {
+                        displayCustomerLoans.map((loan) => {
                           const principal = loan.currentOutstandingPrincipalRupees ?? loan.originalPrincipalRupees;
                           let interest = Math.round(loan.accruedInterestRupees || 0);
                           let total = Math.round(loan.totalDueRupees || principal + interest);
@@ -1344,14 +1425,14 @@ function FinanceDashboardContent() {
                                     <Printer className="h-3.5 w-3.5" />
                                   </button>
 
-                                  {/* Full Khata History Button */}
+                                  {/* Specific Object History & Receipts */}
                                   <button
                                     type="button"
-                                    onClick={() => openHistoryModal(selectedCustomer)}
-                                    className="rounded-lg border border-white/10 bg-white/5 p-1 text-neutral-300 hover:text-amber-300 hover:border-amber-400/40 hover:bg-white/10 transition"
-                                    title="View Customer Khata Statement (You Gave / You Got)"
+                                    onClick={() => setViewHistoryLoan(loan)}
+                                    className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[11px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition"
+                                    title="View Payment Receipts & Ledger for this object"
                                   >
-                                    <History className="h-3.5 w-3.5 text-amber-400" />
+                                    तपशील
                                   </button>
 
                                   {/* WhatsApp */}
@@ -1387,9 +1468,14 @@ function FinanceDashboardContent() {
           <div className="relative w-full max-w-md rounded-2xl border border-emerald-500/40 bg-[#16161c] text-white shadow-2xl p-5 space-y-4">
             <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div>
-                <h4 className="font-bold text-sm text-white">Record Payment (जमा रक्कम)</h4>
-                <p className="text-[11px] text-neutral-400 font-mono">
-                  Loan: {activeLoanForPay.loanNumber} • Rate: {activeLoanForPay.monthlyRate}%
+                <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                  <span>Record Payment (जमा रक्कम)</span>
+                  <span className="rounded bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                    {activeLoanForPay.pledgedItems?.[0]?.description || "Ornaments"}
+                  </span>
+                </h4>
+                <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                  Loan: {activeLoanForPay.loanNumber} • Rate: {activeLoanForPay.monthlyRate}% • Wt: {activeLoanForPay.totalPledgedGrossWeight}g
                 </p>
               </div>
               <button
@@ -1398,6 +1484,28 @@ function FinanceDashboardContent() {
               >
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Object financial snapshot */}
+            <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl border border-white/10 bg-black/40 text-center font-mono">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">शिल्लक मुद्दल</span>
+                <span className="text-xs font-bold text-amber-300">
+                  ₹{Math.round(activeLoanForPay.currentOutstandingPrincipalRupees ?? activeLoanForPay.originalPrincipalRupees).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">शिल्लक व्याज</span>
+                <span className="text-xs font-bold text-rose-300">
+                  ₹{Math.round(activeLoanForPay.accruedInterestRupees || 0).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">एकूण बाकी</span>
+                <span className="text-xs font-bold text-emerald-400">
+                  ₹{Math.round(activeLoanForPay.totalDueRupees || 0).toLocaleString("en-IN")}
+                </span>
+              </div>
             </div>
 
             <form onSubmit={handlePaymentSubmit} className="space-y-3.5">
@@ -1558,6 +1666,146 @@ function FinanceDashboardContent() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: OBJECT-SPECIFIC GIRVI HISTORY & RECEIPTS (तपशील)
+          ======================================================== */}
+      {viewHistoryLoan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-md">
+          <div className="relative w-full max-w-lg rounded-2xl border border-luxury-gold/40 bg-[#16161c] text-white shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <div>
+                <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                  <span>वस्तू कर्ज पावती व इतिहास (Object Loan Statement)</span>
+                </h4>
+                <p className="text-[11px] text-neutral-400 font-mono">
+                  {viewHistoryLoan.loanNumber} • {viewHistoryLoan.pledgedItems?.[0]?.description || "Ornaments"}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewHistoryLoan(null)}
+                className="text-neutral-400 hover:text-white transition p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Object Specs Banner */}
+            <div className="rounded-xl border border-white/10 bg-black/40 p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-center">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">वस्तू / धातू</span>
+                <span className="text-xs font-bold text-white truncate block">
+                  {viewHistoryLoan.pledgedItems?.[0]?.description || "Ornaments"}
+                </span>
+                <span className="text-[10px] text-neutral-400">
+                  {viewHistoryLoan.pledgedItems?.[0]?.metalType === "gold" ? "🪙 Gold 22K" : "🥈 Silver 925"}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">वजन (Weight)</span>
+                <span className="text-xs font-bold text-amber-300">
+                  {viewHistoryLoan.totalPledgedGrossWeight.toFixed(3)}g
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">व्याज दर (Rate)</span>
+                <span className="text-xs font-bold text-luxury-gold">
+                  {viewHistoryLoan.monthlyRate}% / mo
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">कर्ज तारीख</span>
+                <span className="text-xs font-bold text-neutral-300">
+                  {viewHistoryLoan.mortgageDate}
+                </span>
+              </div>
+            </div>
+
+            {/* Balances */}
+            <div className="grid grid-cols-3 gap-2 p-3 rounded-xl border border-luxury-gold/20 bg-luxury-gold/5 text-center font-mono">
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">सुरुवातीची मुद्दल</span>
+                <span className="text-xs font-bold text-neutral-300">
+                  ₹{Math.round(viewHistoryLoan.originalPrincipalRupees).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">चालू मुद्दल बाकी</span>
+                <span className="text-xs font-bold text-amber-300">
+                  ₹{Math.round(viewHistoryLoan.currentOutstandingPrincipalRupees ?? viewHistoryLoan.originalPrincipalRupees).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-neutral-400 uppercase block font-bold">चालू व्याज बाकी</span>
+                <span className="text-xs font-bold text-rose-400">
+                  ₹{Math.round(viewHistoryLoan.accruedInterestRupees || 0).toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+
+            {/* Payment Receipts on THIS loan */}
+            <div className="space-y-2">
+              <h5 className="text-xs font-bold uppercase tracking-wider text-neutral-300 flex items-center justify-between">
+                <span>या वस्तूवर जमा पावत्या (Receipts for this object)</span>
+                <span className="text-[10px] font-mono text-neutral-400">
+                  {viewHistoryLoan.paymentHistory?.length || 0} पावत्या
+                </span>
+              </h5>
+
+              {!viewHistoryLoan.paymentHistory || viewHistoryLoan.paymentHistory.length === 0 ? (
+                <div className="py-6 text-center text-xs text-neutral-500 border border-dashed border-white/10 rounded-xl bg-black/20">
+                  या वस्तूवर अजून कोणतीही जमा रक्कम आलेली नाही (No receipts recorded yet for this object).
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+                  {viewHistoryLoan.paymentHistory.map((p: any, idx: number) => (
+                    <div
+                      key={p.id || idx}
+                      className="rounded-xl border border-white/10 bg-black/50 p-2.5 flex items-center justify-between font-mono text-xs"
+                    >
+                      <div>
+                        <div className="font-bold text-emerald-400 flex items-center gap-2">
+                          <span>{p.receiptNumber || `RCP-${idx + 1}`}</span>
+                          <span className="text-[10px] text-neutral-400 font-normal">
+                            {p.paymentDate || (p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-IN") : "")}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-neutral-400 mt-0.5">
+                          व्याज: ₹{p.interestAppliedRupees || 0} • मुद्दल: ₹{p.principalAppliedRupees || 0} • पद्धत: {p.paymentMethod || "Cash"}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-sm text-emerald-300 block">
+                          ₹{Number(p.totalAmountRupees || 0).toLocaleString("en-IN")}
+                        </span>
+                        <span className="text-[9px] text-neutral-500 block">
+                          उरलेली मुद्दल: ₹{p.newOutstandingPrincipalRupees ?? "-"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Direct Jama Kara CTA */}
+            {viewHistoryLoan.status !== "closed" && (
+              <button
+                type="button"
+                onClick={() => {
+                  const target = viewHistoryLoan;
+                  setViewHistoryLoan(null);
+                  openPayModal(target);
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-xs font-bold text-white hover:brightness-105 active:scale-95 transition shadow-lg shadow-emerald-950/50"
+              >
+                <span>💵</span>
+                <span>या वस्तूवर जमा करा (Pay Due for this Object)</span>
+              </button>
+            )}
           </div>
         </div>
       )}
