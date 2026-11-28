@@ -85,6 +85,8 @@ export default function CustomerKhataModal({
   const [gotDueDate, setGotDueDate] = useState("");
   const [gotNotes, setGotNotes] = useState("");
 
+  const [objectInfo, setObjectInfo] = useState<any>(null);
+
   // Toast feedback
   const showToast = (msg: string) => {
     setSuccessMsg(msg);
@@ -97,10 +99,11 @@ export default function CustomerKhataModal({
     try {
       setLoading(true);
       setError(null);
+      const saleIdQuery = customer.saleId ? `&saleId=${encodeURIComponent(customer.saleId)}` : "";
       const res = await fetch(
         `/api/udhari/entry?phone=${encodeURIComponent(customer.phone)}&name=${encodeURIComponent(
           customer.name
-        )}`
+        )}${saleIdQuery}`
       );
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -111,6 +114,11 @@ export default function CustomerKhataModal({
       setTotalGave(data.totalGaveRupees || 0);
       setTotalGot(data.totalGotRupees || 0);
       setBalanceDue(data.balanceDueRupees || 0);
+      if (data.objectInfo) {
+        setObjectInfo(data.objectInfo);
+      } else {
+        setObjectInfo(null);
+      }
     } catch (err: any) {
       setError(err.message || "Failed to load customer khata");
     } finally {
@@ -292,8 +300,13 @@ export default function CustomerKhataModal({
 
             {/* Customer Details */}
             <div className="min-w-0">
-              <h3 className="font-bold text-sm sm:text-base text-white truncate flex items-center gap-1.5">
+              <h3 className="font-bold text-sm sm:text-base text-white truncate flex items-center gap-1.5 flex-wrap">
                 <span>{customer.name}</span>
+                {objectInfo && (
+                  <span className="rounded bg-amber-500/25 border border-amber-500/50 px-2 py-0.5 text-[10px] font-bold text-amber-300">
+                    🪙 {objectInfo.loanNumber} • {objectInfo.itemDescription || "Ornament"} ({objectInfo.grossWeight}g)
+                  </span>
+                )}
               </h3>
               <p className="text-[11px] text-neutral-400 font-mono truncate">
                 📞 {customer.phone} • {customer.address || "Visapur"}

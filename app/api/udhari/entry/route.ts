@@ -21,6 +21,117 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const phone = (searchParams.get("phone") || "").trim();
     const name = (searchParams.get("name") || "").trim();
+    const saleId = (searchParams.get("saleId") || "").trim();
+
+    // ─────────────────────────────────────────────────────────────
+    // CASE 0: Specific Finance Loan ID requested (Single Object Khata)
+    // ─────────────────────────────────────────────────────────────
+    if (saleId) {
+      try {
+        const specificLoan = await FinanceLoan.findById(saleId).populate("customerId").lean();
+        if (specificLoan) {
+          const lNum = specificLoan.loanNumber || "LOAN";
+          const lDate = new Date(specificLoan.mortgageDate || (specificLoan as any).createdAt);
+          const itemDesc = specificLoan.pledgedItems?.[0]?.description
+            ? `Girvi Loan (${lNum}) • ${specificLoan.pledgedItems[0].description}`
+            : `Girvi Loan (${lNum})`;
+          const principalPaise = specificLoan.originalPrincipalPaise || 0;
+
+          const rawEvents: Array<{
+            id: string;
+            type: "gave" | "got";
+            amountPaise: number;
+            date: Date;
+            description: string;
+            saleNumber: string;
+            saleId: string;
+            paymentMode?: string;
+          }> = [];
+
+          // 1. Principal given for this specific object
+          rawEvents.push({
+            id: `loan_${specificLoan._id.toString()}`,
+            type: "gave",
+            amountPaise: principalPaise,
+            date: lDate,
+            description: itemDesc,
+            saleNumber: lNum,
+            saleId: specificLoan._id.toString(),
+          });
+
+          // 2. Payments for this specific object
+          const payments = await FinancePayment.find({ loanId: specificLoan._id }).sort({ paymentDate: 1, createdAt: 1 }).lean();
+          for (const pay of payments) {
+            const pDate = new Date(pay.paymentDate || (pay as any).createdAt);
+            const pNum = pay.receiptNumber || "RCP";
+            const desc = pay.notes
+              ? `Girvi Pay (${pNum}): ${pay.notes}`
+              : `Girvi Pay (${pNum}) • ${pay.paymentMethod || "Cash"}`;
+
+            rawEvents.push({
+              id: `fpay_${pay._id.toString()}`,
+              type: "got",
+              amountPaise: pay.totalAmountPaise || 0,
+              date: pDate,
+              description: desc,
+              saleNumber: pNum,
+              saleId: pay.loanId?.toString() || pay._id.toString(),
+              paymentMode: pay.paymentMethod || "cash",
+            });
+          }
+
+          rawEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+          let runningBalance = 0;
+          const ledgerEntries = rawEvents.map((ev) => {
+            if (ev.type === "gave") {
+              runningBalance += ev.amountPaise;
+            } else {
+              runningBalance = Math.max(0, runningBalance - ev.amountPaise);
+            }
+            return {
+              id: ev.id,
+              type: ev.type,
+              amountPaise: ev.amountPaise,
+              amountRupees: ev.amountPaise / 100,
+              date: ev.date.toISOString(),
+              description: ev.description,
+              saleNumber: ev.saleNumber,
+              saleId: ev.saleId,
+              paymentMode: ev.paymentMode,
+              runningBalancePaise: runningBalance,
+              runningBalanceRupees: runningBalance / 100,
+            };
+          });
+
+          const totalGavePaise = ledgerEntries.filter((e) => e.type === "gave").reduce((s, e) => s + e.amountPaise, 0);
+          const totalGotPaise = ledgerEntries.filter((e) => e.type === "got").reduce((s, e) => s + e.amountPaise, 0);
+          const balanceDuePaise = Math.max(0, totalGavePaise - totalGotPaise);
+
+          const custData: any = specificLoan.customerId;
+          return NextResponse.json({
+            success: true,
+            customer: {
+              name: custData?.fullName || name || "Customer",
+              phone: custData?.mobileNumber || phone || "",
+              address: custData?.address || "Visapur",
+            },
+            entries: [...ledgerEntries].reverse(),
+            totalGaveRupees: totalGavePaise / 100,
+            totalGotRupees: totalGotPaise / 100,
+            balanceDueRupees: balanceDuePaise / 100,
+            objectInfo: {
+              loanNumber: lNum,
+              itemDescription: specificLoan.pledgedItems?.[0]?.description,
+              grossWeight: specificLoan.pledgedItems?.[0]?.grossWeight,
+              monthlyRate: specificLoan.monthlyRate,
+            },
+          });
+        }
+      } catch (e) {
+        console.warn("Specific loan lookup failed, falling back to full ledger:", e);
+      }
+    }
 
     if (!phone && !name) {
       return NextResponse.json({ error: "Customer phone or name is required" }, { status: 400 });
@@ -342,18 +453,123 @@ export async function POST(req: NextRequest) {
     if (action === "got") {
       const resolvedMode: "cash" | "online" = paymentMode === "online" ? "online" : "cash";
 
-      // If specific saleId is provided, apply to that sale
+      let targetLoan: any = null;
       let targetSale: any = null;
+
+      // 1. If specific saleId is provided, check if it's a FinanceLoan first, then SaleRecord
       if (saleId) {
-        targetSale = await SaleRecord.findById(saleId);
+        try {
+          targetLoan = await FinanceLoan.findOne({
+            _id: saleId,
+            status: { $ne: "closed" },
+          });
+        } catch {
+          targetLoan = null;
+        }
+
+        if (!targetLoan) {
+          try {
+            targetSale = await SaleRecord.findById(saleId);
+          } catch {
+            targetSale = null;
+          }
+        }
       }
 
-      // If no targetSale or targetSale has 0 due, find open sales for this customer with balance > 0
-      if (!targetSale || targetSale.balanceDuePaise <= 0) {
+      // 2. If no targetLoan and no targetSale, find open SaleRecord or open FinanceLoan for this customer
+      if (!targetLoan && (!targetSale || targetSale.balanceDuePaise <= 0)) {
         targetSale = await SaleRecord.findOne({
           $or: [{ "customer.phone": formattedPhone }, { "customer.phone": customerPhone }],
           balanceDuePaise: { $gt: 0 },
         }).sort({ saleDate: 1 }); // FIFO - oldest pending sale
+      }
+
+      if (!targetLoan && (!targetSale || targetSale.balanceDuePaise <= 0)) {
+        const custDocs = await Customer.find({
+          $or: [{ mobileNumber: formattedPhone }, { mobileNumber: customerPhone }],
+        }).lean();
+        const custIds = custDocs.map((c: any) => c._id);
+        if (custIds.length > 0) {
+          targetLoan = await FinanceLoan.findOne({
+            customerId: { $in: custIds },
+            status: { $ne: "closed" },
+          }).sort({ mortgageDate: 1 });
+        }
+      }
+
+      // If customer has an open Finance Loan targeted
+      if (targetLoan) {
+        // Record payment against Finance Loan (Interest First, then Principal!)
+        const currentPrincipalRupees = (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) / 100;
+        const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+        let accruedInterestRupees = 0;
+        try {
+          const calc = calculateMortgageInterest({
+            mortgageDate: targetLoan.mortgageDate,
+            principalRupees: currentPrincipalRupees,
+            asOfDate: todayIST,
+            monthlyRate: targetLoan.monthlyRate || 2,
+            interestMode: targetLoan.interestMode || "yearly_compound",
+          });
+          const interestPaidRupees = (targetLoan.totalInterestPaidPaise || 0) / 100;
+          accruedInterestRupees = Math.max(0, calc.interestRupees - interestPaidRupees);
+        } catch {
+          accruedInterestRupees = Math.max(0, ((targetLoan.accruedInterestPaise || 0) / 100) - ((targetLoan.totalInterestPaidPaise || 0) / 100));
+        }
+
+        let interestAppliedRupees = 0;
+        let principalAppliedRupees = 0;
+        if (numAmount <= accruedInterestRupees) {
+          interestAppliedRupees = numAmount;
+          principalAppliedRupees = 0;
+        } else {
+          interestAppliedRupees = accruedInterestRupees;
+          principalAppliedRupees = Math.min(numAmount - accruedInterestRupees, currentPrincipalRupees);
+        }
+
+        const intPaise = Math.round(interestAppliedRupees * 100);
+        const prinPaise = Math.round(principalAppliedRupees * 100);
+
+        targetLoan.totalInterestPaidPaise = (targetLoan.totalInterestPaidPaise || 0) + intPaise;
+        targetLoan.totalPrincipalPaidPaise = (targetLoan.totalPrincipalPaidPaise || 0) + prinPaise;
+        const remainingPrincipalPaise = Math.max(0, (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) - prinPaise);
+        targetLoan.currentOutstandingPrincipalPaise = remainingPrincipalPaise;
+        targetLoan.status = remainingPrincipalPaise <= 0 ? "closed" : "partially_paid";
+        if (remainingPrincipalPaise <= 0) targetLoan.closedDate = todayIST;
+        await targetLoan.save();
+
+        // Create FinancePayment
+        const payCount = await FinancePayment.countDocuments();
+        const receiptNumber = `SJ-RCP-${new Date().getFullYear()}-${String(payCount + 1).padStart(4, "0")}`;
+        await FinancePayment.create({
+          loanId: targetLoan._id,
+          receiptNumber,
+          paymentDate: todayIST,
+          totalAmountPaise: amountPaise,
+          interestAppliedPaise: intPaise,
+          principalAppliedPaise: prinPaise,
+          paymentMethod: resolvedMode,
+          notes: notes || "Payment received via Customer Khatabook",
+          receivedBy: (sessionUser as any).username || (sessionUser as any).id,
+        });
+
+        // Record in CashTransaction
+        if (resolvedMode === "cash") {
+          await CashTransaction.create({
+            transactionType: "credit",
+            category: "finance_recovery",
+            amountPaise,
+            purpose: `Girvi Collection (YOU GOT): ${finalCustName} [${customerPhone}]`,
+            referenceId: receiptNumber,
+            date: txnDate,
+            notes: notes || "Payment collected via Customer Khata Ledger",
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: `Payment of ₹${numAmount.toLocaleString("en-IN")} recorded successfully on loan ${targetLoan.loanNumber} (YOU GOT).`,
+        });
       }
 
       // If customer has an open sale, allocate to it
@@ -385,100 +601,6 @@ export async function POST(req: NextRequest) {
         if (excessPaise > 0 && customerDoc) {
           customerDoc.advanceBalancePaise = (customerDoc.advanceBalancePaise || 0) + excessPaise;
           await customerDoc.save();
-        }
-      } else {
-        // Check if customer has an open Finance Loan with principal > 0
-        const custDocs = await Customer.find({
-          $or: [{ mobileNumber: formattedPhone }, { mobileNumber: customerPhone }],
-        }).lean();
-        const custIds = custDocs.map((c: any) => c._id);
-
-        let targetLoan: any = null;
-        if (saleId) {
-          targetLoan = await FinanceLoan.findOne({
-            _id: saleId,
-            status: { $ne: "closed" },
-          });
-        }
-        if (!targetLoan && custIds.length > 0) {
-          targetLoan = await FinanceLoan.findOne({
-            customerId: { $in: custIds },
-            status: { $ne: "closed" },
-          }).sort({ mortgageDate: 1 });
-        }
-
-        if (targetLoan) {
-          // Record payment against Finance Loan (Interest First, then Principal!)
-          const currentPrincipalRupees = (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) / 100;
-          const todayIST = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-          let accruedInterestRupees = 0;
-          try {
-            const calc = calculateMortgageInterest({
-              mortgageDate: targetLoan.mortgageDate,
-              principalRupees: currentPrincipalRupees,
-              asOfDate: todayIST,
-              monthlyRate: targetLoan.monthlyRate || 2,
-              interestMode: targetLoan.interestMode || "yearly_compound",
-            });
-            const interestPaidRupees = (targetLoan.totalInterestPaidPaise || 0) / 100;
-            accruedInterestRupees = Math.max(0, calc.interestRupees - interestPaidRupees);
-          } catch {
-            accruedInterestRupees = Math.max(0, ((targetLoan.accruedInterestPaise || 0) / 100) - ((targetLoan.totalInterestPaidPaise || 0) / 100));
-          }
-
-          let interestAppliedRupees = 0;
-          let principalAppliedRupees = 0;
-          if (numAmount <= accruedInterestRupees) {
-            interestAppliedRupees = numAmount;
-            principalAppliedRupees = 0;
-          } else {
-            interestAppliedRupees = accruedInterestRupees;
-            principalAppliedRupees = Math.min(numAmount - accruedInterestRupees, currentPrincipalRupees);
-          }
-
-          const intPaise = Math.round(interestAppliedRupees * 100);
-          const prinPaise = Math.round(principalAppliedRupees * 100);
-
-          targetLoan.totalInterestPaidPaise = (targetLoan.totalInterestPaidPaise || 0) + intPaise;
-          targetLoan.totalPrincipalPaidPaise = (targetLoan.totalPrincipalPaidPaise || 0) + prinPaise;
-          const remainingPrincipalPaise = Math.max(0, (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) - prinPaise);
-          targetLoan.currentOutstandingPrincipalPaise = remainingPrincipalPaise;
-          targetLoan.status = remainingPrincipalPaise <= 0 ? "closed" : "partially_paid";
-          if (remainingPrincipalPaise <= 0) targetLoan.closedDate = todayIST;
-          await targetLoan.save();
-
-          // Create FinancePayment
-          const payCount = await FinancePayment.countDocuments();
-          const receiptNumber = `SJ-RCP-${new Date().getFullYear()}-${String(payCount + 1).padStart(4, "0")}`;
-          await FinancePayment.create({
-            loanId: targetLoan._id,
-            receiptNumber,
-            paymentDate: todayIST,
-            totalAmountPaise: amountPaise,
-            interestAppliedPaise: intPaise,
-            principalAppliedPaise: prinPaise,
-            paymentMethod: resolvedMode,
-            notes: notes || "Payment received via Customer Khatabook",
-            receivedBy: (sessionUser as any).username || (sessionUser as any).id,
-          });
-
-          // Record in CashTransaction
-          if (resolvedMode === "cash") {
-            await CashTransaction.create({
-              transactionType: "credit",
-              category: "finance_recovery",
-              amountPaise,
-              purpose: `Girvi Collection (YOU GOT): ${finalCustName} [${customerPhone}]`,
-              referenceId: receiptNumber,
-              date: txnDate,
-              notes: notes || "Payment collected via Customer Khata Ledger",
-            });
-          }
-
-          return NextResponse.json({
-            success: true,
-            message: `Payment of ₹${numAmount.toLocaleString("en-IN")} recorded successfully on loan ${targetLoan.loanNumber} (YOU GOT).`,
-          });
         }
 
         // No open sale or finance loan with balance due: record as advance deposit on customer
