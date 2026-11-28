@@ -8,7 +8,7 @@ export interface IFinancePayment extends Document {
   totalAmountPaise: number;
   principalAppliedPaise: number;
   interestAppliedPaise: number;
-  paymentMethod: "cash" | "bank_transfer" | "upi" | "cheque";
+  paymentMethod: "cash" | "bank_transfer" | "upi" | "cheque" | "online";
   referenceTransactionId?: string;
   previousOutstandingPrincipalPaise: number;
   newOutstandingPrincipalPaise: number;
@@ -27,7 +27,7 @@ const FinancePaymentSchema = new Schema<IFinancePayment>(
     interestAppliedPaise: { type: Number, required: true, min: 0, default: 0 },
     paymentMethod: {
       type: String,
-      enum: ["cash", "bank_transfer", "upi", "cheque"],
+      enum: ["cash", "bank_transfer", "upi", "cheque", "online"],
       default: "cash",
     },
     referenceTransactionId: { type: String, trim: true },

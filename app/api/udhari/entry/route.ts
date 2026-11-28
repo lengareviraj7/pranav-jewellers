@@ -532,25 +532,30 @@ export async function POST(req: NextRequest) {
 
         targetLoan.totalInterestPaidPaise = (targetLoan.totalInterestPaidPaise || 0) + intPaise;
         targetLoan.totalPrincipalPaidPaise = (targetLoan.totalPrincipalPaidPaise || 0) + prinPaise;
-        const remainingPrincipalPaise = Math.max(0, (targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise) - prinPaise);
+        const prevPrincipalPaise = targetLoan.currentOutstandingPrincipalPaise ?? targetLoan.originalPrincipalPaise;
+        const remainingPrincipalPaise = Math.max(0, prevPrincipalPaise - prinPaise);
         targetLoan.currentOutstandingPrincipalPaise = remainingPrincipalPaise;
         targetLoan.status = remainingPrincipalPaise <= 0 ? "closed" : "partially_paid";
         if (remainingPrincipalPaise <= 0) targetLoan.closedDate = todayIST;
         await targetLoan.save();
+
+        const custId = targetLoan.customerId?._id || targetLoan.customerId || (customerDoc ? customerDoc._id : null);
 
         // Create FinancePayment
         const payCount = await FinancePayment.countDocuments();
         const receiptNumber = `SJ-RCP-${new Date().getFullYear()}-${String(payCount + 1).padStart(4, "0")}`;
         await FinancePayment.create({
           loanId: targetLoan._id,
+          customerId: custId,
           receiptNumber,
           paymentDate: todayIST,
           totalAmountPaise: amountPaise,
           interestAppliedPaise: intPaise,
           principalAppliedPaise: prinPaise,
           paymentMethod: resolvedMode,
+          previousOutstandingPrincipalPaise: prevPrincipalPaise,
+          newOutstandingPrincipalPaise: remainingPrincipalPaise,
           notes: notes || "Payment received via Customer Khatabook",
-          receivedBy: (sessionUser as any).username || (sessionUser as any).id,
         });
 
         // Record in CashTransaction
